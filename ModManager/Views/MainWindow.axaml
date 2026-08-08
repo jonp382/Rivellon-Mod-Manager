@@ -15,11 +15,17 @@
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainViewModel />
     </Design.DataContext>
+    
     <StackPanel Margin = "10" Spacing = "10">
+        <Menu DockPanel.Dock="Top"> 
+            <MenuItem Header="File">
+                <MenuItem 
+                    Header="Load ModSettings File"
+                    Command="{Binding LoadProfileFile}"/>
+            </MenuItem>
+        </Menu>
+
         <TextBlock Text="Prompt Text:" FontWeight="Bold"/>
 
-        <TextBox x:Name="EnteredText" Text="{Binding Greeting}" PlaceholderText="Type here..."/>
-
-        <Button Content="Submit" Click="Button_Click"/>
     </StackPanel>
 </Window>
