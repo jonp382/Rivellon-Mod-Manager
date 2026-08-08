@@ -1,0 +1,44 @@
+## Build and Output Directories
+bin/
+obj/
+out/
+[Dd]ebug/
+[Rr]elease/
+
+## Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+## Visual Studio / JetBrains Rider / IDEs
+.vs/
+.idea/
+*.user
+*.userossc
+*.suo
+*.userprefs
+*.sln.docstates
+
+## NuGet & Dependencies
+*.nupkg
+*.snupkg
+**/packages/
+*.nuget.props
+*.nuget.targets
+
+## Avalonia / Previewer Temp Files
+.avalonia/
+
+## OS Generated Files
+.DS_Store
+.DS_Store?
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+## Logs and Crashes
+*.log
+*.tmp
