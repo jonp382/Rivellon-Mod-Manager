@@ -23,24 +23,30 @@
                 <MenuItem 
                     Header="Load ModSettings File"
                     Command="{Binding LoadProfileFileCommand}"/>
+
+                <MenuItem
+                    Header="Open Mods Directory"
+                    Command="{Binding LoadModsDirectoryCommand}"/>
             </MenuItem>
         </Menu>
 
         <TextBlock Grid.Row="1" Margin="10,5" Text="{Binding TextBoxText}" FontWeight="Bold"/>
         
         <DataGrid
-            ItemsSource="{Binding Mods}"
+            ItemsSource="{Binding AllMods}"
             Grid.Row="2"
             IsReadOnly="True"
             Margin = "10"
             GridLinesVisibility="All"
             BorderThickness="1" BorderBrush="Gray"
             ScrollViewer.VerticalScrollBarVisibility="Auto"
-            ScrollViewer.HorizontalScrollBarVisibility="Auto">
+            ScrollViewer.HorizontalScrollBarVisibility="Auto"
+            AutoGenerateColumns="False">
 
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
                 <DataGridTextColumn Header="Enabled" Binding="{Binding Enabled}" />
+                <DataGridTextColumn Header="Folder" Binding="{Binding Folder}" />
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia;
 
+using System.Collections.ObjectModel;
+
 using System.Xml.Linq;
 
 using System.Diagnostics;
@@ -16,7 +18,10 @@ namespace ModManager.ViewModels;
 public partial class MainViewModel : ViewModelBase
 {
     [ObservableProperty]
-    private string _selectedFilePath = string.Empty;
+    private string _filePathLSX = string.Empty;
+
+    [ObservableProperty]
+    private string _filePathMods = string.Empty;
 
     [ObservableProperty]
     private string _textBoxText = string.Empty;
@@ -38,7 +43,10 @@ public partial class MainViewModel : ViewModelBase
     }
 
     [ObservableProperty]
-    private List<ModInfo> mods;
+    private ObservableCollection<ModInfo> _loadedMods = [];
+
+    [ObservableProperty]
+    private ObservableCollection<ModInfo> _allMods = [];
 
     [RelayCommand]
     public async Task LoadProfileFile() {
@@ -59,9 +67,9 @@ public partial class MainViewModel : ViewModelBase
 
         if (files.Count > 0) 
         {
-            SelectedFilePath = files[0].Path.LocalPath;
+            FilePathLSX = files[0].Path.LocalPath;
 
-            if (string.IsNullOrEmpty(SelectedFilePath))
+            if (string.IsNullOrEmpty(FilePathLSX))
             {
                 Debug.WriteLine($"Invalid file path (path was blank). Please try again.");
                 return;
@@ -73,14 +81,78 @@ public partial class MainViewModel : ViewModelBase
             return;
         }
 
-        Debug.WriteLine($"Selected file: {SelectedFilePath}");
+        Debug.WriteLine($"Selected file: {FilePathLSX}");
         ParseLSXFile();
+    }
+
+    [RelayCommand]
+    public async Task LoadModsDirectory()
+    {
+        var provider = StorageService.GetStorageProvider();
+        if (provider == null) return;
+
+        var directory = await provider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = "Select the Mods folder",
+            AllowMultiple = false,
+            
+        });
+
+        if (directory.Count > 0) 
+        {
+            FilePathMods = directory[0].Path.LocalPath;
+
+            if (string.IsNullOrEmpty(FilePathMods))
+            {
+                Debug.WriteLine($"Invalid directory path (path was blank). Please try again.");
+                return;
+            }
+        }
+        else
+        {
+            Debug.WriteLine($"No directory selected. Please try again.");
+            return;
+        }
+
+        Debug.WriteLine($"Selected directory: {FilePathMods}");
+        ParseModsDirectory();
+    }
+
+    public void ParseModsDirectory()
+    {
+        string filePath = FilePathMods;
+
+        if(string.IsNullOrEmpty(filePath)) return;
+
+        if(!System.IO.Directory.Exists(filePath)) return;
+
+        List<ModInfo> Mods = new List<ModInfo>();
+
+
+        foreach(string file in System.IO.Directory.GetFiles(filePath))
+        {
+            var Extension = System.IO.Path.GetExtension(file);
+            if(Extension != ".pak") continue;
+
+            var Name = System.IO.Path.GetFileNameWithoutExtension(file);
+
+            Debug.WriteLine($"Found PAK file {Name}");
+
+            ModInfo mod = new()
+            {
+                Folder = Name
+            };
+            Mods.Add(mod);
+        }
+        TextBoxText = $"Total Mod Count: {AllMods.Count}";
+
+        AllMods = new(Mods);
     }
 
     public void ParseLSXFile()
     {
         // TODO: Implement parsing of LSX files
-        string filePath = SelectedFilePath;
+        string filePath = FilePathLSX;
 
         if(string.IsNullOrEmpty(filePath)) return;
 
@@ -98,7 +170,7 @@ public partial class MainViewModel : ViewModelBase
                     ?.Attribute("value")?.Value,
             }).ToHashSet().Select(node => node.UUID).ToHashSet();
 
-        Mods = doc.Descendants("node")
+        var Mods = doc.Descendants("node")
             .Where(node => (string)node.Attribute("id") == "ModuleShortDesc")
             .Select(node => new ModInfo
             {
@@ -121,11 +193,13 @@ public partial class MainViewModel : ViewModelBase
 
         Mods.ForEach(mod => mod.Enabled = ActiveUUIDs.Contains(mod.UUID));
 
-        TextBoxText = $"{Mods.Count}";
+        LoadedMods = new(Mods);
+
+        TextBoxText = $"{LoadedMods.Count}";
 
         
 
-        foreach(var mod in Mods)
+        foreach(var mod in LoadedMods)
         {
             Debug.WriteLine($"[Mod] {mod.Name} | {mod.Folder} | {mod.MD5} | {mod.UUID} | {mod.Version}");
         }
