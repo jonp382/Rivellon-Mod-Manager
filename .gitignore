@@ -42,3 +42,6 @@ Desktop.ini
 ## Logs and Crashes
 *.log
 *.tmp
+
+## divinity testing files
+Testing Files/*
