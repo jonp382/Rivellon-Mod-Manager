@@ -21,11 +21,11 @@
             <MenuItem Header="File">
                 <MenuItem 
                     Header="Load ModSettings File"
-                    Command="{Binding LoadProfileFile}"/>
+                    Command="{Binding LoadProfileFileCommand}"/>
             </MenuItem>
         </Menu>
 
-        <TextBlock Text="Prompt Text:" FontWeight="Bold"/>
+        <TextBlock Text="{Binding SelectedFilePath}" FontWeight="Bold"/>
 
     </StackPanel>
 </Window>
