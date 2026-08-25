@@ -16,8 +16,9 @@
         <vm:MainViewModel />
     </Design.DataContext>
     
-    <StackPanel Margin = "10" Spacing = "10">
-        <Menu DockPanel.Dock="Top"> 
+    <Grid RowDefinitions="Auto, Auto, *">
+
+        <Menu Grid.Row="0"> 
             <MenuItem Header="File">
                 <MenuItem 
                     Header="Load ModSettings File"
@@ -25,7 +26,22 @@
             </MenuItem>
         </Menu>
 
-        <TextBlock Text="{Binding SelectedFilePath}" FontWeight="Bold"/>
+        <TextBlock Grid.Row="1" Margin="10,5" Text="{Binding SelectedFilePath}" FontWeight="Bold"/>
+        
+        <DataGrid
+            ItemsSource="{Binding Mods}"
+            Grid.Row="2"
+            IsReadOnly="True"
+            Margin = "10"
+            GridLinesVisibility="All"
+            BorderThickness="1" BorderBrush="Gray"
+            ScrollViewer.VerticalScrollBarVisibility="Auto"
+            ScrollViewer.HorizontalScrollBarVisibility="Auto">
 
-    </StackPanel>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
+                <DataGridTextColumn Header="Enabled" Binding="{Binding Enabled}" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
 </Window>

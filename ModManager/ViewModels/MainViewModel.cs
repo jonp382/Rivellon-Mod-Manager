@@ -5,7 +5,11 @@ using System.Threading.Tasks;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia;
 
+using System.Xml.Linq;
+
 using System.Diagnostics;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ModManager.ViewModels;
 
@@ -30,10 +34,20 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
+    [ObservableProperty]
+    private List<ModInfo> mods;
+
+    [ObservableProperty]
+    private List<ModInfo> order;
+
     [RelayCommand]
     public async Task LoadProfileFile() {
         
-        var files = await StorageService.GetStorageProvider().OpenFilePickerAsync(new FilePickerOpenOptions
+
+        var provider = StorageService.GetStorageProvider();
+        if (provider == null) return;
+
+        var files = await provider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = "Select a ModSettings.LSX file",
             AllowMultiple = false,
@@ -60,6 +74,80 @@ public partial class MainViewModel : ViewModelBase
         }
 
         Debug.WriteLine($"Selected file: {SelectedFilePath}");
+        ParseLSXFile();
+    }
+
+    public void ParseLSXFile()
+    {
+        // TODO: Implement parsing of LSX files
+        string filePath = SelectedFilePath;
+
+        if(string.IsNullOrEmpty(filePath)) return;
+
+        if(!System.IO.File.Exists(filePath)) return;
+
+        // Open the file and read its contents
+        XDocument doc = XDocument.Load(filePath);
+
+        Mods = doc.Descendants("node")
+            .Where(node => (string)node.Attribute("id") == "ModuleShortDesc")
+            .Select(node => new ModInfo
+            {
+                Name = node.Elements("attribute")
+                    .FirstOrDefault(attribute => (string)attribute.Attribute("id") == "Name")
+                    ?.Attribute("value")?.Value,
+                MD5 = node.Elements("attribute")
+                    .FirstOrDefault(attribute => (string)attribute.Attribute("id") == "MD5")
+                    ?.Attribute("value")?.Value,
+                Folder = node.Elements("attribute")
+                    .FirstOrDefault(attribute => (string)attribute.Attribute("id") == "Folder")
+                    ?.Attribute("value")?.Value,
+                UUID = node.Elements("attribute")
+                    .FirstOrDefault(attribute => (string)attribute.Attribute("id") == "UUID")
+                    ?.Attribute("value")?.Value,
+                Version = node.Elements("attribute")
+                    .FirstOrDefault(attribute => (string)attribute.Attribute("id") == "Version")
+                    ?.Attribute("value")?.Value
+            }).ToList();
+
+        Order = doc.Descendants("node")
+            .Where(node => (string)node.Attribute("id") == "Module")
+            .Select(node => new ModInfo
+            {
+                UUID = node.Elements("attribute")
+                    .FirstOrDefault(attribute => (string)attribute.Attribute("id") == "UUID")
+                    ?.Attribute("value")?.Value
+            }).ToList();
+
+        HashSet<string> orderedUUIDs = [.. Order.Select(n => n.UUID)];
+
+        foreach(var Mod in Mods)
+        {
+            if (orderedUUIDs.Contains(Mod.UUID))
+            {
+                Mod.Enabled = true;
+            }
+        }
+
+
+        
+
+        foreach(var mod in mods)
+        {
+            Debug.WriteLine($"[Mod] {mod.Name} | {mod.Folder} | {mod.MD5} | {mod.UUID} | {mod.Version}");
+        }
+
+    }
+
+    public class ModInfo
+    {
+        public string Folder { get; set; } = "";
+        public string MD5 { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string UUID { get; set; } = "";
+        public string Version { get; set; } = "";
+
+        public bool Enabled { get; set; } = false;
 
     }
 }
