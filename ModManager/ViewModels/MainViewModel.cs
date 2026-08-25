@@ -18,6 +18,9 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private string _selectedFilePath = string.Empty;
 
+    [ObservableProperty]
+    private string _textBoxText = string.Empty;
+
 
     public static class StorageService
     {
@@ -36,9 +39,6 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty]
     private List<ModInfo> mods;
-
-    [ObservableProperty]
-    private List<ModInfo> order;
 
     [RelayCommand]
     public async Task LoadProfileFile() {
@@ -89,6 +89,15 @@ public partial class MainViewModel : ViewModelBase
         // Open the file and read its contents
         XDocument doc = XDocument.Load(filePath);
 
+        var ActiveUUIDs = doc.Descendants("node")
+            .Where(node => (string)node.Attribute("id") == "Module")
+            .Select(node => new ModInfo
+            {
+                UUID = node.Elements("attribute")
+                    .FirstOrDefault(attribute => (string)attribute.Attribute("id") == "UUID")
+                    ?.Attribute("value")?.Value,
+            }).ToHashSet().Select(node => node.UUID).ToHashSet();
+
         Mods = doc.Descendants("node")
             .Where(node => (string)node.Attribute("id") == "ModuleShortDesc")
             .Select(node => new ModInfo
@@ -107,35 +116,25 @@ public partial class MainViewModel : ViewModelBase
                     ?.Attribute("value")?.Value,
                 Version = node.Elements("attribute")
                     .FirstOrDefault(attribute => (string)attribute.Attribute("id") == "Version")
-                    ?.Attribute("value")?.Value
+                    ?.Attribute("value")?.Value,
             }).ToList();
 
-        Order = doc.Descendants("node")
-            .Where(node => (string)node.Attribute("id") == "Module")
-            .Select(node => new ModInfo
-            {
-                UUID = node.Elements("attribute")
-                    .FirstOrDefault(attribute => (string)attribute.Attribute("id") == "UUID")
-                    ?.Attribute("value")?.Value
-            }).ToList();
+        Mods.ForEach(mod => mod.Enabled = ActiveUUIDs.Contains(mod.UUID));
 
-        HashSet<string> orderedUUIDs = [.. Order.Select(n => n.UUID)];
-
-        foreach(var Mod in Mods)
-        {
-            if (orderedUUIDs.Contains(Mod.UUID))
-            {
-                Mod.Enabled = true;
-            }
-        }
-
+        TextBoxText = $"{Mods.Count}";
 
         
 
-        foreach(var mod in mods)
+        foreach(var mod in Mods)
         {
             Debug.WriteLine($"[Mod] {mod.Name} | {mod.Folder} | {mod.MD5} | {mod.UUID} | {mod.Version}");
         }
+
+        foreach(var uuid in ActiveUUIDs)
+        {
+            Debug.WriteLine($"[Mod] {uuid}");
+        }
+
 
     }
 
