@@ -35,17 +35,36 @@
         </Menu>
 
         <TextBlock Grid.Row="1" Margin="10,5" Text="{Binding TextBoxText}" FontWeight="Bold"/>
-        
-        <DataGrid
-            ItemsSource="{Binding AllMods}"
-            Grid.Row="2"
-            IsReadOnly="True"
-            Margin = "10"
-            GridLinesVisibility="All"
-            BorderThickness="1" BorderBrush="Gray"
-            ScrollViewer.VerticalScrollBarVisibility="Auto"
-            ScrollViewer.HorizontalScrollBarVisibility="Auto"
-            AutoGenerateColumns="True">
-        </DataGrid>
+        <Grid Grid.Row = "2" ColumnDefinitions="*, 16, *">
+            <DataGrid
+                ItemsSource="{Binding EnabledMods}"
+                Grid.Row="0"
+                Grid.Column="0"
+                IsReadOnly="True"
+                Margin = "10"
+                GridLinesVisibility="All"
+                BorderThickness="1" BorderBrush="Gray"
+                ScrollViewer.VerticalScrollBarVisibility="Auto"
+                ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                AutoGenerateColumns="True">
+            </DataGrid>
+
+            <!-- Use column 1 for spacing -->
+
+            <DataGrid
+                ItemsSource="{Binding DisabledMods}"
+                Grid.Row="0"
+                Grid.Column="2"
+                IsReadOnly="True"
+                Margin = "10"
+                GridLinesVisibility="All"
+                BorderThickness="1" BorderBrush="Gray"
+                ScrollViewer.VerticalScrollBarVisibility="Auto"
+                ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                AutoGenerateColumns="True">
+            </DataGrid>
+
+
+        </Grid>
     </Grid>
 </Window>
