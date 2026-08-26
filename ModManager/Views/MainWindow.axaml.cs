@@ -120,7 +120,16 @@ public partial class MainWindow : Window
         if(e.DataTransfer.TryGetValue(ModItemFormat) is not ModInfo droppedMod) return;
 
         ObservableCollection<ModInfo> targetList = targetGrid == EnabledGrid ? vm.EnabledMods : vm.DisabledMods;
-        ObservableCollection<ModInfo> sourceList = targetGrid == EnabledGrid ? vm.DisabledMods : vm.EnabledMods;
+        
+        ObservableCollection<ModInfo> sourceList = null;
+        if (vm.EnabledMods.Contains(droppedMod))
+        {
+            sourceList = vm.EnabledMods;
+        }
+        else
+        {
+            sourceList = vm.DisabledMods;
+        }
 
         int targetIndex = GetTargetIndex(targetGrid, e);
 
