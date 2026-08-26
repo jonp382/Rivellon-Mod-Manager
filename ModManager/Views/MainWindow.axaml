@@ -46,7 +46,14 @@
                 BorderThickness="1" BorderBrush="Gray"
                 ScrollViewer.VerticalScrollBarVisibility="Auto"
                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                AutoGenerateColumns="True">
+                AutoGenerateColumns="False">
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Load Order" Binding="{Binding LoadOrder}" />
+                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
+                    <DataGridTextColumn Header="Version" Binding="{Binding Version}" />
+                    <DataGridTextColumn Header="Author" Binding="{Binding Author}" />
+                </DataGrid.Columns>
             </DataGrid>
 
             <!-- Use column 1 for spacing -->
@@ -61,7 +68,13 @@
                 BorderThickness="1" BorderBrush="Gray"
                 ScrollViewer.VerticalScrollBarVisibility="Auto"
                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                AutoGenerateColumns="True">
+                AutoGenerateColumns="False">
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
+                    <DataGridTextColumn Header="Version" Binding="{Binding Version}" />
+                    <DataGridTextColumn Header="Author" Binding="{Binding Author}" />
+                </DataGrid.Columns>
             </DataGrid>
 
 
