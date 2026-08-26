@@ -256,6 +256,7 @@ public partial class MainViewModel : ViewModelBase
         var allDisabledMods = AllMods.Where(mod => EnabledMods.FirstOrDefault(enabled => enabled.UUID == mod.UUID) == null);
         DisabledMods = new(allDisabledMods.ToList());
 
+        /* Debug file output to Downloads folder for testing enabled vs disabled mods.
         var outFilePath = 
             Path.Combine(
                 System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile),
@@ -277,7 +278,7 @@ public partial class MainViewModel : ViewModelBase
         {
             writer.WriteLine($"Disabled mod | {mod.Name} | {mod.UUID}");
         }
-        
+        */
 
     }
 
