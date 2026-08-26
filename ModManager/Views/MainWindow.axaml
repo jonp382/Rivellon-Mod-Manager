@@ -45,13 +45,7 @@
             BorderThickness="1" BorderBrush="Gray"
             ScrollViewer.VerticalScrollBarVisibility="Auto"
             ScrollViewer.HorizontalScrollBarVisibility="Auto"
-            AutoGenerateColumns="False">
-
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
-                <DataGridTextColumn Header="Enabled" Binding="{Binding Enabled}" />
-                <DataGridTextColumn Header="Folder" Binding="{Binding Folder}" />
-            </DataGrid.Columns>
+            AutoGenerateColumns="True">
         </DataGrid>
     </Grid>
 </Window>
