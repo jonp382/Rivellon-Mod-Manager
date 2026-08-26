@@ -27,6 +27,10 @@
                 <MenuItem
                     Header="Open Mods Directory"
                     Command="{Binding LoadModsDirectoryCommand}"/>
+
+                <MenuItem
+                    Header="Open PAK File"
+                    Command="{Binding OpenPakFileCommand}"/>
             </MenuItem>
         </Menu>
 
