@@ -144,6 +144,7 @@ public partial class MainWindow : Window
             targetList.Insert(targetIndex, droppedMod);
         }
         
+        vm.UpdateLoadOrders();
     }
 
     private int GetTargetIndex(DataGrid targetGrid, DragEventArgs e)

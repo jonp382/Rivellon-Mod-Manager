@@ -282,4 +282,23 @@ public partial class MainViewModel : ViewModelBase
 
     }
 
+    public void UpdateLoadOrders()
+    {
+        // don't sort DisabledMods since we don't care about load orders there.
+        // set all load orders to -1 which im using as "invalid" or unloaded.
+        foreach(var mod in DisabledMods)
+        {
+            mod.LoadOrder = -1;
+        }
+
+        for(int i = 0; i < EnabledMods.Count; i++)
+        {
+            EnabledMods[i].LoadOrder = i;
+
+        }
+        EnabledMods = new(EnabledMods.OrderBy(n => n.LoadOrder).ToList());
+
+        
+    }
+
 }
