@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Collections.ObjectModel;
 using Avalonia;
+using Avalonia.VisualTree;
 
 namespace ModManager.Views;
 
@@ -121,12 +122,40 @@ public partial class MainWindow : Window
         ObservableCollection<ModInfo> targetList = targetGrid == EnabledGrid ? vm.EnabledMods : vm.DisabledMods;
         ObservableCollection<ModInfo> sourceList = targetGrid == EnabledGrid ? vm.DisabledMods : vm.EnabledMods;
 
-        if (sourceList.Contains(droppedMod))
-        {
-            sourceList.Remove(droppedMod);
-            targetList.Add(droppedMod);
+        int targetIndex = GetTargetIndex(targetGrid, e);
 
+        sourceList.Remove(droppedMod);
             
+        if(targetIndex < 0 || targetIndex > targetList.Count) 
+        {
+            targetList.Add(droppedMod);
         }
+        else
+        {
+            targetList.Insert(targetIndex, droppedMod);
+        }
+        
+    }
+
+    private int GetTargetIndex(DataGrid targetGrid, DragEventArgs e)
+    {
+        if(DataContext is not MainViewModel vm) return -1;
+
+        var dropPoint = e.GetPosition(targetGrid);
+        var hitElement = targetGrid.InputHitTest(dropPoint) as Visual;
+
+        var row = hitElement?.FindAncestorOfType<DataGridRow>();
+
+        if(row != null && row.DataContext is ModInfo targetMod)
+        {
+            var list = targetGrid == EnabledGrid ? vm.EnabledMods : vm.DisabledMods;
+
+            int index = list.IndexOf(targetMod)+1;
+            return index != -1 ? index : list.Count;
+        }
+
+        return targetGrid == EnabledGrid ? vm.EnabledMods.Count : vm.DisabledMods.Count;
+
+
     }
 }
