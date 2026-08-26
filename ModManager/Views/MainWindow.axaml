@@ -36,7 +36,7 @@
 
         <TextBlock Grid.Row="1" Margin="10,5" Text="{Binding TextBoxText}" FontWeight="Bold"/>
         <Grid Grid.Row = "2" ColumnDefinitions="*, 16, *">
-            <DataGrid
+            <DataGrid x:Name="EnabledGrid"
                 ItemsSource="{Binding EnabledMods}"
                 Grid.Row="0"
                 Grid.Column="0"
@@ -46,7 +46,10 @@
                 BorderThickness="1" BorderBrush="Gray"
                 ScrollViewer.VerticalScrollBarVisibility="Auto"
                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                AutoGenerateColumns="False">
+                AutoGenerateColumns="False"
+                DragDrop.AllowDrop="True"
+                PointerPressed="OnPointerPressed"
+                >
 
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Load Order" Binding="{Binding LoadOrder}" />
@@ -58,7 +61,7 @@
 
             <!-- Use column 1 for spacing -->
 
-            <DataGrid
+            <DataGrid  x:Name="DisabledGrid"
                 ItemsSource="{Binding DisabledMods}"
                 Grid.Row="0"
                 Grid.Column="2"
@@ -68,7 +71,10 @@
                 BorderThickness="1" BorderBrush="Gray"
                 ScrollViewer.VerticalScrollBarVisibility="Auto"
                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                AutoGenerateColumns="False">
+                AutoGenerateColumns="False"
+                DragDrop.AllowDrop="True"
+                PointerPressed="OnPointerPressed"
+                >
 
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
