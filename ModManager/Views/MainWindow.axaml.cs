@@ -8,12 +8,15 @@ using ModManager.Resources;
 using System.Diagnostics;
 using System.Linq;
 using System.Collections.ObjectModel;
+using Avalonia;
 
 namespace ModManager.Views;
 
 public partial class MainWindow : Window
 {
+    private Point? _pressPosition;
     private static ModInfo? _draggedMod;
+    private PointerPressedEventArgs? _pressedEvent;
     private static readonly DataFormat<ModInfo> ModItemFormat = 
         DataFormat.CreateInProcessFormat<ModInfo>("application/x-mod-item");
 
@@ -30,8 +33,13 @@ public partial class MainWindow : Window
         DragDrop.AddDropHandler(DisabledGrid, OnDrop);
 
         
-        EnabledGrid.AddHandler(DataGrid.PointerPressedEvent, OnPointerPressed, Avalonia.Interactivity.RoutingStrategies.Tunnel | Avalonia.Interactivity.RoutingStrategies.Bubble, true);
-        DisabledGrid.AddHandler(DataGrid.PointerPressedEvent, OnPointerPressed, Avalonia.Interactivity.RoutingStrategies.Tunnel | Avalonia.Interactivity.RoutingStrategies.Bubble, true);
+        EnabledGrid.AddHandler(DataGrid.PointerPressedEvent, OnPointerPressed, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, true);
+        EnabledGrid.AddHandler(DataGrid.PointerMovedEvent, OnPointerMoved, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, true);
+        EnabledGrid.AddHandler(DataGrid.PointerReleasedEvent, OnPointerReleased, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, true);
+
+        DisabledGrid.AddHandler(DataGrid.PointerPressedEvent, OnPointerPressed, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, true);
+        DisabledGrid.AddHandler(DataGrid.PointerMovedEvent, OnPointerMoved, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, true);
+        DisabledGrid.AddHandler(DataGrid.PointerReleasedEvent, OnPointerReleased, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, true);
 
     }
 
@@ -43,13 +51,49 @@ public partial class MainWindow : Window
         if(srcGrid.SelectedItem is not ModInfo selectedMod) return;
 
         _draggedMod = selectedMod;
+        _pressPosition = e.GetPosition(srcGrid);
+        _pressedEvent = e;
 
         var item = DataTransferItem.Create(ModItemFormat, selectedMod);
 
         var dragData = new DataTransfer();
         dragData.Add(item);
-        
-        await DragDrop.DoDragDropAsync(e, dragData, DragDropEffects.Move);
+
+    }
+
+    private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        // Clear state if the mouse is released without dragging
+        _pressPosition = null;
+        _draggedMod = null;
+        _pressedEvent = null;
+    }
+
+    private async void OnPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (_pressPosition == null || _draggedMod == null) return;
+        if (sender is not DataGrid srcGrid) return;
+
+        var currentPos = e.GetPosition(srcGrid);
+        var diff = currentPos - _pressPosition.Value;
+
+        // Require a small movement threshold (e.g., 5 pixels) before starting drag
+        if (System.Math.Abs(diff.X) > 5 || System.Math.Abs(diff.Y) > 5)
+        {
+            var modToDrag = _draggedMod;
+            var pressEvent = _pressedEvent;
+            
+            // Clear tracking variables so it doesn't re-trigger
+            _pressPosition = null;
+            _draggedMod = null;
+            _pressedEvent = null;
+
+            var item = DataTransferItem.Create(ModItemFormat, modToDrag);
+            var dragData = new DataTransfer();
+            dragData.Add(item);
+
+            await DragDrop.DoDragDropAsync(pressEvent, dragData, DragDropEffects.Move);
+        }
     }
 
     private void OnDragOver(object? sender, DragEventArgs e)
