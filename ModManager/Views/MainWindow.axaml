@@ -51,6 +51,12 @@
                 PointerPressed="OnPointerPressed"
                 >
 
+                <DataGrid.Styles>
+                    <Style Selector="DataGridCell">
+                        <Setter Property="FontSize" Value="12"/>
+                    </Style>
+                </DataGrid.Styles>
+
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Load Order" Binding="{Binding LoadOrder}" />
                     <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
@@ -75,6 +81,12 @@
                 DragDrop.AllowDrop="True"
                 PointerPressed="OnPointerPressed"
                 >
+
+                <DataGrid.Styles>
+                    <Style Selector="DataGridCell">
+                        <Setter Property="FontSize" Value="12"/>
+                    </Style>
+                </DataGrid.Styles>
 
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
