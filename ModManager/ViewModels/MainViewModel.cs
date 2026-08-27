@@ -21,11 +21,15 @@ namespace ModManager.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
-    [ObservableProperty]
-    private string _filePathLSX = string.Empty;
 
-    [ObservableProperty]
-    private string _filePathMods = string.Empty;
+    public MainViewModel()
+    {
+        IOHelper.UserSettings.Load();
+        ParseModsDirectory();
+        ParseLSXFile();
+        Debug.WriteLine($"Constructor complete");
+        OnPropertyChanged();
+    }
 
     [ObservableProperty]
     private string _textBoxText = string.Empty;
@@ -74,13 +78,14 @@ public partial class MainViewModel : ViewModelBase
 
         if (files.Count > 0) 
         {
-            FilePathLSX = files[0].Path.LocalPath;
+            string FilePathLSX = files[0].Path.LocalPath;
 
             if (string.IsNullOrEmpty(FilePathLSX))
             {
                 Debug.WriteLine($"Invalid file path (path was blank). Please try again.");
                 return;
             }
+            IOHelper.UserSettings.Default.SelectedModLSX = files[0].Path.LocalPath;
         }
         else
         {
@@ -88,7 +93,7 @@ public partial class MainViewModel : ViewModelBase
             return;
         }
 
-        Debug.WriteLine($"Selected file: {FilePathLSX}");
+        Debug.WriteLine($"Selected file: {IOHelper.UserSettings.Default.SelectedModLSX}");
         ParseLSXFile();
     }
 
@@ -107,13 +112,15 @@ public partial class MainViewModel : ViewModelBase
 
         if (directory.Count > 0) 
         {
-            FilePathMods = directory[0].Path.LocalPath;
+            string FilePathMods = directory[0].Path.LocalPath;
 
             if (string.IsNullOrEmpty(FilePathMods))
             {
                 Debug.WriteLine($"Invalid directory path (path was blank). Please try again.");
                 return;
             }
+
+            IOHelper.UserSettings.Default.SelectedModFolder = FilePathMods;
         }
         else
         {
@@ -121,13 +128,13 @@ public partial class MainViewModel : ViewModelBase
             return;
         }
 
-        Debug.WriteLine($"Selected directory: {FilePathMods}");
+        Debug.WriteLine($"Selected directory: {IOHelper.UserSettings.Default.SelectedModFolder}");
         ParseModsDirectory();
     }
 
     public void ParseModsDirectory()
     {
-        string filePath = FilePathMods;
+        string filePath = IOHelper.UserSettings.Default.SelectedModFolder;
 
         if(string.IsNullOrEmpty(filePath)) return;
 
@@ -200,7 +207,7 @@ public partial class MainViewModel : ViewModelBase
         EnabledMods.Clear();
         DisabledMods.Clear();
 
-        string filePath = FilePathLSX;
+        string filePath = IOHelper.UserSettings.Default.SelectedModLSX;
 
         if(string.IsNullOrEmpty(filePath)) return;
 

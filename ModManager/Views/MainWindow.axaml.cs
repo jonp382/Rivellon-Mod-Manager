@@ -10,6 +10,7 @@ using System.Linq;
 using System.Collections.ObjectModel;
 using Avalonia;
 using Avalonia.VisualTree;
+using System;
 
 namespace ModManager.Views;
 
@@ -42,6 +43,27 @@ public partial class MainWindow : Window
         DisabledGrid.AddHandler(DataGrid.PointerMovedEvent, OnPointerMoved, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, true);
         DisabledGrid.AddHandler(DataGrid.PointerReleasedEvent, OnPointerReleased, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, true);
 
+        this.Closing += MainWindowClosing;
+
+        Width = IOHelper.UserSettings.Default.WindowWidth;
+        Height = IOHelper.UserSettings.Default.WindowHeight;
+
+    }
+
+    private void MainWindowClosing(object? sender, WindowClosingEventArgs e)
+    {
+        // wrap in try-catch so an error can never block the closing process
+        try
+        {
+            IOHelper.UserSettings.Default.WindowWidth = Width;
+            IOHelper.UserSettings.Default.WindowHeight = Height;
+            
+            IOHelper.UserSettings.Default.Save();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"An error occurred in MainWindowClosing: {ex.Message}");
+        }
     }
 
     private async void OnPointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
