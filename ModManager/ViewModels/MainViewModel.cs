@@ -34,22 +34,6 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private string _textBoxText = string.Empty;
 
-
-    public static class StorageService
-    {
-        public static IStorageProvider? GetStorageProvider()
-        {
-            // Check if the app is running on a standard Desktop (Windows/macOS/Linux)
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-            {
-                // Return the main window's storage provider
-                return desktop.MainWindow?.StorageProvider;
-            }
-
-            return null;
-        }
-    }
-
     [ObservableProperty]
     private ObservableCollection<Resources.ModInfo> _enabledMods = [];
 
@@ -62,82 +46,11 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private string _currentProfileText = string.Empty;
 
-    [RelayCommand]
-    public async Task LoadProfileFile() {
-        
-
-        var provider = StorageService.GetStorageProvider();
-        if (provider == null) return;
-
-        var files = await provider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = "Select a ModSettings.LSX file",
-            AllowMultiple = false,
-            FileTypeFilter = new[]
-            {
-                new FilePickerFileType("LSX Files") {Patterns = new[] {"*.lsx"}}
-            }
-        });
-
-        if (files.Count > 0) 
-        {
-            string FilePathLSX = files[0].Path.LocalPath;
-
-            if (string.IsNullOrEmpty(FilePathLSX))
-            {
-                Debug.WriteLine($"Invalid file path (path was blank). Please try again.");
-                return;
-            }
-            IOHelper.UserSettings.Default.SelectedModLSX = files[0].Path.LocalPath;
-        }
-        else
-        {
-            Debug.WriteLine($"No file selected. Please try again.");
-            return;
-        }
-
-        Debug.WriteLine($"Selected file: {IOHelper.UserSettings.Default.SelectedModLSX}");
-        ParseLSXFile();
-    }
-
-    [RelayCommand]
-    public async Task LoadModsDirectory()
-    {
-        var provider = StorageService.GetStorageProvider();
-        if (provider == null) return;
-
-        var directory = await provider.OpenFolderPickerAsync(new FolderPickerOpenOptions
-        {
-            Title = "Select the Mods folder",
-            AllowMultiple = false,
-            
-        });
-
-        if (directory.Count > 0) 
-        {
-            string FilePathMods = directory[0].Path.LocalPath;
-
-            if (string.IsNullOrEmpty(FilePathMods))
-            {
-                Debug.WriteLine($"Invalid directory path (path was blank). Please try again.");
-                return;
-            }
-
-            IOHelper.UserSettings.Default.SelectedModFolder = FilePathMods;
-        }
-        else
-        {
-            Debug.WriteLine($"No directory selected. Please try again.");
-            return;
-        }
-
-        Debug.WriteLine($"Selected directory: {IOHelper.UserSettings.Default.SelectedModFolder}");
-        ParseModsDirectory();
-    }
-
     public void ParseModsDirectory()
     {
-        string filePath = IOHelper.UserSettings.Default.SelectedModFolder;
+        string filePath = IOHelper.UserSettings.Default.DataFolder + "/Mods";
+
+        Debug.WriteLine($"Attempting to parse mods directory at {filePath}");
 
         if(string.IsNullOrEmpty(filePath)) return;
 
@@ -174,7 +87,9 @@ public partial class MainViewModel : ViewModelBase
         EnabledMods.Clear();
         DisabledMods.Clear();
 
-        string filePath = IOHelper.UserSettings.Default.SelectedModLSX;
+        string filePath = IOHelper.UserSettings.Default.DataFolder + "/PlayerProfiles" + $"/{IOHelper.UserSettings.Default.SelectedProfile}/" + "modsettings.lsx";
+
+        Debug.WriteLine($"Attempting to parse LSX file at {filePath}");
 
         if(string.IsNullOrEmpty(filePath)) return;
 
@@ -230,32 +145,8 @@ public partial class MainViewModel : ViewModelBase
         var allDisabledMods = AllMods.Where(mod => EnabledMods.FirstOrDefault(enabled => enabled.UUID == mod.UUID) == null);
         DisabledMods = new(allDisabledMods.ToList());
 
-        CurrentProfileText = $"Current Profile: {IOHelper.SharedPaths.GetCurrentProfle()}";
+        // CurrentProfileText = $"Current Profile: {IOHelper.SharedPaths.GetCurrentProfle()}";
         OnPropertyChanged();
-
-        /* Debug file output to Downloads folder for testing enabled vs disabled mods.
-        var outFilePath = 
-            Path.Combine(
-                System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile),
-                "Downloads",
-                "DebugOutput.txt"
-            );
-            
-        if(!File.Exists(outFilePath)) File.Create(outFilePath);
-        File.WriteAllText(outFilePath, string.Empty);
-        using var fileStream = File.Open(outFilePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
-        using var writer = new StreamWriter(fileStream);
-        
-        foreach(var mod in EnabledMods)
-        {
-            writer.WriteLine($"Enabled mod | {mod.Name} | {mod.UUID}");
-        }
-
-        foreach(var mod in DisabledMods)
-        {
-            writer.WriteLine($"Disabled mod | {mod.Name} | {mod.UUID}");
-        }
-        */
 
     }
 
@@ -276,6 +167,23 @@ public partial class MainViewModel : ViewModelBase
         EnabledMods = new(EnabledMods.OrderBy(n => n.LoadOrder).ToList());
 
         
+    }
+
+    // Updates the list of all mods and their load orders after a change to the settings are made.
+    public void Update()
+    {
+
+        Debug.WriteLine($"Running Update() in MainViewModel");
+
+        AllMods.Clear();
+        EnabledMods.Clear();
+        DisabledMods.Clear();
+
+        ParseModsDirectory();
+        ParseLSXFile();
+
+        UpdateLoadOrders();
+
     }
 
 }

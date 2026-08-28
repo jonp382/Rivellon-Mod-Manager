@@ -22,17 +22,12 @@
             <MenuItem Header="File">
                 
 
-                <MenuItem
-                    Header="Open Mods Directory"
-                    Command="{Binding LoadModsDirectoryCommand}"/>
+                
 
             </MenuItem>
 
             <MenuItem Header="Profile">
-                <MenuItem 
-                    Header="Load ModSettings File"
-                    Command="{Binding LoadProfileFileCommand}"
-                />
+               
 
 
             </MenuItem>

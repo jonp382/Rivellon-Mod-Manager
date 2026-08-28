@@ -52,8 +52,12 @@ public partial class MainWindow : Window
 
     private async void OnOpenSettingsClicked(object? sender, RoutedEventArgs e)
     {
+        if(DataContext is not MainViewModel vm) return;
+        
         var settingsWindow = new SettingsWindow();
         await settingsWindow.ShowDialog(this); 
+        
+        vm.Update();
     }
 
     private void MainWindowClosing(object? sender, WindowClosingEventArgs e)

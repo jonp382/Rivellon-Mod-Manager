@@ -6,32 +6,75 @@
         mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="300"
         x:Class="ModManager.Views.SettingsWindow"
         x:DataType="vm:SettingsViewModel"
-        Title="Settings" Width="500" Height="300">
+        Title="Settings" Width="800" Height="300">
 
-        <Grid RowDefinitions="30, 30" ColumnDefinitions="175, *" Margin="10">
+        <Grid RowDefinitions="40, 40, 50" ColumnDefinitions="175, *, 75" Margin="10">
+
             <TextBlock
                 Text="Divinity Data Folder"
                 Grid.Row="0"
                 Grid.Column="0"
+                Margin="5"
+                VerticalAlignment="Center"
             />
 
             <TextBox
-                Text="{Binding ProfileDirectory}"
+                Name="DataFolderTextbox"
+                Text="{Binding DataDirectory}"
                 Grid.Row="0"
                 Grid.Column="1"
+                Margin="5"
+                VerticalAlignment="Center"
+                TextChanged="DataFolderTextbox_TextChanged"
+            />
+
+            <Button
+                Name="DataFolderButton"
+                Content="Select"
+                Grid.Row="0"
+                Grid.Column="2"
+                Margin="5"
+                VerticalAlignment="Center"
+                Command="{Binding SelectDataDirectory}"
             />
 
             <TextBlock
-                Text="Divinity Current Profile"
+                Text="Current Profile"
                 Grid.Row="1"
                 Grid.Column="0"
+                Margin="5"
+                VerticalAlignment="Center"
             />
 
-            <TextBox
-                Text="{Binding ProfileDirectory}"
+            <ComboBox
+                Name="ProfileComboBox"
+                ItemsSource="{Binding AllProfiles}"
+                SelectedItem="{Binding CurrentProfile}"
                 Grid.Row="1"
                 Grid.Column="1"
+                Margin="5"
+                VerticalAlignment="Center"
             />
+
+            <Button
+                Content="Apply"
+                Name="ApplyButton"
+                Click="ApplyButton_Click"
+                Grid.Row="2"
+                Grid.Column="0"
+                VerticalAlignment="Bottom"
+            />
+
+            <Button
+                Content="Cancel"
+                Name="CancelButton"
+                Click="CancelButton_Click"
+                Grid.Row="2"
+                Grid.Column="1"
+                VerticalAlignment="Bottom"
+            />
+
+            
         </Grid>
 
 

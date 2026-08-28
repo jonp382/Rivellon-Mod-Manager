@@ -1,10 +1,15 @@
 namespace IOHelper;
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-
+using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Platform.Storage;
 
 public class SharedPaths
 {
@@ -25,16 +30,39 @@ public class SharedPaths
         );
     }
 
-    public static string GetCurrentProfle()
+    public static List<string>? GetAllProfiles(string folder)
     {
-        // gets the currrent profile from the current LSX
-        string CurrentLSXPath = UserSettings.Default.SelectedModLSX;
-        if(String.IsNullOrEmpty(CurrentLSXPath))
+        Debug.WriteLine($"Trying to get all profiles from {folder}");
+        if(folder.EndsWith("/") || folder.EndsWith(@"\"))
         {
-            return "No profile selected!";
+            folder = folder.Remove(folder.Length-1,1);
         }
+        if( // protect against cases where there's a trailing slash
+            !folder.EndsWith("Divinity Original Sin 2 Definitive Edition", StringComparison.OrdinalIgnoreCase)
+            ) 
+        {
+            Debug.WriteLine($"Invalid data folder");
+            return null;
+        }
+        try
+        {
+            var ProfilesPath = Directory.GetDirectories(folder + "/PlayerProfiles");
+            if (ProfilesPath == null) 
+            {
+                Debug.WriteLine($"no profiles found");
+                return null;
+            }
 
-        return Directory.GetParent(CurrentLSXPath).Name;
+            var profiles = ProfilesPath.Select(n => Path.GetFileName(n)).ToList();
+
+            return new List<string>(profiles);
+            
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Exception occurred when getting all profiles: {ex.Message}");
+            return null;
+        }
     }
 
     public static string AutoFindGameDataFolder()
@@ -56,6 +84,97 @@ public class SharedPaths
         }
 
     }
+
+    public static string GetLSXFromProfile()
+    {
+        return string.Empty;
+    }
+}
+
+public static class OpenFolder
+{
+    public async static Task<string?> SelectModsFolder(string prompt = "Please make a selection")
+    {
+        var provider = StorageService.GetStorageProvider();
+        if (provider == null) return null;
+
+        var directory = await provider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = prompt,
+            AllowMultiple = false,
+            
+        });
+
+        if (directory.Count > 0) 
+        {
+            string FilePathMods = directory[0].Path.LocalPath;
+
+            if (string.IsNullOrEmpty(FilePathMods))
+            {
+                Debug.WriteLine($"Invalid directory path (path was blank). Please try again.");
+                return null;
+            }
+
+            // IOHelper.UserSettings.Default.SelectedModFolder = FilePathMods;
+            return FilePathMods;
+        }
+        else
+        {
+            Debug.WriteLine($"No directory selected. Please try again.");
+            return null;
+        }
+
+        // Debug.WriteLine($"Selected directory: {IOHelper.UserSettings.Default.SelectedModFolder}");
+    }
+
+    public async static Task<string?> SelectLSXFile(string prompt = "Please make a selection")
+    {
+        var provider = StorageService.GetStorageProvider();
+        if (provider == null) return null;
+
+        var files = await provider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = prompt,
+            AllowMultiple = false,
+            FileTypeFilter = new[]
+            {
+                new FilePickerFileType("LSX Files") {Patterns = new[] {"*.lsx"}}
+            }
+        });
+
+        if (files.Count > 0) 
+        {
+            string FilePathLSX = files[0].Path.LocalPath;
+
+            if (string.IsNullOrEmpty(FilePathLSX))
+            {
+                Debug.WriteLine($"Invalid file path (path was blank). Please try again.");
+                return null;
+            }
+            // IOHelper.UserSettings.Default.SelectedModLSX = files[0].Path.LocalPath;
+            return FilePathLSX;
+        }
+        else
+        {
+            Debug.WriteLine($"No file selected. Please try again.");
+            return null;
+        }
+    }
+}
+
+public static class StorageService
+{
+    public static IStorageProvider? GetStorageProvider()
+    {
+        // Check if the app is running on a standard Desktop (Windows/macOS/Linux)
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            // Return the main window's storage provider
+            return desktop.MainWindow?.StorageProvider;
+        }
+
+        return null;
+    }
 }
 
 public class UserSettings
@@ -63,10 +182,8 @@ public class UserSettings
 
     private static UserSettings? _instance;
     public static UserSettings Default => _instance ??= Load();
-
-
-    public string SelectedModFolder {get; set; } = string.Empty;
-    public string SelectedModLSX {get; set; } = string.Empty;
+    public string SelectedProfile {get; set; } = string.Empty;
+    public string DataFolder {get; set; } = string.Empty;
     public double WindowWidth {get; set; } = 1200;
     public double WindowHeight {get; set; } = 800;
 
@@ -78,6 +195,7 @@ public class UserSettings
             try
             {
                 string json = File.ReadAllText(configFilePath);
+                Debug.WriteLine($"Read in user-config file from {configFilePath}");
                 return JsonSerializer.Deserialize<UserSettings>(json) ?? new UserSettings();
             }
             catch (Exception ex)
