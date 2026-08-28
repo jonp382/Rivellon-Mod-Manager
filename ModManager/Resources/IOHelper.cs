@@ -36,6 +36,26 @@ public class SharedPaths
 
         return Directory.GetParent(CurrentLSXPath).Name;
     }
+
+    public static string AutoFindGameDataFolder()
+    {
+
+        if (OperatingSystem.IsLinux())
+        {
+            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            return Path.Combine(home, "debian-installation", "steamapps", "compatdata", "435150", "pfx", "drive_c", "users", "steamuser", "Documents", "Larian Studios", "Divinity Original Sin 2 Definitive Edition");
+        }
+        else if(OperatingSystem.IsWindows()){
+            var home = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            return Path.Combine(home, "Larian Studios", "Divinity Original Sin 2 Definitive Edition");
+        }
+        else
+        {
+            Debug.WriteLine($"Invalid operating system!");
+            return string.Empty;
+        }
+
+    }
 }
 
 public class UserSettings
