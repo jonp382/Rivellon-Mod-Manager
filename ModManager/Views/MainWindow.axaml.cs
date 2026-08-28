@@ -50,6 +50,12 @@ public partial class MainWindow : Window
 
     }
 
+    private async void OnOpenSettingsClicked(object? sender, RoutedEventArgs e)
+    {
+        var settingsWindow = new SettingsWindow();
+        await settingsWindow.ShowDialog(this); 
+    }
+
     private void MainWindowClosing(object? sender, WindowClosingEventArgs e)
     {
         // wrap in try-catch so an error can never block the closing process

@@ -20,23 +20,29 @@
 
         <Menu Grid.Row="0" Grid.ColumnSpan="2" FontSize="12" FontWeight="Bold" > 
             <MenuItem Header="File">
-                <MenuItem 
-                    Header="Load ModSettings File"
-                    Command="{Binding LoadProfileFileCommand}"/>
+                
 
                 <MenuItem
                     Header="Open Mods Directory"
                     Command="{Binding LoadModsDirectoryCommand}"/>
 
-                <MenuItem
-                    Header="Open PAK File"
-                    Command="{Binding OpenPakFileCommand}"/>
+            </MenuItem>
+
+            <MenuItem Header="Profile">
+                <MenuItem 
+                    Header="Load ModSettings File"
+                    Command="{Binding LoadProfileFileCommand}"
+                />
+
+
             </MenuItem>
 
             <MenuItem Header="Settings">
-
-
-
+                <MenuItem
+                    Header="Open Preferences"
+                    Click="OnOpenSettingsClicked"
+                    
+                />
             </MenuItem>
 
             <MenuItem Header="Help"> 
@@ -46,6 +52,7 @@
             <MenuItem Header="About"> 
             
             </MenuItem>
+            
 
         </Menu>
 
