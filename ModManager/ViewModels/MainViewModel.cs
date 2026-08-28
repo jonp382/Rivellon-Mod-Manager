@@ -59,6 +59,9 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<Resources.ModInfo> _allMods = [];
 
+    [ObservableProperty]
+    private string _currentProfileText = string.Empty;
+
     [RelayCommand]
     public async Task LoadProfileFile() {
         
@@ -262,6 +265,9 @@ public partial class MainViewModel : ViewModelBase
 
         var allDisabledMods = AllMods.Where(mod => EnabledMods.FirstOrDefault(enabled => enabled.UUID == mod.UUID) == null);
         DisabledMods = new(allDisabledMods.ToList());
+
+        CurrentProfileText = $"Current Profile: {IOHelper.SharedPaths.GetCurrentProfle()}";
+        OnPropertyChanged();
 
         /* Debug file output to Downloads folder for testing enabled vs disabled mods.
         var outFilePath = 

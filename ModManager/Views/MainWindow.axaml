@@ -18,7 +18,7 @@
     
     <Grid RowDefinitions="Auto, Auto, *">
 
-        <Menu Grid.Row="0"> 
+        <Menu Grid.Row="0" Grid.ColumnSpan="2" FontSize="12" FontWeight="Bold" > 
             <MenuItem Header="File">
                 <MenuItem 
                     Header="Load ModSettings File"
@@ -32,17 +32,34 @@
                     Header="Open PAK File"
                     Command="{Binding OpenPakFileCommand}"/>
             </MenuItem>
+
+            <MenuItem Header="Settings">
+
+
+
+            </MenuItem>
+
+            <MenuItem Header="Help"> 
+
+            </MenuItem> 
+
+            <MenuItem Header="About"> 
+            
+            </MenuItem>
+
         </Menu>
 
-        <TextBlock Grid.Row="1" Margin="10,5" Text="{Binding TextBoxText}" FontWeight="Bold"/>
-        <Grid Grid.Row = "2" ColumnDefinitions="*, 16, *">
+        <TextBlock Grid.Row="1" Margin="10,0" Text="{Binding CurrentProfileText}" FontWeight="Bold"/>
+
+        
+        <Grid Grid.Row = "2" ColumnDefinitions="*, 10, *">
             <DataGrid x:Name="EnabledGrid"
                 ItemsSource="{Binding EnabledMods}"
                 Grid.Row="0"
                 Grid.Column="0"
                 IsReadOnly="True"
-                Margin = "10"
-                GridLinesVisibility="All"
+                Margin = "5"
+                GridLinesVisibility="None"
                 BorderThickness="1" BorderBrush="Gray"
                 ScrollViewer.VerticalScrollBarVisibility="Auto"
                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
@@ -58,7 +75,7 @@
                 </DataGrid.Styles>
 
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Load Order" Binding="{Binding LoadOrder}" />
+                    <DataGridTextColumn Header="#" Binding="{Binding LoadOrder}" />
                     <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
                     <DataGridTextColumn Header="Version" Binding="{Binding Version}" />
                     <DataGridTextColumn Header="Author" Binding="{Binding Author}" />
@@ -72,8 +89,8 @@
                 Grid.Row="0"
                 Grid.Column="2"
                 IsReadOnly="True"
-                Margin = "10"
-                GridLinesVisibility="All"
+                Margin = "5"
+                GridLinesVisibility="None"
                 BorderThickness="1" BorderBrush="Gray"
                 ScrollViewer.VerticalScrollBarVisibility="Auto"
                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
