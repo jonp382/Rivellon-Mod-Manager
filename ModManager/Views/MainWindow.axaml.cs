@@ -55,9 +55,10 @@ public partial class MainWindow : Window
         if(DataContext is not MainViewModel vm) return;
         
         var settingsWindow = new SettingsWindow();
-        await settingsWindow.ShowDialog(this); 
+        var dialogResult = await settingsWindow.ShowDialog<bool>(this); 
         
-        vm.Update();
+        // don't update anything if the user cancelled the settings window (also includes hitting [X])
+        if (dialogResult) vm.Update();
     }
 
     private void MainWindowClosing(object? sender, WindowClosingEventArgs e)
