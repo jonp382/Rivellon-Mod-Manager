@@ -24,6 +24,18 @@ public class SharedPaths
             "config.json"
         );
     }
+
+    public static string GetCurrentProfle()
+    {
+        // gets the currrent profile from the current LSX
+        string CurrentLSXPath = UserSettings.Default.SelectedModLSX;
+        if(String.IsNullOrEmpty(CurrentLSXPath))
+        {
+            return "No profile selected!";
+        }
+
+        return Directory.GetParent(CurrentLSXPath).Name;
+    }
 }
 
 public class UserSettings
