@@ -169,42 +169,6 @@ public partial class MainViewModel : ViewModelBase
         TextBoxText = $"Total Mod Count: {AllMods.Count}";
     }
 
-    [RelayCommand]
-    public async Task OpenPakFile()
-    {
-        var provider = StorageService.GetStorageProvider();
-        if (provider == null) return;
-
-        var files = await provider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = "Select a ModSettings.LSX file",
-            AllowMultiple = false,
-            FileTypeFilter = new[]
-            {
-                new FilePickerFileType("PAK Files") {Patterns = new[] {"*.pak"}}
-            }
-        });
-        string PakFilePath;
-        if (files.Count > 0) 
-        {
-            PakFilePath = files[0].Path.LocalPath;
-
-            if (string.IsNullOrEmpty(PakFilePath))
-            {
-                Debug.WriteLine($"Invalid file path (path was blank). Please try again.");
-                return;
-            }
-        }
-        else
-        {
-            Debug.WriteLine($"No file selected. Please try again.");
-            return;
-        }
-
-        Debug.WriteLine($"Selected file: {PakFilePath}");
-        Resources.LSServices.ExtractPakFile(PakFilePath);
-    }
-
     public void ParseLSXFile()
     {
         EnabledMods.Clear();
