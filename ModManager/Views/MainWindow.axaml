@@ -75,11 +75,20 @@
                 >
 
                 <DataGrid.Styles>
+
                     <Style Selector="DataGridCell">
                         <Setter Property="FontSize" Value="12"/>
                     </Style>
 
                     <Style Selector="DataGridRow" x:DataType="models:ModInfo">
+
+                        <Setter 
+                            Property="ToolTip.Tip" 
+                            Value="{Binding InvalidReason, Converter={x:Static conv:StringToTooltipConverter.Instance}}"
+                                
+                        />
+
+
                         <Setter 
                             Property="Background" 
                             Value="{Binding IsValid, Converter={x:Static conv:BoolToRedBrushConverter.Instance}}"

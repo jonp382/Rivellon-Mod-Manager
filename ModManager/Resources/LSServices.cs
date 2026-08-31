@@ -211,6 +211,9 @@ public partial class ModInfo : ObservableObject
     [ObservableProperty]
     private bool _isValid = true;
 
+    [ObservableProperty]
+    private string _invalidReason = string.Empty;
+
     public string UUID { get; set; } = string.Empty;
     public string Folder { get; set; } = string.Empty;
     public string Version { get; set; } = string.Empty;

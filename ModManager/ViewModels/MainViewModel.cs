@@ -204,10 +204,12 @@ public partial class MainViewModel : ViewModelBase
             {
                 Resources.ModInfo Mod = EnabledMods[i];
                 Mod.IsValid = true;
+                Mod.InvalidReason = string.Empty;
 
                 if(Mod.LoadOrder < 0)
                 {
                     Mod.IsValid = false;
+                    Mod.InvalidReason = "Load order must be set for all enabled mods. Current Load Order: " + Mod.LoadOrder;
                 }
 
                 foreach(var dep in Mod.Dependencies)
@@ -220,12 +222,21 @@ public partial class MainViewModel : ViewModelBase
                         Debug.WriteLine($"UUID not found: {dep}");
                         Debug.WriteLine($"Mod {Mod.Name} is invalid.");
                         Mod.IsValid = false;
+                        Mod.InvalidReason = $"A mod with UUID {dep} was expected but not found in the Mods folder.";
                     }
-                    else if (matchingMod.LoadOrder < 0 || matchingMod.LoadOrder > Mod.LoadOrder)
+                    else if (matchingMod.LoadOrder < 0)
                     {
                         Debug.WriteLine($"Load order error");
                         Debug.WriteLine($"Mod {Mod.Name} is invalid.");
                         Mod.IsValid = false;
+                        Mod.InvalidReason = $"{matchingMod.Name} should be enabled and placed before this mod, but it is currently DISABLED.";
+                    }
+                    else if(matchingMod.LoadOrder > Mod.LoadOrder)
+                    {
+                        Debug.WriteLine($"Load order error");
+                        Debug.WriteLine($"Mod {Mod.Name} is invalid.");
+                        Mod.IsValid = false;
+                        Mod.InvalidReason = $"{matchingMod.Name} should be placed before this mod, but it is currently placed AFTER this mod.";
                     }
                 }
 
