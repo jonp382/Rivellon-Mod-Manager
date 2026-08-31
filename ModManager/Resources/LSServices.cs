@@ -75,18 +75,45 @@ public class LSServices
             throw new InvalidDataException("Invalid meta.lsx structure. Unable to parse ModuleInfo.");
         }
 
-        string GetAttribute(string name) =>
-            moduleInfoNode.Attributes.TryGetValue(name, out var attr) ? attr.Value?.ToString() : string.Empty;
+        string GetAttribute(Node node, string name) =>
+            node.Attributes.TryGetValue(name, out var attr) ? attr.Value?.ToString() : string.Empty;
 
-        return new ModInfo
+        ModInfo modInfo = new ModInfo
         {
-            Name = GetAttribute("Name"),
-            UUID = GetAttribute("UUID"),
-            Folder = GetAttribute("Folder"),
-            Version = GetAttribute("Version"),
-            Author = GetAttribute("Author"),
-            Description = GetAttribute("Description")
+            Name = GetAttribute(moduleInfoNode, "Name"),
+            UUID = GetAttribute(moduleInfoNode, "UUID"),
+            Folder = GetAttribute(moduleInfoNode, "Folder"),
+            Version = GetAttribute(moduleInfoNode, "Version"),
+            Author = GetAttribute(moduleInfoNode, "Author"),
+            Description = GetAttribute(moduleInfoNode, "Description")
         };
+
+        Debug.WriteLine($"Accessing dependencies for {modInfo.Name}");
+        
+        List<Node> Dependencies;
+        try
+        {
+            Dependencies = resource.Regions["Config"]
+                .Children["Dependencies"].FirstOrDefault()?.Children["ModuleShortDesc"] ?? new List<Node>();
+            
+            Debug.WriteLine($"Mod {modInfo.Name} has {Dependencies.Count} dependencies");
+        }
+        catch
+        {
+            Debug.WriteLine($"No dependencies node found for {modInfo.Name}");
+            Dependencies = [];
+        }
+
+
+        if(Dependencies.Count > 0)
+        {
+            foreach(Node dependency in Dependencies)
+            {
+                modInfo.Dependencies.Add(GetAttribute(dependency, "UUID"));
+            }
+        }
+
+        return modInfo;
 
 
     }
@@ -181,4 +208,8 @@ public class ModInfo
     public string Version { get; set; }
     public string Author { get; set; }
     public string Description { get; set; }
+
+    public bool IsValid {get; set; } = true;
+
+    public List<string> Dependencies {get; set; } = [];
 }
