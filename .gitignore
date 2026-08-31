@@ -21,6 +21,7 @@ out/
 *.suo
 *.userprefs
 *.sln.docstates
+**.vscode
 
 ## NuGet & Dependencies
 *.nupkg
@@ -44,4 +45,4 @@ Desktop.ini
 *.tmp
 
 ## divinity testing files
-Testing Files/*
+**Testing Files/*
