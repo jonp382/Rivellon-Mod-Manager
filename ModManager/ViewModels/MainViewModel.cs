@@ -27,6 +27,10 @@ public partial class MainViewModel : ViewModelBase
         IOHelper.UserSettings.Load();
         ParseModsDirectory();
         ParseLSXFile();
+
+        UpdateLoadOrders();
+        ValidateLoadOrder();
+
         Debug.WriteLine($"Constructor complete");
         OnPropertyChanged();
     }
@@ -209,7 +213,7 @@ public partial class MainViewModel : ViewModelBase
                 foreach(var dep in Mod.Dependencies)
                 {
                     if(Resources.FixedModUUIDs.IDs.Contains(dep)) continue;
-                    
+
                     var matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.UUID, dep, System.StringComparison.OrdinalIgnoreCase));
                     if(matchingMod == null) 
                     {
