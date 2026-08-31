@@ -68,7 +68,7 @@ public partial class MainViewModel : ViewModelBase
 
             Debug.WriteLine($"Found PAK file {Name}");
 
-            Package? package = Resources.LSServices.ExtractPakFile(file);
+            Package? package = Resources.LSServices.GetPakAsPackage(file);
 
             if(package == null)
             {
@@ -80,6 +80,25 @@ public partial class MainViewModel : ViewModelBase
             
         }
         TextBoxText = $"Total Mod Count: {AllMods.Count}";
+    }
+
+    [RelayCommand]
+    public async Task ExtractPakFile()
+    {
+        string? FilePath = await IOHelper.OpenFolder.SelectAnyFile("Select the PAK file to extract");
+        if(string.IsNullOrEmpty(FilePath)) return;
+
+        // Debug file output to Downloads folder for testing.
+        var outFilePath = 
+            Path.Combine(
+                System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile),
+                "Downloads",
+                "Test Folder"
+            );
+
+        Resources.LSServices.ExtractPAKFile(FilePath, outFilePath);
+
+
     }
 
     public void ParseLSXFile()

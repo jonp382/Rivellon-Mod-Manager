@@ -160,6 +160,36 @@ public static class OpenFolder
             return null;
         }
     }
+
+    public async static Task<string?> SelectAnyFile(string prompt = "Please make a selection")
+    {
+        var provider = StorageService.GetStorageProvider();
+        if (provider == null) return null;
+
+        var files = await provider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = prompt,
+            AllowMultiple = false
+        });
+
+        if (files.Count > 0) 
+        {
+            string FilePath = files[0].Path.LocalPath;
+
+            if (string.IsNullOrEmpty(FilePath))
+            {
+                Debug.WriteLine($"Invalid file path (path was blank). Please try again.");
+                return null;
+            }
+            // IOHelper.UserSettings.Default.SelectedModLSX = files[0].Path.LocalPath;
+            return FilePath;
+        }
+        else
+        {
+            Debug.WriteLine($"No file selected. Please try again.");
+            return null;
+        }
+    }
 }
 
 public static class StorageService

@@ -1,5 +1,6 @@
 using CommunityToolkit.HighPerformance.Helpers;
 using LSLib.LS;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -8,7 +9,7 @@ namespace ModManager.Resources;
 
 public class LSServices
 {
-    public static Package? ExtractPakFile(string Path)
+    public static Package? GetPakAsPackage(string Path)
     {
 
         if(File.Exists(Path)){
@@ -41,6 +42,26 @@ public class LSServices
         
         // Debug.WriteLine($"Parsing resource");
         return ParseResource(resource);
+        
+    }
+
+    public static void ExtractPAKFile(string Path, string Destination)
+    {
+        if(!File.Exists(Path)) throw new FileNotFoundException($"No PAK file was found at the path {Path}!");
+
+        Directory.CreateDirectory(Destination);
+
+        var packager = new Packager();
+        Debug.WriteLine($"Extracting {Path} to {Destination}");
+
+        try
+        {
+            packager.UncompressPackage(Path, Destination);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"An error occurred while extracting the PAK file. {ex.Message}");
+        }
         
     }
 
