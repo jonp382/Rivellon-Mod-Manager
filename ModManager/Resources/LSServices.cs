@@ -142,6 +142,23 @@ public class LSServices
         return files[0];
     }
 
+    public static List<ModInfo> AddFakeMods()
+    {
+        List<ModInfo> AllFakeNodes = [];
+        var DivinityOrigins = new ModInfo
+        {
+            Name = "Divinity: Original Sin 2",
+            UUID = "1301db3d-1f54-4e98-9be5-5094030916e4",
+            Folder = "DivinityOrigins_1301db3d-1f54-4e98-9be5-5094030916e4",
+            Version = "373234071",
+            MD5="73d13f95607b70c953cc32e56d62b7d7"
+        };
+
+        AllFakeNodes.Add(DivinityOrigins);
+
+        return AllFakeNodes;
+    }
+
     public static void WriteProfileLSX(List<ModInfo> EnabledMods)
     {
         var LSXPath = GetLSXFromProfile();
@@ -150,24 +167,35 @@ public class LSServices
         Debug.WriteLine($"Writing to {LSXPath}");
 
         var resource = new Resource();
-
-        var moduleSettings = new Region{ Name = "ModuleSettings" };
-        resource.Regions["ModuleSettings"] = moduleSettings;
+        var region = new Region
+        {
+            RegionName = "ModuleSettings",
+            Name="root"
+        };
+        resource.Regions["ModuleSettings"] = region;
 
         var modOrderNode = new Node { Name = "ModOrder" };
         var modsNode = new Node{ Name = "Mods" };
 
-        moduleSettings.Children["ModOrder"] = new List<Node> { modOrderNode };
-        moduleSettings.Children["Mods"] = new List<Node> { modsNode };
+        region.Children["ModOrder"] = new List<Node> { modOrderNode };
+        region.Children["Mods"] = new List<Node> { modsNode };
 
         var orderList = new List<Node>();
         var modList = new List<Node>();
+
+        // add all fake mods so the game doesnt freak out
+        // this includes "divinity origins" which is just the base game.
+        var AllFakeMods = AddFakeMods();
+        foreach(var mod in AllFakeMods)
+        {
+            modList.Add(CreateNodeFromModInfo(mod));
+        }
 
         foreach(var mod in EnabledMods)
         {
             var orderEntry = new Node{ Name = "Module" };
             
-            orderEntry.Attributes["UUID"] = new NodeAttribute(LSLib.LS.AttributeType.String)
+            orderEntry.Attributes["UUID"] = new NodeAttribute(LSLib.LS.AttributeType.FixedString)
             {
                 Value=mod.UUID
             };
@@ -175,29 +203,9 @@ public class LSServices
             orderList.Add(orderEntry);
 
 
-            var modEntry = new Node { Name = "ModuleShortDesc" };
-            modEntry.Attributes["Folder"] = new NodeAttribute(LSLib.LS.AttributeType.String)
-            {
-                Value=mod.Folder
-            };
-            modEntry.Attributes["MD5"] = new NodeAttribute(LSLib.LS.AttributeType.String)
-            {
-                Value="" // Usually this is just blank, not sure why?
-            };
-            modEntry.Attributes["Name"] = new NodeAttribute(LSLib.LS.AttributeType.String)
-            {
-                Value=mod.Name
-            };
-            modEntry.Attributes["UUID"] = new NodeAttribute(LSLib.LS.AttributeType.String)
-            {
-                Value=mod.UUID
-            };
-            modEntry.Attributes["Version"] = new NodeAttribute(LSLib.LS.AttributeType.String)
-            {
-                Value=mod.Version.ToString()
-            };
+            
 
-            modList.Add(modEntry);
+            modList.Add(CreateNodeFromModInfo(mod));
 
         }
 
@@ -215,6 +223,33 @@ public class LSServices
         }
 
 
+    }
+
+    public static Node CreateNodeFromModInfo(ModInfo mod)
+    {
+        var modEntry = new Node { Name = "ModuleShortDesc" };
+        modEntry.Attributes["Folder"] = new NodeAttribute(LSLib.LS.AttributeType.LSWString)
+        {
+            Value=mod.Folder,
+        };
+        modEntry.Attributes["MD5"] = new NodeAttribute(LSLib.LS.AttributeType.LSString)
+        {
+            Value=mod.MD5 // Usually this is just blank, unless its a default "mod"
+        };
+        modEntry.Attributes["Name"] = new NodeAttribute(LSLib.LS.AttributeType.FixedString)
+        {
+            Value=mod.Name
+        };
+        modEntry.Attributes["UUID"] = new NodeAttribute(LSLib.LS.AttributeType.FixedString)
+        {
+            Value=mod.UUID
+        };
+        modEntry.Attributes["Version"] = new NodeAttribute(LSLib.LS.AttributeType.Int)
+        {
+           Value=int.Parse(mod.Version)
+        };
+
+        return modEntry;
     }
 
      public static Dictionary<string, List<ModInfo>> ReadModSettings(string path)
@@ -317,6 +352,7 @@ public partial class ModInfo : ObservableObject
     public string Version { get; set; } = string.Empty;
     public string Author { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public string MD5 {get; set; } = string.Empty; // almost always unused unless its a default fake mod like the base game.
 
 
     public List<string> Dependencies {get; set; } = [];
