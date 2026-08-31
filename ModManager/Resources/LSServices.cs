@@ -210,7 +210,7 @@ public partial class ModInfo : ObservableObject
 
     [ObservableProperty]
     private bool _isValid = true;
-    
+
     public string UUID { get; set; } = string.Empty;
     public string Folder { get; set; } = string.Empty;
     public string Version { get; set; } = string.Empty;
@@ -219,4 +219,14 @@ public partial class ModInfo : ObservableObject
 
 
     public List<string> Dependencies {get; set; } = [];
+}
+
+public static class FixedModUUIDs
+{
+    public static readonly System.Collections.Frozen.FrozenSet<string> IDs =
+    [
+        "1301db3d-1f54-4e98-9be5-5094030916e4", // Divinity Origins - base game
+        "eedf7638-36ff-4f26-a50a-076b87d53ba0", // I think this is gift bag 2?
+        "b40e443e-badd-4727-82b3-f88a170c4db7" // I think this is gift bag 3?
+    ];
 }

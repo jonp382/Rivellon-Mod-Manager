@@ -184,8 +184,51 @@ public partial class MainViewModel : ViewModelBase
 
         }
         EnabledMods = new(EnabledMods.OrderBy(n => n.LoadOrder).ToList());
+        
+        ValidateLoadOrder();
 
         
+    }
+
+    public void ValidateLoadOrder()
+    {
+        // don't sort DisabledMods since we don't care about load orders there.
+        
+        if(EnabledMods.Count > 0)
+        {
+            for(int i = 0; i < EnabledMods.Count; i++)
+            {
+                Resources.ModInfo Mod = EnabledMods[i];
+                Mod.IsValid = true;
+
+                if(Mod.LoadOrder < 0)
+                {
+                    Mod.IsValid = false;
+                }
+
+                foreach(var dep in Mod.Dependencies)
+                {
+                    if(Resources.FixedModUUIDs.IDs.Contains(dep)) continue;
+                    
+                    var matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.UUID, dep, System.StringComparison.OrdinalIgnoreCase));
+                    if(matchingMod == null) 
+                    {
+                        Debug.WriteLine($"UUID not found: {dep}");
+                        Debug.WriteLine($"Mod {Mod.Name} is invalid.");
+                        Mod.IsValid = false;
+                    }
+                    else if (matchingMod.LoadOrder < 0 || matchingMod.LoadOrder > Mod.LoadOrder)
+                    {
+                        Debug.WriteLine($"Load order error");
+                        Debug.WriteLine($"Mod {Mod.Name} is invalid.");
+                        Mod.IsValid = false;
+                    }
+                }
+
+
+            }
+
+        }
     }
 
     // Updates the list of all mods and their load orders after a change to the settings are made.
