@@ -48,6 +48,10 @@ public partial class MainWindow : Window
         Width = IOHelper.UserSettings.Default.WindowWidth;
         Height = IOHelper.UserSettings.Default.WindowHeight;
 
+        Application.Current.RequestedThemeVariant = IOHelper.UserSettings.Default.EnableDarkTheme
+                ? Avalonia.Styling.ThemeVariant.Dark
+                : Avalonia.Styling.ThemeVariant.Light;
+
     }
 
     private async void OnOpenSettingsClicked(object? sender, RoutedEventArgs e)
@@ -58,7 +62,16 @@ public partial class MainWindow : Window
         var dialogResult = await settingsWindow.ShowDialog<bool>(this); 
         
         // don't update anything if the user cancelled the settings window (also includes hitting [X])
-        if (dialogResult) vm.Update();
+        if (dialogResult) 
+        {
+            vm.Update();
+
+            Application.Current.RequestedThemeVariant = IOHelper.UserSettings.Default.EnableDarkTheme
+                ? Avalonia.Styling.ThemeVariant.Dark
+                : Avalonia.Styling.ThemeVariant.Light;
+            
+                
+        }
     }
 
     private void MainWindowClosing(object? sender, WindowClosingEventArgs e)

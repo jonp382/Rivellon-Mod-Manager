@@ -216,6 +216,7 @@ public class UserSettings
     public string DataFolder {get; set; } = string.Empty;
     public double WindowWidth {get; set; } = 1200;
     public double WindowHeight {get; set; } = 800;
+    public bool EnableDarkTheme {get; set; } = false;
 
     public static UserSettings Load()
     {

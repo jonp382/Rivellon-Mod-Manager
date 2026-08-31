@@ -20,12 +20,16 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private ObservableCollection<string> _allProfiles;
 
+    [ObservableProperty]
+    private bool _enableDarkTheme;
+
     public SettingsViewModel()
     {
         _dataDirectory = IOHelper.UserSettings.Default.DataFolder;
         _allProfiles = new(IOHelper.SharedPaths.GetAllProfiles(_dataDirectory) ?? new List<string>());
         
         _currentProfile = IOHelper.UserSettings.Default.SelectedProfile;
+        _enableDarkTheme = IOHelper.UserSettings.Default.EnableDarkTheme;
 
         
     }
@@ -34,6 +38,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         IOHelper.UserSettings.Default.DataFolder = DataDirectory;
         IOHelper.UserSettings.Default.SelectedProfile = CurrentProfile;
+        IOHelper.UserSettings.Default.EnableDarkTheme = EnableDarkTheme;
     }
 
     [RelayCommand]
