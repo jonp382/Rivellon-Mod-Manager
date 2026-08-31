@@ -119,6 +119,104 @@ public class LSServices
 
     }
 
+    public static string? GetLSXFromProfile()
+    {
+        var dataPath = IOHelper.UserSettings.Default.DataFolder;
+        var playerProfilesPath = Path.Combine(dataPath, "PlayerProfiles");
+
+        var profilePath = Directory.GetDirectories(playerProfilesPath).FirstOrDefault(n => n.EndsWith(IOHelper.UserSettings.Default.SelectedProfile, StringComparison.OrdinalIgnoreCase));
+        if(profilePath == null)
+        {
+            Debug.WriteLine($"Unable to find ProfilePath for {IOHelper.UserSettings.Default.SelectedProfile} from DataPath");
+            return null;
+        }
+
+        var files = Directory.GetFiles(profilePath).Where(n => n.EndsWith("modsettings.lsx", StringComparison.OrdinalIgnoreCase)).ToList();
+        if(files == null || files.Count == 0)
+        {
+            Debug.WriteLine($"Unable to find any .lsx files in {profilePath}");
+            return null;
+        }
+
+        // assume there is only one modsettings.lsx file, which there should be.
+        return files[0];
+    }
+
+    public static void WriteProfileLSX(List<ModInfo> EnabledMods)
+    {
+        var LSXPath = GetLSXFromProfile();
+        if(LSXPath == null) return;
+
+        Debug.WriteLine($"Writing to {LSXPath}");
+
+        var resource = new Resource();
+
+        var moduleSettings = new Region{ Name = "ModuleSettings" };
+        resource.Regions["ModuleSettings"] = moduleSettings;
+
+        var modOrderNode = new Node { Name = "ModOrder" };
+        var modsNode = new Node{ Name = "Mods" };
+
+        moduleSettings.Children["ModOrder"] = new List<Node> { modOrderNode };
+        moduleSettings.Children["Mods"] = new List<Node> { modsNode };
+
+        var orderList = new List<Node>();
+        var modList = new List<Node>();
+
+        foreach(var mod in EnabledMods)
+        {
+            var orderEntry = new Node{ Name = "Module" };
+            
+            orderEntry.Attributes["UUID"] = new NodeAttribute(LSLib.LS.AttributeType.String)
+            {
+                Value=mod.UUID
+            };
+
+            orderList.Add(orderEntry);
+
+
+            var modEntry = new Node { Name = "ModuleShortDesc" };
+            modEntry.Attributes["Folder"] = new NodeAttribute(LSLib.LS.AttributeType.String)
+            {
+                Value=mod.Folder
+            };
+            modEntry.Attributes["MD5"] = new NodeAttribute(LSLib.LS.AttributeType.String)
+            {
+                Value="" // Usually this is just blank, not sure why?
+            };
+            modEntry.Attributes["Name"] = new NodeAttribute(LSLib.LS.AttributeType.String)
+            {
+                Value=mod.Name
+            };
+            modEntry.Attributes["UUID"] = new NodeAttribute(LSLib.LS.AttributeType.String)
+            {
+                Value=mod.UUID
+            };
+            modEntry.Attributes["Version"] = new NodeAttribute(LSLib.LS.AttributeType.String)
+            {
+                Value=mod.Version.ToString()
+            };
+
+            modList.Add(modEntry);
+
+        }
+
+        modOrderNode.Children["Children"] = orderList;
+        modsNode.Children["Children"] = modList;
+
+        using (var stream = new FileStream(LSXPath, FileMode.Create, FileAccess.Write))
+        {
+            var writer = new LSXWriter(stream)
+            {
+                PrettyPrint = true
+            };
+
+            writer.Write(resource);
+        }
+
+
+    }
+
      public static Dictionary<string, List<ModInfo>> ReadModSettings(string path)
     {
         // assuming the path is already verified to exist

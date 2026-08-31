@@ -263,4 +263,10 @@ public partial class MainViewModel : ViewModelBase
 
     }
 
+    [RelayCommand]
+    public void ExportLSXToProfile()
+    {
+        Resources.LSServices.WriteProfileLSX(EnabledMods.ToList());
+    }
+
 }

@@ -24,6 +24,10 @@
 
         <Menu Grid.Row="0" Grid.ColumnSpan="2" FontSize="12" FontWeight="Bold" > 
             <MenuItem Header="File">
+                <MenuItem
+                    Header="Export LSX to Profile"
+                    Command="{Binding ExportLSXToProfileCommand}"
+                />
                 <MenuItem 
                     Header="Extract PAK File"
                     Command="{Binding ExtractPakFileCommand}"
