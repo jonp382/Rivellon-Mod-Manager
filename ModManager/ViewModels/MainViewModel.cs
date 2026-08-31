@@ -161,7 +161,8 @@ public partial class MainViewModel : ViewModelBase
                 continue;
             }
 
-            matchingModInAllMods.LoadOrder = i;
+            // 1-indexed to match in-game mod menu.
+            matchingModInAllMods.LoadOrder = i+1;
             EnabledMods.Add(matchingModInAllMods);
         }
 
@@ -184,7 +185,7 @@ public partial class MainViewModel : ViewModelBase
 
         for(int i = 0; i < EnabledMods.Count; i++)
         {
-            EnabledMods[i].LoadOrder = i;
+            EnabledMods[i].LoadOrder = i+1;
 
         }
         EnabledMods = new(EnabledMods.OrderBy(n => n.LoadOrder).ToList());
@@ -206,7 +207,7 @@ public partial class MainViewModel : ViewModelBase
                 Mod.IsValid = true;
                 Mod.InvalidReason = string.Empty;
 
-                if(Mod.LoadOrder < 0)
+                if(Mod.LoadOrder <= 0)
                 {
                     Mod.IsValid = false;
                     Mod.InvalidReason = "Load order must be set for all enabled mods. Current Load Order: " + Mod.LoadOrder;
@@ -224,7 +225,7 @@ public partial class MainViewModel : ViewModelBase
                         Mod.IsValid = false;
                         Mod.InvalidReason = $"A mod with UUID {dep} was expected but not found in the Mods folder.";
                     }
-                    else if (matchingMod.LoadOrder < 0)
+                    else if (matchingMod.LoadOrder <= 0)
                     {
                         Debug.WriteLine($"Load order error");
                         Debug.WriteLine($"Mod {Mod.Name} is invalid.");
