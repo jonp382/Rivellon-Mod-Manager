@@ -1,4 +1,5 @@
 using CommunityToolkit.HighPerformance.Helpers;
+using CommunityToolkit.Mvvm.ComponentModel;
 using LSLib.LS;
 using System;
 using System.Collections.Generic;
@@ -199,17 +200,23 @@ public class LSServices
     }
 }
 
-public class ModInfo
+public partial class ModInfo : ObservableObject
 {
-    public string Name { get; set; }
-    public int LoadOrder {get; set; } = -1;
-    public string UUID { get; set; }
-    public string Folder { get; set; }
-    public string Version { get; set; }
-    public string Author { get; set; }
-    public string Description { get; set; }
+    [ObservableProperty]
+    private string _name = String.Empty;
+    
+    [ObservableProperty]
+    private int _loadOrder = -1;
 
-    public bool IsValid {get; set; } = true;
+    [ObservableProperty]
+    private bool _isValid = true;
+    
+    public string UUID { get; set; } = string.Empty;
+    public string Folder { get; set; } = string.Empty;
+    public string Version { get; set; } = string.Empty;
+    public string Author { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+
 
     public List<string> Dependencies {get; set; } = [];
 }
