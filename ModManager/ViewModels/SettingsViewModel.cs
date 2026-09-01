@@ -54,4 +54,15 @@ public partial class SettingsViewModel : ObservableObject
         
     }    
 
+    [RelayCommand]
+    public async Task AutoSelectDataDirectory()
+    {
+        var path = await IOHelper.SharedPaths.AutoFindGameDataFolder();
+
+        if (!string.IsNullOrEmpty(path))
+        {
+            DataDirectory = path;
+        }
+    }
+
 }
