@@ -47,9 +47,6 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<Resources.ModInfo> _allMods = [];
 
-    [ObservableProperty]
-    private string _currentProfileText = string.Empty;
-
     public void ParseModsDirectory()
     {
         string filePath = IOHelper.UserSettings.Default.DataFolder + "/Mods";
@@ -169,7 +166,6 @@ public partial class MainViewModel : ViewModelBase
         var allDisabledMods = AllMods.Where(mod => EnabledMods.FirstOrDefault(enabled => enabled.UUID == mod.UUID) == null);
         DisabledMods = new(allDisabledMods.ToList());
 
-        // CurrentProfileText = $"Current Profile: {IOHelper.SharedPaths.GetCurrentProfle()}";
         OnPropertyChanged();
 
     }

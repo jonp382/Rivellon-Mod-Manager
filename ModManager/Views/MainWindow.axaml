@@ -57,14 +57,39 @@
             
 
         </Menu>
-
-        <TextBlock Grid.Row="1" Margin="10,0" Text="{Binding CurrentProfileText}" FontWeight="Bold"/>
-
         
-        <Grid Name="MainGrid" Grid.Row = "2" ColumnDefinitions="*, 10, *">
+        <Grid 
+            Name="MainGrid" 
+            Grid.Row = "2" 
+            ColumnDefinitions="*, 10, *"
+            RowDefinitions="15, *"
+        >
+
+            <TextBlock 
+                Grid.Row="0" 
+                Grid.Column="0"
+                Margin="25,0" 
+                VerticalAlignment="Center"
+                HorizontalAlignment="Left"
+                Text="Enabled Mods" 
+                FontWeight="Bold"
+                FontSize="12"
+            />
+
+            <TextBlock 
+                Grid.Row="0" 
+                Grid.Column="2"
+                Margin="25,0" 
+                VerticalAlignment="Center"
+                HorizontalAlignment="Left"
+                Text="Disabled Mods" 
+                FontWeight="Bold"
+                FontSize="12"
+            />
+
             <DataGrid x:Name="EnabledGrid"
                 ItemsSource="{Binding EnabledMods}"
-                Grid.Row="0"
+                Grid.Row="1"
                 Grid.Column="0"
                 IsReadOnly="True"
                 Margin = "5"
@@ -116,7 +141,7 @@
 
             <DataGrid  x:Name="DisabledGrid"
                 ItemsSource="{Binding DisabledMods}"
-                Grid.Row="0"
+                Grid.Row="1"
                 Grid.Column="2"
                 IsReadOnly="True"
                 Margin = "5"
