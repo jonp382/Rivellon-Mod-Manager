@@ -10,7 +10,7 @@
         Background="{DynamicResource AppBackgroundBrush}"
         Foreground="{DynamicResource AppTextBrush}">
 
-        <Grid RowDefinitions="40, 40, 40, 50" ColumnDefinitions="175, *, 75, 75" Margin="10">
+        <Grid RowDefinitions="40, 40, 40, 50, 40" ColumnDefinitions="175, *, 75, 75" Margin="10">
 
             <TextBlock
                 Text="Divinity Data Folder"
@@ -101,6 +101,16 @@
                 Grid.Row="3"
                 Grid.Column="1"
                 VerticalAlignment="Bottom"
+            />
+
+            <TextBlock
+                Text="Config is safed in the 'config' sub-folder, next to the program executable"
+                Grid.Row="4"
+                Grid.ColumnSpan="4"
+                Grid.Column="0"
+                TextWrapping="NoWrap"
+                Margin="0, 10"
+                VerticalAlignment="Center"
             />
             
         </Grid>
