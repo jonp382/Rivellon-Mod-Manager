@@ -72,13 +72,26 @@ public class SharedPaths
         }
     }
 
-    public static string AutoFindGameDataFolder()
+    public async static Task<string> AutoFindGameDataFolder()
     {
+        // the game data folder is probably consistent on windows but could vary on linux
+        // on windows assume its in MyDocuments
+        // on linux ask the user to select their root steam folder first
 
         if (OperatingSystem.IsLinux())
         {
-            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            return Path.Combine(home, "debian-installation", "steamapps", "compatdata", "435150", "pfx", "drive_c", "users", "steamuser", "Documents", "Larian Studios", "Divinity Original Sin 2 Definitive Edition");
+            var steamPath = await OpenFolder.SelectAnyFolder("Please select your steamapps folder in your Steam directory.");
+            if(string.IsNullOrEmpty(steamPath)) 
+            {
+                Debug.WriteLine($"No folder selected");
+                return string.Empty;
+            }
+
+            // once they select Steamapps its guaranteed navigation from there.
+            // compatdata, 435150, pfc, drive_c
+            // in the case of divinity, its users -> steamuser -> Documents -> Larian Studios -> Divinity Original Sin 2 Definitive Edition
+            
+            return Path.Combine(steamPath, "compatdata", "435150", "pfx", "drive_c", "users", "steamuser", "Documents", "Larian Studios", "Divinity Original Sin 2 Definitive Edition");
         }
         else if(OperatingSystem.IsWindows()){
             var home = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -134,40 +147,6 @@ public static class OpenFolder
         // Debug.WriteLine($"Selected directory: {IOHelper.UserSettings.Default.SelectedModFolder}");
     }
 
-    public async static Task<string?> SelectLSXFile(string prompt = "Please make a selection")
-    {
-        var provider = StorageService.GetStorageProvider();
-        if (provider == null) return null;
-
-        var files = await provider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = prompt,
-            AllowMultiple = false,
-            FileTypeFilter = new[]
-            {
-                new FilePickerFileType("LSX Files") {Patterns = new[] {"*.lsx"}}
-            }
-        });
-
-        if (files.Count > 0) 
-        {
-            string FilePathLSX = files[0].Path.LocalPath;
-
-            if (string.IsNullOrEmpty(FilePathLSX))
-            {
-                Debug.WriteLine($"Invalid file path (path was blank). Please try again.");
-                return null;
-            }
-            // IOHelper.UserSettings.Default.SelectedModLSX = files[0].Path.LocalPath;
-            return FilePathLSX;
-        }
-        else
-        {
-            Debug.WriteLine($"No file selected. Please try again.");
-            return null;
-        }
-    }
-
     public async static Task<string?> SelectAnyFile(string prompt = "Please make a selection")
     {
         var provider = StorageService.GetStorageProvider();
@@ -196,6 +175,43 @@ public static class OpenFolder
             Debug.WriteLine($"No file selected. Please try again.");
             return null;
         }
+    }
+
+        public async static Task<string?> SelectAnyFolder(string prompt = "Please make a selection")
+    {
+        var provider = StorageService.GetStorageProvider();
+        if (provider == null) return null;
+
+        IStorageFolder? startLocation = await provider.TryGetFolderFromPathAsync(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
+
+        var directory = await provider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = prompt,
+            AllowMultiple = false,
+            SuggestedStartLocation = startLocation
+            
+        });
+
+        if (directory.Count > 0) 
+        {
+            string FilePathMods = directory[0].Path.LocalPath;
+
+            if (string.IsNullOrEmpty(FilePathMods))
+            {
+                Debug.WriteLine($"Invalid directory path (path was blank). Please try again.");
+                return null;
+            }
+
+            // IOHelper.UserSettings.Default.SelectedModFolder = FilePathMods;
+            return FilePathMods;
+        }
+        else
+        {
+            Debug.WriteLine($"No directory selected. Please try again.");
+            return null;
+        }
+
+        // Debug.WriteLine($"Selected directory: {IOHelper.UserSettings.Default.SelectedModFolder}");
     }
 }
 
