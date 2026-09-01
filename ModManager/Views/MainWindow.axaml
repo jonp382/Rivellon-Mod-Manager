@@ -45,16 +45,7 @@
                     Click="OnOpenSettingsClicked"
                     
                 />
-            </MenuItem>
-
-            <MenuItem Header="Help"> 
-
-            </MenuItem> 
-
-            <MenuItem Header="About"> 
-            
-            </MenuItem>
-            
+            </MenuItem>            
 
         </Menu>
         
