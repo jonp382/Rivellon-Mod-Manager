@@ -15,11 +15,18 @@ public class SharedPaths
 {
     public static string GetConfigFolderPath()
     {
+        // place config file in EXE folder\config
         return Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "ModManager",
-            "Config"
-            );
+                AppContext.BaseDirectory,
+                "config"
+                );
+        // return Path.Combine(
+        //     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        //     "ModManager",
+        //     "Config"
+        //     );
+
+            
     }
 
     public static string GetConfigFile()
