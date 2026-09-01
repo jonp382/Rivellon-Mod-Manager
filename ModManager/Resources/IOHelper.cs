@@ -61,8 +61,9 @@ public class SharedPaths
             }
 
             var profiles = ProfilesPath.Select(n => Path.GetFileName(n)).ToList();
+            profiles.Sort();
 
-            return new List<string>(profiles);
+            return profiles;
             
         }
         catch (Exception ex)
