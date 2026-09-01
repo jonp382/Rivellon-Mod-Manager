@@ -62,7 +62,7 @@
         <TextBlock Grid.Row="1" Margin="10,0" Text="{Binding CurrentProfileText}" FontWeight="Bold"/>
 
         
-        <Grid Grid.Row = "2" ColumnDefinitions="*, 10, *">
+        <Grid Name="MainGrid" Grid.Row = "2" ColumnDefinitions="*, 10, *">
             <DataGrid x:Name="EnabledGrid"
                 ItemsSource="{Binding EnabledMods}"
                 Grid.Row="0"
@@ -130,7 +130,7 @@
                 CanUserResizeColumns="True"
                 CanUserReorderColumns="True"
                 CanUserSortColumns="True"
-                
+
                 DragDrop.AllowDrop="True"
                 PointerPressed="OnPointerPressed"
                 >
@@ -147,6 +147,17 @@
                     <DataGridTextColumn Header="Author" Binding="{Binding Author}" />
                 </DataGrid.Columns>
             </DataGrid>
+
+            <Rectangle 
+                Name="GridDropIndicator"
+                Grid.ColumnSpan="3"
+                Height="2"
+                Fill="DodgerBlue"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                IsVisible="False"
+                IsHitTestVisible="False"
+            />
 
 
         </Grid>

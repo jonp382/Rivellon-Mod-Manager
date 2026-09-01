@@ -111,6 +111,7 @@ public partial class MainWindow : Window
     private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
         // Clear state if the mouse is released without dragging
+        GridDropIndicator.IsVisible = false;
         _pressPosition = null;
         _draggedMod = null;
         _pressedEvent = null;
@@ -153,13 +154,42 @@ public partial class MainWindow : Window
         else
         {
             e.DragEffects = DragDropEffects.None;
+            GridDropIndicator.IsVisible = false;
+            return;
+        }
+
+        if(sender is not DataGrid targetGrid) return;
+
+        var indicator = GridDropIndicator;
+        var dropPoint = e.GetPosition(targetGrid);
+        var hitElement = targetGrid.InputHitTest(dropPoint) as Visual;
+        var row = hitElement?.FindAncestorOfType<DataGridRow>();
+
+        if(row != null)
+        {
+            var rowTopLeft = row.TranslatePoint(new Point(0,0), MainGrid);
+
+            if (rowTopLeft.HasValue)
+            {
+                double xPosition = rowTopLeft.Value.X;
+                double yPosition = rowTopLeft.Value.Y + row.Bounds.Height;
+                
+                indicator.Margin = new Thickness(xPosition, yPosition, 0, 0);
+                indicator.Width = targetGrid.Bounds.Width;
+                indicator.IsVisible = true;
+
+            }
+        }
+        else
+        {
+            // indicator.IsVisible = false;
         }
     }
 
     private void OnDrop(object? sender, DragEventArgs e)
     {
         Debug.WriteLine($"Firing OnDrop");
-        Debug.WriteLine($"Firing OnPointerPressed");
+        GridDropIndicator.IsVisible = false;
         if(sender is not DataGrid targetGrid) return;
         if(DataContext is not MainViewModel vm) return;
 
