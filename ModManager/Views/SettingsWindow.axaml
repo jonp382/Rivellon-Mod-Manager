@@ -6,7 +6,9 @@
         mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="300"
         x:Class="ModManager.Views.SettingsWindow"
         x:DataType="vm:SettingsViewModel"
-        Title="Settings" Width="1200" Height="300">
+        Title="Settings" Width="1200" Height="300"
+        Background="{DynamicResource AppBackgroundBrush}"
+        Foreground="{DynamicResource AppTextBrush}">
 
         <Grid RowDefinitions="40, 40, 40, 50" ColumnDefinitions="175, *, 75, 75" Margin="10">
 
