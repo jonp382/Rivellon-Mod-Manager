@@ -73,7 +73,12 @@
                 BorderThickness="1" BorderBrush="Gray"
                 ScrollViewer.VerticalScrollBarVisibility="Auto"
                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                
                 AutoGenerateColumns="False"
+                CanUserResizeColumns="True"
+                CanUserReorderColumns="True"
+                CanUserSortColumns="True"
+
                 DragDrop.AllowDrop="True"
                 PointerPressed="OnPointerPressed"
                 >
@@ -120,7 +125,12 @@
                 BorderThickness="1" BorderBrush="Gray"
                 ScrollViewer.VerticalScrollBarVisibility="Auto"
                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                
                 AutoGenerateColumns="False"
+                CanUserResizeColumns="True"
+                CanUserReorderColumns="True"
+                CanUserSortColumns="True"
+                
                 DragDrop.AllowDrop="True"
                 PointerPressed="OnPointerPressed"
                 >
