@@ -3,9 +3,13 @@ NOTE! This app is a work in progress.
 
 This Mod Manager supports Divinity: Original Sin 2, by Larian Studios.
 
+![Overview Image](Images/OverviewImage.png)
+
 This tool is cross-platform and supports any desktop operating system. It is developed and tested primarily on Linux (Ubuntu).
 
 It was developed as a cross-platform alternative to LaughingLeader's Divinity Mod Manager for those who do not use Windows. Their mod manager is a fantastic tool and I highly recommend it for Windows users, but unfortunately it is infamously tricky to get running on non-Windows systems.
+
+![Demo GIF](Images/Demo.gif)
 
 # Features
 Currently, it supports:
@@ -17,6 +21,8 @@ Currently, it supports:
   * Example: missing dependency (disabled, or not installed), or dependency is loaded after the mod that needs it.
 * Saving and exporting the current load order to the target profile
 * Basic user settings, including setting the GameData path, the current profile, and a light/dark theme toggle checkbox.
+
+![Settings Overview](Images/SettingsImage.png)
 
 # Planned Features
 Features that are planned, but not yet implemented, include:
