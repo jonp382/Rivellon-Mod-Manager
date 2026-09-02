@@ -9,8 +9,6 @@ This tool is cross-platform and supports any desktop operating system. It is dev
 
 It was developed as a cross-platform alternative to LaughingLeader's Divinity Mod Manager for those who do not use Windows. Their mod manager is a fantastic tool and I highly recommend it for Windows users, but unfortunately it is infamously tricky to get running on non-Windows systems.
 
-![Demo GIF](Images/Demo.gif)
-
 # Features
 Currently, it supports:
 * Profile selection
