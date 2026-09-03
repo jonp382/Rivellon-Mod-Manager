@@ -25,18 +25,14 @@ public partial class MainViewModel : ViewModelBase
     public MainViewModel()
     {
         IOHelper.UserSettings.Load();
-        ParseModsDirectory();
-        ParseLSXFile();
-
-        UpdateLoadOrders();
-        ValidateLoadOrder();
+        Update();
 
         Debug.WriteLine($"Constructor complete");
         OnPropertyChanged();
     }
 
     [ObservableProperty]
-    private string _textBoxText = string.Empty;
+    private string _statusText = string.Empty;
 
     [ObservableProperty]
     private ObservableCollection<Resources.ModInfo> _enabledMods = [];
@@ -46,6 +42,9 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty]
     private ObservableCollection<Resources.ModInfo> _allMods = [];
+
+    [ObservableProperty]
+    private string _currentProfileText = string.Empty;
 
     public void ParseModsDirectory()
     {
@@ -80,7 +79,7 @@ public partial class MainViewModel : ViewModelBase
             AllMods.Add(Resources.LSServices.ExtractMetadata(package));
             
         }
-        TextBoxText = $"Total Mod Count: {AllMods.Count}";
+        
     }
 
     [RelayCommand]
@@ -255,6 +254,9 @@ public partial class MainViewModel : ViewModelBase
 
         ParseModsDirectory();
         ParseLSXFile();
+
+        // update UI profile display
+        CurrentProfileText = IOHelper.UserSettings.Default.SelectedProfile;
 
         UpdateLoadOrders();
 
