@@ -11,6 +11,7 @@ using System.Collections.ObjectModel;
 using Avalonia;
 using Avalonia.VisualTree;
 using System;
+using System.Collections.Generic;
 
 namespace ModManager.Views;
 
@@ -222,6 +223,73 @@ public partial class MainWindow : Window
         
         vm.UpdateLoadOrders();
     }
+
+    public void EnableSelectedItem(object? sender, RoutedEventArgs e)
+    {
+        if(DataContext is not MainViewModel vm) return;
+
+        var sourceList = vm.DisabledMods;
+        var targetList = vm.EnabledMods;
+
+        var sourceGrid = DisabledGrid;
+
+        ModInfo? targetMod = (ModInfo)sourceGrid.SelectedItem;
+        if(targetMod == null) return;
+
+        MoveItem([targetMod], sourceList, targetList);
+    }
+
+    public void DisableSelectedItem(object? sender, RoutedEventArgs e)
+    {
+        if(DataContext is not MainViewModel vm) return;
+
+        var sourceList = vm.EnabledMods;
+        var targetList = vm.DisabledMods;
+
+        var sourceGrid = EnabledGrid;
+
+        ModInfo targetMod = (ModInfo)sourceGrid.SelectedItem;
+        if(targetMod == null) return;
+
+        MoveItem([targetMod], sourceList, targetList);
+    }
+
+    public void EnableAllItems(object? sender, RoutedEventArgs e)
+    {
+        if(DataContext is not MainViewModel vm) return;
+
+        var sourceList = vm.DisabledMods;
+        var targetList = vm.EnabledMods;
+
+        MoveItem(sourceList.ToList(), sourceList, targetList);
+
+    }
+
+    public void DisableAllItems(object? sender, RoutedEventArgs e)
+    {
+        if(DataContext is not MainViewModel vm) return;
+
+        var sourceList = vm.EnabledMods;
+        var targetList = vm.DisabledMods;
+
+        MoveItem(sourceList.ToList(), sourceList, targetList);
+    }
+
+    public void MoveItem(List<ModInfo> ModsToMove, ObservableCollection<ModInfo> SourceList, ObservableCollection<ModInfo> TargetList)
+    {
+        if(DataContext is not MainViewModel vm) return;
+
+        foreach(ModInfo modToRemove in ModsToMove)
+        {
+            if(modToRemove == null) continue; // skip null mods
+            SourceList.Remove(modToRemove); // remove mod from source list
+            TargetList.Add(modToRemove); // add mod to target list
+
+        }
+
+        vm.UpdateLoadOrders();
+    }
+    
 
     private int GetTargetIndex(DataGrid targetGrid, DragEventArgs e)
     {

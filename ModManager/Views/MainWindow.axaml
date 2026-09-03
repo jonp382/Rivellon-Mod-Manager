@@ -14,7 +14,8 @@
         Title="ModManager"
         Width="800" Height = "500"
         Background="{DynamicResource AppBackgroundBrush}"
-        Foreground="{DynamicResource AppTextBrush}">
+        Foreground="{DynamicResource AppTextBrush}"
+        >
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
@@ -22,7 +23,29 @@
         <vm:MainViewModel />
     </Design.DataContext>
     
-    <Grid RowDefinitions="Auto, Auto, *">
+    <Window.Styles>
+        <!-- DataGrid Visual Enhancements -->
+        <Style Selector="DataGrid">
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="GridLinesVisibility" Value="None"/>
+        </Style>
+
+        <Style Selector="DataGridCell">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="8,4"/>
+        </Style>
+
+        <Style Selector="Button.ActionBtn">
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+    </Window.Styles>
+    
+    <Grid RowDefinitions="Auto, Auto, *, 30">
 
         <Menu Grid.Row="0" Grid.ColumnSpan="2" FontSize="12" FontWeight="Bold" > 
             <MenuItem Header="File">
@@ -49,43 +72,51 @@
 
         </Menu>
         
+        <!-- TODO: need to rename -->
         <Grid 
             Name="MainGrid" 
             Grid.Row = "2" 
-            ColumnDefinitions="*, 10, *"
+            ColumnDefinitions="*, 45, *"
             RowDefinitions="15, *"
         >
 
+            <StackPanel Grid.Row="1" Grid.RowSpan="4" Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                <Button Content="&lt;" ToolTip.Tip="Enable Selected" Classes="ActionBtn" Click="EnableSelectedItem"/>
+                <Button Content="&lt;&lt;" ToolTip.Tip="Enable ALL" Classes="ActionBtn" Click="EnableAllItems"/>
+                <Button Content="&gt;" ToolTip.Tip="Disable Selected" Classes="ActionBtn" Click="DisableSelectedItem"/>
+                <Button Content="&gt;&gt;" ToolTip.Tip="Disable ALL" Classes="ActionBtn" Click="DisableAllItems"/>
+            </StackPanel>
+
+            <!-- Enabled/Disabled mod count textblocks -->
             <TextBlock 
                 Grid.Row="0" 
                 Grid.Column="0"
                 Margin="25,0" 
                 VerticalAlignment="Center"
                 HorizontalAlignment="Left"
-                Text="Enabled Mods" 
+                Text="{Binding EnabledMods.Count, StringFormat='{}{0} Enabled Mods'}" 
                 FontWeight="Bold"
                 FontSize="12"
             />
 
             <TextBlock 
+                Text="{Binding DisabledMods.Count, StringFormat='{}{0} Disabled Mods'}" 
+                FontWeight="Bold"
+                FontSize="12"
                 Grid.Row="0" 
                 Grid.Column="2"
                 Margin="25,0" 
                 VerticalAlignment="Center"
                 HorizontalAlignment="Left"
-                Text="Disabled Mods" 
-                FontWeight="Bold"
-                FontSize="12"
             />
 
+            <!-- Enabled Mods Grid -->
             <DataGrid x:Name="EnabledGrid"
                 ItemsSource="{Binding EnabledMods}"
                 Grid.Row="1"
                 Grid.Column="0"
                 IsReadOnly="True"
                 Margin = "5"
-                GridLinesVisibility="None"
-                BorderThickness="1" BorderBrush="Gray"
                 ScrollViewer.VerticalScrollBarVisibility="Auto"
                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
                 
@@ -99,10 +130,6 @@
                 >
 
                 <DataGrid.Styles>
-
-                    <Style Selector="DataGridCell">
-                        <Setter Property="FontSize" Value="12"/>
-                    </Style>
 
                     <Style Selector="DataGridRow" x:DataType="models:ModInfo">
 
@@ -128,16 +155,18 @@
                 </DataGrid.Columns>
             </DataGrid>
 
+            <!--  -->
             <!-- Use column 1 for spacing -->
+            <!--  -->
 
+            <!-- Disabled Mods Grid -->
             <DataGrid  x:Name="DisabledGrid"
                 ItemsSource="{Binding DisabledMods}"
                 Grid.Row="1"
                 Grid.Column="2"
                 IsReadOnly="True"
                 Margin = "5"
-                GridLinesVisibility="None"
-                BorderThickness="1" BorderBrush="Gray"
+
                 ScrollViewer.VerticalScrollBarVisibility="Auto"
                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
                 
@@ -150,12 +179,6 @@
                 PointerPressed="OnPointerPressed"
                 >
 
-                <DataGrid.Styles>
-                    <Style Selector="DataGridCell">
-                        <Setter Property="FontSize" Value="12"/>
-                    </Style>
-                </DataGrid.Styles>
-
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
                     <DataGridTextColumn Header="Version" Binding="{Binding Version}" />
@@ -163,11 +186,12 @@
                 </DataGrid.Columns>
             </DataGrid>
 
+            <!-- Drag-drop indicator to show where a mod will be placed. -->
             <Rectangle 
                 Name="GridDropIndicator"
                 Grid.ColumnSpan="3"
                 Height="2"
-                Fill="DodgerBlue"
+                Fill="{DynamicResource SystemAccentColor}"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
                 IsVisible="False"
@@ -176,5 +200,34 @@
 
 
         </Grid>
+
+        
+        <Border
+            Grid.Row="3"
+            Background="{DynamicResource SystemControlBackgroundChromeLowBrush}"
+            Padding="12,4"
+            BorderThickness="0,1,0,0"
+            
+        >
+            <DockPanel
+
+            >
+                <TextBlock
+                    Text="{Binding StatusText, StringFormat='{}Status: {0}'}"
+                    FontSize="11"
+                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                    HorizontalAlignment="Left"
+                />
+                <TextBlock
+                    Text="{Binding CurrentProfileText, StringFormat='{}Selected Profile: {0}'}"
+                    FontSize="11"
+                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                    HorizontalAlignment="Right"
+                />
+
+            </DockPanel>
+        
+    
+        </Border>
     </Grid>
 </Window>
