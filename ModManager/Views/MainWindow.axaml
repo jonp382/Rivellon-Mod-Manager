@@ -76,11 +76,18 @@
         <Grid 
             Name="MainGrid" 
             Grid.Row = "2" 
-            ColumnDefinitions="*, 45, *"
+            ColumnDefinitions="*, *, 45, *"
             RowDefinitions="15, *"
         >
 
-            <StackPanel Grid.Row="1" Grid.RowSpan="4" Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+            <StackPanel
+                
+            >   
+        
+            </StackPanel>
+
+            <!-- Enabled/Disabled buttons -->
+            <StackPanel Grid.Row="1" Grid.RowSpan="4" Grid.Column="2" VerticalAlignment="Center" Spacing="4">
                 <Button Content="&lt;" ToolTip.Tip="Enable Selected" Classes="ActionBtn" Click="EnableSelectedItem"/>
                 <Button Content="&lt;&lt;" ToolTip.Tip="Enable ALL" Classes="ActionBtn" Click="EnableAllItems"/>
                 <Button Content="&gt;" ToolTip.Tip="Disable Selected" Classes="ActionBtn" Click="DisableSelectedItem"/>
@@ -90,7 +97,7 @@
             <!-- Enabled/Disabled mod count textblocks -->
             <TextBlock 
                 Grid.Row="0" 
-                Grid.Column="0"
+                Grid.Column="1"
                 Margin="25,0" 
                 VerticalAlignment="Center"
                 HorizontalAlignment="Left"
@@ -104,7 +111,7 @@
                 FontWeight="Bold"
                 FontSize="12"
                 Grid.Row="0" 
-                Grid.Column="2"
+                Grid.Column="3"
                 Margin="25,0" 
                 VerticalAlignment="Center"
                 HorizontalAlignment="Left"
@@ -114,7 +121,7 @@
             <DataGrid x:Name="EnabledGrid"
                 ItemsSource="{Binding EnabledMods}"
                 Grid.Row="1"
-                Grid.Column="0"
+                Grid.Column="1"
                 IsReadOnly="True"
                 Margin = "5"
                 ScrollViewer.VerticalScrollBarVisibility="Auto"
@@ -150,20 +157,18 @@
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="#" Binding="{Binding LoadOrder}" />
                     <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
-                    <DataGridTextColumn Header="Version" Binding="{Binding Version}" />
-                    <DataGridTextColumn Header="Author" Binding="{Binding Author}" />
                 </DataGrid.Columns>
             </DataGrid>
 
             <!--  -->
-            <!-- Use column 1 for spacing -->
+            <!-- Use column 2 for spacing -->
             <!--  -->
 
             <!-- Disabled Mods Grid -->
             <DataGrid  x:Name="DisabledGrid"
                 ItemsSource="{Binding DisabledMods}"
                 Grid.Row="1"
-                Grid.Column="2"
+                Grid.Column="3"
                 IsReadOnly="True"
                 Margin = "5"
 
@@ -189,7 +194,7 @@
             <!-- Drag-drop indicator to show where a mod will be placed. -->
             <Rectangle 
                 Name="GridDropIndicator"
-                Grid.ColumnSpan="3"
+                Grid.ColumnSpan="4"
                 Height="2"
                 Fill="{DynamicResource SystemAccentColor}"
                 HorizontalAlignment="Left"
