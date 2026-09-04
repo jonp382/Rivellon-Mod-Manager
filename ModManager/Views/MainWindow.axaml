@@ -86,15 +86,18 @@
         <Grid 
             Name="MainGrid" 
             Grid.Row = "2" 
-            ColumnDefinitions="*, *, 45, *"
+            ColumnDefinitions="360, *, 45, *"
             RowDefinitions="15, *"
         >
 
             <!-- stack panel to hold the preview section on the left side -->
-            <StackPanel
+            <Grid
                 Grid.RowSpan="10"
                 Grid.Column="0"
-                Spacing="5"
+                RowDefinitions="350, 30, 30, 30, 30, 30, *"
+                ColumnDefinitions="*"
+
+                Margin="5"
             >   
 
                 
@@ -105,6 +108,9 @@
                     Height="340"
                     Margin="5"
                     Stretch="Uniform"
+
+                    Grid.Row="0"
+                    Grid.Column="0"
                 >
             
                 </Image>
@@ -113,40 +119,65 @@
                 <TextBlock
                     Text="{Binding CurrentlySelectedMod.Name, StringFormat='{}{0}'}"
                     FontWeight="Bold"
-                    Margin="5, 0, 0, 0"
+                    
+                    Grid.Row="1"
+                    Grid.Column="0"
+
                 />
                 
                 <!-- mod author -->
                 <TextBlock
                     Text="{Binding CurrentlySelectedMod.Author, StringFormat='{}Author: {0}'}"
-                    Margin="5, 0, 0, 0"
+
+                    Grid.Row="2"
+                    Grid.Column="0"
+
                 />
 
                 <!-- mod version -->
                 <TextBlock
                     Text="{Binding CurrentlySelectedMod.Version, StringFormat='{}Version: {0}'}"
-                    Margin="5, 0, 0, 0"
+
+                    Grid.Row="3"
+                    Grid.Column="0"
+
                 />
 
                 <!-- mod UUID -->
                 <TextBlock
                     Text="{Binding CurrentlySelectedMod.UUID, StringFormat='{}ID: {0}'}"
-                    Margin="5, 0, 0, 0"
+
+                    Grid.Row="4"
+                    Grid.Column="0"
+
                 />
 
                 <!-- mod workshop ID -->
                 <TextBlock
                     Text="{Binding CurrentlySelectedMod.WorkshopID, StringFormat='{}Workshop ID: {0}'}"
-                    Margin="5, 0, 0, 0"
+
+                    Grid.Row="5"
+                    Grid.Column="0"
+
                 />
 
                 <!-- mod workshop description -->
-                <TextBlock
-                    Text="{Binding CurrentlySelectedMod.WorkshopDetails.Description}"
-                />
+                <ScrollViewer
+                    Grid.Row="6"
+                    Grid.Column="0"
+                >
+                    <TextBlock
+                        Text="{Binding CurrentlySelectedMod.WorkshopDetails.Description}"
+                        TextWrapping="WrapWithOverflow"
+                        
+                        ScrollViewer.VerticalScrollBarVisibility="Visible"
+                        
+                        
+                    />
+                </ScrollViewer>
                     
         
-            </StackPanel>
+            </Grid>
 
             <!-- Enabled/Disable buttons -->
             <StackPanel Grid.Row="1" Grid.RowSpan="4" Grid.Column="2" VerticalAlignment="Center" Spacing="4">
