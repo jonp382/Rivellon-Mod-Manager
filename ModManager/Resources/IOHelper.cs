@@ -37,6 +37,9 @@ public class SharedPaths
             );
     }
 
+    // where the EXE is stored
+    public static string GetBaseFolderPath() { return AppContext.BaseDirectory; }
+
         
 
     public static string GetConfigFile()

@@ -142,12 +142,12 @@ public partial class MainViewModel : ViewModelBase
         string? FilePath = await IOHelper.OpenFolder.SelectAnyFile("Select the PAK file to extract");
         if(string.IsNullOrEmpty(FilePath)) return;
 
-        // Debug file output to Downloads folder for testing.
+        
         var outFilePath = 
             Path.Combine(
-                System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile),
-                "Downloads",
-                "Test Folder"
+                IOHelper.SharedPaths.GetBaseFolderPath(),
+                "Extracted PAK Files",
+                Path.GetFileNameWithoutExtension(FilePath)
             );
 
         Resources.LSServices.ExtractPAKFile(FilePath, outFilePath);
