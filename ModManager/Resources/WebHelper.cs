@@ -9,6 +9,8 @@ using ModManager.Resources;
 using System.Threading;
 
 using SteamAPI;
+using System;
+using Avalonia.Controls;
 
 namespace WebHelper;
 
@@ -128,4 +130,12 @@ public class WebRequest()
             Debug.WriteLine($"[✗] Failed to download preview image {mod.Folder}: {ex.Message}");
         }
     }
+
+    public static async Task OpenURL(string URL, TopLevel topLevel)
+    {
+        if(Uri.TryCreate(URL, UriKind.Absolute, out Uri? uri))
+        {
+            await topLevel.Launcher.LaunchUriAsync(uri);
+        }
+    }   
 }
