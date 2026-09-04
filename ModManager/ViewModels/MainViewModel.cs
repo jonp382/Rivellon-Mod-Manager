@@ -47,21 +47,19 @@ public partial class MainViewModel : ViewModelBase
             !File.Exists(Path.Combine(IOHelper.CommonPaths.GetResourcesFolderPath(), "preview-images", $"{n.Folder}.png")
             )).ToList();
 
+        StatusText = "Fetching Steam Workshop details for installed mods...";
+
         await WebHelper.WebRequest.GetWorkshopDetails(batchIDs);
 
         ParseWorkshopJson();
 
         await WebHelper.WebRequest.DownloadAllPreviewImages(batchIDs);
 
-        foreach(Resources.ModInfo mod in AllMods)
-        {
-            var imagePath = Path.Combine(IOHelper.CommonPaths.GetResourcesFolderPath(), "preview-images", $"{mod.Folder}.png");
-            if(File.Exists(imagePath)) 
-            {
-                mod.PreviewImage = new Bitmap(imagePath);
-                Debug.WriteLine($"Assigned image to mod {mod.Name} from {imagePath}");
-            }
-        }
+        StatusText = "Downloading missing preview images from Steam Workshop...";
+
+        UpdatePreviewImages();
+
+        StatusText = "Workshop sync complete!";
 
     }
 
@@ -102,6 +100,8 @@ public partial class MainViewModel : ViewModelBase
 
     public void ParseModsDirectory()
     {
+        StatusText = "Retrieving mods from Mods folder...";
+
         string filePath = IOHelper.UserSettings.Default.DataFolder + "/Mods";
 
         Debug.WriteLine($"Attempting to parse mods directory at {filePath}");
@@ -133,6 +133,8 @@ public partial class MainViewModel : ViewModelBase
             AllMods.Add(Resources.LSServices.ExtractMetadata(package));
             
         }
+
+        StatusText = $"Retrieving mods from Mods folder... Complete, found {AllMods.Count} mods!";
         
     }
 
@@ -164,6 +166,8 @@ public partial class MainViewModel : ViewModelBase
     {
         EnabledMods.Clear();
         DisabledMods.Clear();
+
+        StatusText = $"Reading mod configuration from DOS2 profile {IOHelper.UserSettings.Default.SelectedProfile}...";
 
         string filePath = IOHelper.UserSettings.Default.DataFolder + "/PlayerProfiles" + $"/{IOHelper.UserSettings.Default.SelectedProfile}/" + "modsettings.lsx";
 
@@ -229,12 +233,15 @@ public partial class MainViewModel : ViewModelBase
         var allDisabledMods = AllMods.Where(mod => EnabledMods.FirstOrDefault(enabled => enabled.UUID == mod.UUID) == null);
         DisabledMods = new(allDisabledMods.ToList());
 
+        StatusText = $"Reading mod configuration from DOS2 profile {IOHelper.UserSettings.Default.SelectedProfile}... Complete, found {EnabledMods.Count} enabled mods and {DisabledMods.Count} disabled mods!";
+
         OnPropertyChanged();
 
     }
 
     public void UpdateLoadOrders()
     {
+        StatusText = $"Updating load order...";
         // don't sort DisabledMods since we don't care about load orders there.
         // set all load orders to -1 which im using as "invalid" or unloaded.
         foreach(var mod in DisabledMods)
@@ -251,11 +258,14 @@ public partial class MainViewModel : ViewModelBase
         
         ValidateLoadOrder();
 
+        StatusText = "Successfully updated and validated load order!";
+
         
     }
 
     public void ValidateLoadOrder()
     {
+        StatusText = $"Validating load order...";
         // don't sort DisabledMods since we don't care about load orders there.
         
         if(EnabledMods.Count > 0)
@@ -339,7 +349,7 @@ public partial class MainViewModel : ViewModelBase
     public async void Update()
     {
 
-        Debug.WriteLine($"Running Update() in MainViewModel");
+        StatusText = "Updating mods database...";
 
         AllMods.Clear();
         EnabledMods.Clear();
@@ -348,11 +358,14 @@ public partial class MainViewModel : ViewModelBase
         ParseModsDirectory();
         ParseLSXFile();
         ParseWorkshopFolder();
+        UpdatePreviewImages(); // this only re-assigns images, it does not download them
 
         // update UI profile display
         CurrentProfileText = IOHelper.UserSettings.Default.SelectedProfile;
 
         UpdateLoadOrders();
+
+        StatusText = "Update complete!";
 
     }
 
@@ -432,6 +445,19 @@ public partial class MainViewModel : ViewModelBase
 
         await MessageboxHelper.ErrorBox.ErrorMessageBox($"The following mods were not found among your installed list, and could not be enabled: \n{string.Join("\n", missingMods)}");
 
+    }
+
+    public void UpdatePreviewImages()
+    {
+        foreach(Resources.ModInfo mod in AllMods)
+        {
+            var imagePath = Path.Combine(IOHelper.CommonPaths.GetResourcesFolderPath(), "preview-images", $"{mod.Folder}.png");
+            if(File.Exists(imagePath)) 
+            {
+                mod.PreviewImage = new Bitmap(imagePath);
+                Debug.WriteLine($"Assigned image to mod {mod.Name} from {imagePath}");
+            }
+        }
     }
 
 }
