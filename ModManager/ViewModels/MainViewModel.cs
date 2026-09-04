@@ -140,7 +140,11 @@ public partial class MainViewModel : ViewModelBase
     public async Task ExtractPakFile()
     {
         string? FilePath = await IOHelper.FileIO.SelectAnyFile("Select the PAK file to extract");
-        if(string.IsNullOrEmpty(FilePath)) return;
+        if(string.IsNullOrEmpty(FilePath))
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox("No file was selected. Please try again.");
+            return;
+        }
 
         
         var outFilePath = 
@@ -151,11 +155,12 @@ public partial class MainViewModel : ViewModelBase
             );
 
         Resources.LSServices.ExtractPAKFile(FilePath, outFilePath);
+        await MessageboxHelper.InfoBox.InfoMessageBox($"Successfully exported PAK file to {outFilePath}!", "PAK File Exporter");
 
 
     }
 
-    public void ParseLSXFile()
+    public async void ParseLSXFile()
     {
         EnabledMods.Clear();
         DisabledMods.Clear();
@@ -166,11 +171,16 @@ public partial class MainViewModel : ViewModelBase
 
         if(string.IsNullOrEmpty(filePath)) return;
 
-        if(!File.Exists(filePath)) return;
+        if(!File.Exists(filePath))
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox($"The file {filePath} was not found. Please try again.");
+            return;    
+        }
+        
 
         if(AllMods == null || AllMods.Count <= 0)
         {
-            Debug.WriteLine($"Please load the mod folder first!");
+            await MessageboxHelper.ErrorBox.ErrorMessageBox($"The modsettings.lsx file requires the Mods folder to be parsed first. Unable to load profile.");
             return;
         }
 
