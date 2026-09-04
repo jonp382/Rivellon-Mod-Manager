@@ -17,4 +17,20 @@ public static class ErrorBox
 
         await box.ShowWindowAsync();
     }
+
+}
+
+public static class InfoBox
+{
+    public static async Task InfoMessageBox(string text, string title = "Mod Manager")
+    {
+        var box = MessageBoxManager.GetMessageBoxStandard(
+            title: title,
+            text: text,
+            ButtonEnum.Ok,
+            Icon.Info
+        );
+
+        await box.ShowWindowAsync();
+    }
 }
