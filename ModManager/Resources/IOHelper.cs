@@ -29,6 +29,16 @@ public class SharedPaths
             
     }
 
+    public static string GetResourcesFolderPath()
+    {
+        return Path.Combine(
+            AppContext.BaseDirectory,
+            "resources"
+            );
+    }
+
+        
+
     public static string GetConfigFile()
     {
         return Path.Combine(
@@ -104,6 +114,20 @@ public class SharedPaths
             return string.Empty;
         }
 
+    }
+
+    public async static Task<string> AutoFindWorkshopFolder()
+    {
+
+        var steamPath = await OpenFolder.SelectAnyFolder("Please select your steamapps folder in your Steam directory.");
+        if(string.IsNullOrEmpty(steamPath)) 
+        {
+            Debug.WriteLine($"No folder selected");
+            return string.Empty;
+        }
+
+
+        return Path.Combine(steamPath, "workshop", "content", "435150");
     }
 
     public static string GetLSXFromProfile()
@@ -238,6 +262,7 @@ public class UserSettings
     public static UserSettings Default => _instance ??= Load();
     public string SelectedProfile {get; set; } = string.Empty;
     public string DataFolder {get; set; } = string.Empty;
+    public string WorkshopFolder {get; set; } = string.Empty;
     public double WindowWidth {get; set; } = 1200;
     public double WindowHeight {get; set; } = 800;
     public bool EnableDarkTheme {get; set; } = false;
