@@ -600,6 +600,12 @@ public partial class MainViewModel : ViewModelBase
                     var matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.UUID, dependency, System.StringComparison.OrdinalIgnoreCase));
                     if(matchingMod == null) continue;
 
+                    if(!EnabledMods.Contains(matchingMod))
+                    {
+                        // this means its disabled. Move it first so duplicate mods aren't created.
+                        await MoveMods([matchingMod], DisabledMods, EnabledMods);
+                    }
+
                     // this dependency is already good relative to this mod so don't move it.
                     if(EnabledMods.IndexOf(matchingMod) < EnabledMods.IndexOf(mod) && EnabledMods.IndexOf(matchingMod) != -1) continue;
 
