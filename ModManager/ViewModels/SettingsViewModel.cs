@@ -31,7 +31,7 @@ public partial class SettingsViewModel : ObservableObject
         _dataDirectory = IOHelper.UserSettings.Default.DataFolder;
         _workshopDirectory = IOHelper.UserSettings.Default.WorkshopFolder;
 
-        _allProfiles = new(IOHelper.SharedPaths.GetAllProfiles(_dataDirectory) ?? new List<string>());
+        _allProfiles = new(IOHelper.CommonPaths.GetAllProfiles(_dataDirectory) ?? new List<string>());
         
         _currentProfile = IOHelper.UserSettings.Default.SelectedProfile;
         _enableDarkTheme = IOHelper.UserSettings.Default.EnableDarkTheme;
@@ -50,7 +50,7 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     public async Task SelectDataDirectory()
     {
-        var path = await IOHelper.OpenFolder.SelectModsFolder("Select the Divinity 2 parent folder that contains Mods, PlayerProfiles etc.");
+        var path = await IOHelper.FileIO.SelectModsFolder("Select the Divinity 2 parent folder that contains Mods, PlayerProfiles etc.");
 
         // only update if a valid path was selected.
         if(path != null)
@@ -63,7 +63,7 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     public async Task AutoSelectDataDirectory()
     {
-        var path = await IOHelper.SharedPaths.AutoFindGameDataFolder();
+        var path = await IOHelper.CommonPaths.AutoFindGameDataFolder();
 
         if (!string.IsNullOrEmpty(path))
         {
@@ -74,7 +74,7 @@ public partial class SettingsViewModel : ObservableObject
         [RelayCommand]
     public async Task SelectWorkshopDirectory()
     {
-        var path = await IOHelper.OpenFolder.SelectModsFolder("Select the Divinity 2 parent folder that contains Mods, PlayerProfiles etc.");
+        var path = await IOHelper.FileIO.SelectModsFolder("Select the Divinity 2 parent folder that contains Mods, PlayerProfiles etc.");
 
         // only update if a valid path was selected.
         if(path != null)
@@ -87,7 +87,7 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     public async Task AutoSelectWorkshopDirectory()
     {
-        var path = await IOHelper.SharedPaths.AutoFindWorkshopFolder();
+        var path = await IOHelper.CommonPaths.AutoFindWorkshopFolder();
 
         if (!string.IsNullOrEmpty(path))
         {

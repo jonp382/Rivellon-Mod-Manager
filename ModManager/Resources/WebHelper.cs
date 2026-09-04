@@ -26,7 +26,7 @@ public class WebRequest()
 
         // TODO add button to force-update workshop metadata.
         // TOOD add check to see if any mods are missing from the metadata, and if so, fetch new results.
-        if(File.Exists(Path.Combine(IOHelper.SharedPaths.GetResourcesFolderPath(), "steam_api.json"))) return;
+        if(File.Exists(Path.Combine(IOHelper.CommonPaths.GetResourcesFolderPath(), "steam_api.json"))) return;
 
         var allResults = new List<PublishedFileDetail>();
 
@@ -65,7 +65,7 @@ public class WebRequest()
             Debug.WriteLine($"Successfully queried steam API and obtained {allResults.Count} results.");
 
             File.WriteAllText(
-                Path.Combine(IOHelper.SharedPaths.GetResourcesFolderPath(), "steam_api.json"), 
+                Path.Combine(IOHelper.CommonPaths.GetResourcesFolderPath(), "steam_api.json"), 
                 jsonResponse
             );
             
@@ -82,7 +82,7 @@ public class WebRequest()
 
     public static async Task DownloadAllPreviewImages(List<ModInfo> Mods)
     {
-        var outputDirectory = Path.Combine(IOHelper.SharedPaths.GetResourcesFolderPath(), "preview-images");
+        var outputDirectory = Path.Combine(IOHelper.CommonPaths.GetResourcesFolderPath(), "preview-images");
 
         if(!Directory.Exists(outputDirectory)) Directory.CreateDirectory(outputDirectory);
 

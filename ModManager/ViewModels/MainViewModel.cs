@@ -44,7 +44,7 @@ public partial class MainViewModel : ViewModelBase
         List<Resources.ModInfo> batchIDs = AllMods.Where(
             n => !string.IsNullOrEmpty(n.WorkshopID)
             &&
-            !File.Exists(Path.Combine(IOHelper.SharedPaths.GetResourcesFolderPath(), "preview-images", $"{n.Folder}.png")
+            !File.Exists(Path.Combine(IOHelper.CommonPaths.GetResourcesFolderPath(), "preview-images", $"{n.Folder}.png")
             )).ToList();
 
         await WebHelper.WebRequest.GetWorkshopDetails(batchIDs);
@@ -55,7 +55,7 @@ public partial class MainViewModel : ViewModelBase
 
         foreach(Resources.ModInfo mod in AllMods)
         {
-            var imagePath = Path.Combine(IOHelper.SharedPaths.GetResourcesFolderPath(), "preview-images", $"{mod.Folder}.png");
+            var imagePath = Path.Combine(IOHelper.CommonPaths.GetResourcesFolderPath(), "preview-images", $"{mod.Folder}.png");
             if(File.Exists(imagePath)) 
             {
                 mod.PreviewImage = new Bitmap(imagePath);
@@ -67,7 +67,7 @@ public partial class MainViewModel : ViewModelBase
 
     public void ParseWorkshopJson()
     {
-        var jsonPath = Path.Combine(IOHelper.SharedPaths.GetResourcesFolderPath(), "steam_api.json");
+        var jsonPath = Path.Combine(IOHelper.CommonPaths.GetResourcesFolderPath(), "steam_api.json");
         var rawString = File.ReadAllText(jsonPath);
 
         var json = JsonSerializer.Deserialize<SteamAPIResponse>(rawString);
@@ -139,13 +139,13 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     public async Task ExtractPakFile()
     {
-        string? FilePath = await IOHelper.OpenFolder.SelectAnyFile("Select the PAK file to extract");
+        string? FilePath = await IOHelper.FileIO.SelectAnyFile("Select the PAK file to extract");
         if(string.IsNullOrEmpty(FilePath)) return;
 
         
         var outFilePath = 
             Path.Combine(
-                IOHelper.SharedPaths.GetBaseFolderPath(),
+                IOHelper.CommonPaths.GetBaseFolderPath(),
                 "Extracted PAK Files",
                 Path.GetFileNameWithoutExtension(FilePath)
             );
@@ -360,7 +360,7 @@ public partial class MainViewModel : ViewModelBase
         var ExportList = EnabledMods.Select(n => n.UUID);
 
         // export to modlists subfolder in base directory
-        var ExportDirectory  = Path.Combine(IOHelper.SharedPaths.GetBaseFolderPath(), "Mod Orders");
+        var ExportDirectory  = Path.Combine(IOHelper.CommonPaths.GetBaseFolderPath(), "Mod Orders");
         if(!Directory.Exists(ExportDirectory)) Directory.CreateDirectory(ExportDirectory);
 
         var file = Path.Combine(ExportDirectory, $"{IOHelper.UserSettings.Default.SelectedProfile}.json");
@@ -377,7 +377,7 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     public async Task ImportLoadOrderFromFile()
     {
-        var file = await IOHelper.OpenFolder.SelectAnyFile("Please select the mod order file you want to import");
+        var file = await IOHelper.FileIO.SelectAnyFile("Please select the mod order file you want to import");
         string? filePath = file?.ToString();
 
         if(string.IsNullOrWhiteSpace(file)) return;

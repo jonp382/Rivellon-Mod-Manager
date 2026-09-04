@@ -31,7 +31,7 @@ public partial class SettingsWindow : Window
     {
         var text = ((TextBox)sender!).Text ?? string.Empty;
         
-        var profiles = IOHelper.SharedPaths.GetAllProfiles(text);
+        var profiles = IOHelper.CommonPaths.GetAllProfiles(text);
         if (profiles == null)
         {
             ViewModel.AllProfiles.Clear();

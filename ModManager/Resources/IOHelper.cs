@@ -11,7 +11,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
 
-public class SharedPaths
+public class CommonPaths
 {
     public static string GetConfigFolderPath()
     {
@@ -94,7 +94,7 @@ public class SharedPaths
 
         if (OperatingSystem.IsLinux())
         {
-            var steamPath = await OpenFolder.SelectAnyFolder("Please select your steamapps folder in your Steam directory.");
+            var steamPath = await FileIO.SelectAnyFolder("Please select your steamapps folder in your Steam directory.");
             if(string.IsNullOrEmpty(steamPath)) 
             {
                 Debug.WriteLine($"No folder selected");
@@ -122,7 +122,7 @@ public class SharedPaths
     public async static Task<string> AutoFindWorkshopFolder()
     {
 
-        var steamPath = await OpenFolder.SelectAnyFolder("Please select your steamapps folder in your Steam directory.");
+        var steamPath = await FileIO.SelectAnyFolder("Please select your steamapps folder in your Steam directory.");
         if(string.IsNullOrEmpty(steamPath)) 
         {
             Debug.WriteLine($"No folder selected");
@@ -139,7 +139,7 @@ public class SharedPaths
     }
 }
 
-public static class OpenFolder
+public static class FileIO
 {
     public async static Task<string?> SelectModsFolder(string prompt = "Please make a selection")
     {
@@ -272,7 +272,7 @@ public class UserSettings
 
     public static UserSettings Load()
     {
-        var configFilePath = SharedPaths.GetConfigFile();
+        var configFilePath = CommonPaths.GetConfigFile();
         if (File.Exists(configFilePath))
         {
             try
@@ -295,10 +295,10 @@ public class UserSettings
 
     public void Save()
     {
-        var directory = SharedPaths.GetConfigFolderPath();
+        var directory = CommonPaths.GetConfigFolderPath();
         if(!Directory.Exists(directory)) Directory.CreateDirectory(directory);
 
-        var configFilePath = SharedPaths.GetConfigFile();
+        var configFilePath = CommonPaths.GetConfigFile();
         try
         {
             File.WriteAllText(configFilePath, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
