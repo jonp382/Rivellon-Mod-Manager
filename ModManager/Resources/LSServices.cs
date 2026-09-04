@@ -109,6 +109,7 @@ public class LSServices
 
         if(Dependencies.Count > 0)
         {
+            Dependencies.RemoveAll(n => FixedModUUIDs.IDs.Contains(GetAttribute(n, "UUID")));
             foreach(Node dependency in Dependencies)
             {
                 modInfo.Dependencies.Add(GetAttribute(dependency, "UUID"));
