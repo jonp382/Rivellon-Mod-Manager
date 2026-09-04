@@ -546,8 +546,6 @@ public partial class MainViewModel : ViewModelBase
 
     public async Task MoveMods(List<Resources.ModInfo> ModsToMove, ObservableCollection<Resources.ModInfo> SourceList, ObservableCollection<Resources.ModInfo> TargetList)
     {
-        var previousIndex = SourceList.IndexOf(ModsToMove[0]);
-
         foreach(Resources.ModInfo modToMove in ModsToMove)
         {
             if(modToMove == null) continue; // skip null mods
@@ -558,6 +556,62 @@ public partial class MainViewModel : ViewModelBase
 
         UpdateLoadOrders();
 
+    }
+
+    public async Task MoveModsToIndex(List<Resources.ModInfo> ModsToMove, ObservableCollection<Resources.ModInfo> SourceList, ObservableCollection<Resources.ModInfo> TargetList, int targetIndex)
+    {
+        targetIndex = System.Math.Max(0, targetIndex);
+        foreach(Resources.ModInfo modToMove in ModsToMove)
+        {
+            if(modToMove == null) continue; // skip null mods
+
+            Debug.WriteLine($"Attempting to move {modToMove.Name} to index {targetIndex}");
+            SourceList.Remove(modToMove); // remove mod from source list
+            TargetList.Insert(targetIndex, modToMove); // add mod to target list
+            targetIndex ++; // increment so it inserts below the previous mod
+
+        }
+
+        UpdateLoadOrders();
+
+    }
+
+    // im using the word "sort" to refer to resolving dependencies via load order.
+    [RelayCommand]
+    public async Task SortMods()
+    {
+        // use a for loop over a while loop to prevent infinite looping
+        for(int i = 0; i < 1; i++)
+        {
+            // break if all mods are valid.
+            if(EnabledMods.All(n => n.IsValid)) break;
+
+            var modsWithDependencies = EnabledMods.ToList().Where(n => n.Dependencies.Count > 0);
+            foreach(var mod in modsWithDependencies)
+            {
+                // Debug.WriteLine($"Mod with dependencies: {mod.Name}, {mod.Dependencies.Count}");
+                // foreach(var dependency in mod.Dependencies) Debug.WriteLine($"\t{dependency}\t{AllMods.FirstOrDefault(n => string.Equals(n.UUID, dependency, System.StringComparison.OrdinalIgnoreCase))?.Name ?? "Unknown"}");
+                // continue;
+
+                if(mod.IsValid) continue;
+
+                foreach(var dependency in mod.Dependencies)
+                {
+                    var matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.UUID, dependency, System.StringComparison.OrdinalIgnoreCase));
+                    if(matchingMod == null) continue;
+
+                    // this dependency is already good relative to this mod so don't move it.
+                    if(EnabledMods.IndexOf(matchingMod) < EnabledMods.IndexOf(mod) && EnabledMods.IndexOf(matchingMod) != -1) continue;
+
+                    var targetIndex = EnabledMods.IndexOf(mod) - 1;
+
+                    await MoveModsToIndex([matchingMod], EnabledMods, EnabledMods, targetIndex);
+                    Debug.WriteLine($"Moved {matchingMod.Name} due to sort (1) to index {targetIndex}");
+                }
+                
+            }
+
+        }
     }
 
 }

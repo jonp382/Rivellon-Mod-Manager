@@ -195,6 +195,7 @@
                 <Button Content="&lt;&lt;" ToolTip.Tip="Enable ALL" Classes="ActionBtn" Command="{Binding EnableAllMods}"/>
                 <Button Content="&gt;" ToolTip.Tip="Disable Selected" Classes="ActionBtn" Command="{Binding DisableMod}"/>
                 <Button Content="&gt;&gt;" ToolTip.Tip="Disable ALL" Classes="ActionBtn" Command="{Binding DisableAllMods}"/>
+                <Button Content="&lt;&gt;" ToolTip.Tip="Sort Mods by Dependencies" Classes="ActionBtn" Command="{Binding SortMods}"/>
             </StackPanel>
 
             <!-- Enabled mod count -->
