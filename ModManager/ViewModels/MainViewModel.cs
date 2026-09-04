@@ -378,20 +378,37 @@ public partial class MainViewModel : ViewModelBase
         var file = await IOHelper.FileIO.SelectAnyFile("Please select the mod order file you want to import");
         string? filePath = file?.ToString();
 
-        if(string.IsNullOrWhiteSpace(file)) return;
+        if(string.IsNullOrWhiteSpace(file))
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox($"No file was selected. Please try again.");
+            return;
+        }
 
         List<Resources.ModInfo> tempList = new();
         var rawText = File.ReadAllText(file);
-        var json = JsonSerializer.Deserialize<List<string>>(rawText);
-        if(json == null) return;
+        List<string>? json;
+        
+        try { json = JsonSerializer.Deserialize<List<string>>(rawText); }
+        catch { json = null; }
 
+        if(json == null)
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox($"The selected file was of an invalid JSON format, and the mod order could not be imported.");
+            return;
+        }
+
+        List<string> missingMods = [];
         foreach(string entry in json)
         {
             var matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.UUID, entry));
             if(matchingMod != null)
             {
                 tempList.Add(matchingMod);
+                continue;
             }
+
+            // mod is missing
+            missingMods.Add(entry);
 
         }
 
@@ -402,6 +419,8 @@ public partial class MainViewModel : ViewModelBase
         DisabledMods = new(AllMods.Where(mod => EnabledMods.FirstOrDefault(enabled => enabled.UUID == mod.UUID) == null));
 
         UpdateLoadOrders();
+
+        await MessageboxHelper.ErrorBox.ErrorMessageBox($"The following mods were not found among your installed list, and could not be enabled: \n{string.Join("\n", missingMods)}");
 
     }
 
