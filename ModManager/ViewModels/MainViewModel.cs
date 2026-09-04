@@ -17,6 +17,8 @@ using System.Linq;
 
 using LSLib.LS;
 using Avalonia.Media.Imaging;
+using System.Text.Json;
+using SteamAPI;
 
 namespace ModManager.ViewModels;
 
@@ -46,7 +48,10 @@ public partial class MainViewModel : ViewModelBase
             )).ToList();
 
         await WebHelper.WebRequest.GetWorkshopDetails(batchIDs);
-        await WebHelper.WebRequest.DownloadPreviewImage(batchIDs);
+
+        ParseWorkshopJson();
+
+        await WebHelper.WebRequest.DownloadAllPreviewImages(batchIDs);
 
         foreach(Resources.ModInfo mod in AllMods)
         {
@@ -56,6 +61,23 @@ public partial class MainViewModel : ViewModelBase
                 mod.PreviewImage = new Bitmap(imagePath);
                 Debug.WriteLine($"Assigned image to mod {mod.Name} from {imagePath}");
             }
+        }
+
+    }
+
+    public void ParseWorkshopJson()
+    {
+        var jsonPath = Path.Combine(IOHelper.SharedPaths.GetResourcesFolderPath(), "steam_api.json");
+        var rawString = File.ReadAllText(jsonPath);
+
+        var json = JsonSerializer.Deserialize<SteamAPIResponse>(rawString);
+
+        foreach(var mod in AllMods)
+        {
+            if(string.IsNullOrWhiteSpace(mod.WorkshopID)) continue;
+
+            // allow for null results
+            mod.WorkshopDetails = json?.Response.PublishedFileDetails.FirstOrDefault(n => string.Equals(n.PublishedFileId, mod.WorkshopID)) ?? null;
         }
 
     }

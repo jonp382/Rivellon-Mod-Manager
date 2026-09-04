@@ -3,11 +3,12 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.IO;
 using ModManager.Resources;
 using System.Threading;
+
+using SteamAPI;
 
 namespace WebHelper;
 
@@ -22,6 +23,10 @@ public class WebRequest()
             Debug.WriteLine($"Null input in GetWorkshopDetails. Exiting.");
             return;
         }
+
+        // TODO add button to force-update workshop metadata.
+        // TOOD add check to see if any mods are missing from the metadata, and if so, fetch new results.
+        if(File.Exists(Path.Combine(IOHelper.SharedPaths.GetResourcesFolderPath(), "steam_api.json"))) return;
 
         var allResults = new List<PublishedFileDetail>();
 
@@ -43,20 +48,27 @@ public class WebRequest()
             response.EnsureSuccessStatusCode();
 
             string jsonResponse = await response.Content.ReadAsStringAsync();
-            var parsed = JsonSerializer.Deserialize<SteamApiResponse>(jsonResponse);
+            var parsed = JsonSerializer.Deserialize<SteamAPIResponse>(jsonResponse);
 
             if(parsed?.Response?.PublishedFileDetails != null)
             {
                 allResults.AddRange(parsed.Response.PublishedFileDetails);
             }
 
-            foreach(ModInfo mod in workshopItems)
-            {
-                var matchingResult = allResults.FirstOrDefault(x => x.PublishedFileId == mod.WorkshopID);
-                mod.WorkshopDetails = matchingResult;
-            }
+            // don't match here. match elsewhere. keep this function only for web request.
+            // foreach(ModInfo mod in workshopItems)
+            // {
+            //     var matchingResult = allResults.FirstOrDefault(x => x.PublishedFileId == mod.WorkshopID);
+            //     mod.WorkshopDetails = matchingResult;
+            // }
 
             Debug.WriteLine($"Successfully queried steam API and obtained {allResults.Count} results.");
+
+            File.WriteAllText(
+                Path.Combine(IOHelper.SharedPaths.GetResourcesFolderPath(), "steam_api.json"), 
+                jsonResponse
+            );
+            
 
             
         }
@@ -67,53 +79,8 @@ public class WebRequest()
         return;
     }
 
-    public class SteamApiResponse
-    {
-        [JsonPropertyName("response")]
-        public PublishedFileResponse Response { get; set; }
-    }
 
-    public class PublishedFileResponse
-    {
-        [JsonPropertyName("result")]
-        public int Result { get; set; }
-
-        [JsonPropertyName("resultcount")]
-        public int ResultCount { get; set; }
-
-        [JsonPropertyName("publishedfiledetails")]
-        public List<PublishedFileDetail> PublishedFileDetails { get; set; }
-    
-    }
-
-    public class PublishedFileDetail
-    {
-        [JsonPropertyName("publishedfileid")]
-        public string PublishedFileId { get; set; }
-
-        [JsonPropertyName("result")]
-        public int Result { get; set; } // 1 = Success, 9 = Not Found / Deleted, 15 = Access Denied
-
-        [JsonPropertyName("title")]
-        public string Title { get; set; }
-
-        [JsonPropertyName("description")]
-        public string Description { get; set; }
-
-        [JsonPropertyName("file_size")]
-        public string FileSize { get; set; } // Note: Steam API returns file_size as a string
-
-        [JsonPropertyName("preview_url")]
-        public string PreviewUrl { get; set; }
-
-        [JsonPropertyName("time_created")]
-        public long TimeCreated { get; set; }
-
-        [JsonPropertyName("time_updated")]
-        public long TimeUpdated { get; set; }
-    }
-
-    public static async Task DownloadPreviewImage(List<ModInfo> Mods)
+    public static async Task DownloadAllPreviewImages(List<ModInfo> Mods)
     {
         var outputDirectory = Path.Combine(IOHelper.SharedPaths.GetResourcesFolderPath(), "preview-images");
 
