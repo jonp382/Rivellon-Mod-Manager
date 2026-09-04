@@ -353,7 +353,7 @@ public partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public void ExportLoadOrderToFile()
+    public async Task ExportLoadOrderToFile()
     {
         // only export enabled mods, no point to export disabled or all mods.
         // only export UUIDs
@@ -366,9 +366,7 @@ public partial class MainViewModel : ViewModelBase
         var file = Path.Combine(ExportDirectory, $"{IOHelper.UserSettings.Default.SelectedProfile}.json");
 
         var json = JsonSerializer.Serialize(ExportList, new JsonSerializerOptions {WriteIndented=true});
-        File.WriteAllText(file, json);
-
-        Debug.WriteLine($"Exported mod list to {file}!");
+        await IOHelper.FileIO.SaveToFile(json, "Save mod-list to JSON file", ExportDirectory);
 
         // TODO: check how laughing leader mod manager exports, this should be cross-compatible.
 

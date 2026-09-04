@@ -241,6 +241,41 @@ public static class FileIO
 
         // Debug.WriteLine($"Selected directory: {IOHelper.UserSettings.Default.SelectedModFolder}");
     }
+
+    public async static Task SaveToFile(string fileText, string prompt = "Please make a selection", string defaultLocation = "")
+    {
+
+        var provider = StorageService.GetStorageProvider();
+        if(provider == null) return;
+
+        if(string.IsNullOrWhiteSpace(defaultLocation)) defaultLocation = CommonPaths.GetBaseFolderPath();
+
+        IStorageFolder? startLocation = null;
+        if(Directory.Exists(defaultLocation))
+        {
+            startLocation = await provider.TryGetFolderFromPathAsync(defaultLocation);
+        }
+
+        var file = await provider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = prompt,
+            DefaultExtension = "json",
+            SuggestedFileName = "modlist",
+            SuggestedStartLocation = startLocation,
+            FileTypeChoices = new[]
+            {
+                new FilePickerFileType("JSON") {Patterns = new[] {"*.json"}}
+            }
+        });
+
+        string? filePath = file?.TryGetLocalPath() ?? null;
+
+        if(!string.IsNullOrWhiteSpace(filePath))
+        {
+            File.WriteAllText(filePath, fileText);
+            Debug.WriteLine($"Saved file {Path.GetFileName(filePath)}");
+        }
+    }
 }
 
 public static class StorageService
