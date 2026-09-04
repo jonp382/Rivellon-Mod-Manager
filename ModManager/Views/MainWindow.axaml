@@ -27,7 +27,9 @@
     </Design.DataContext>
     
     <Window.Styles>
-        <!-- DataGrid Visual Enhancements -->
+    
+        <!-- Datagrid styling -->
+
         <Style Selector="DataGrid">
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
@@ -40,6 +42,8 @@
             <Setter Property="Padding" Value="8,4"/>
         </Style>
 
+        <!-- action button styling -->
+
         <Style Selector="Button.ActionBtn">
             <Setter Property="Padding" Value="10,5"/>
             <Setter Property="Margin" Value="2"/>
@@ -48,8 +52,10 @@
         </Style>
     </Window.Styles>
     
+    <!-- global grid -->
     <Grid RowDefinitions="Auto, Auto, *, 30">
-
+        
+        <!-- top menu row -->
         <Menu Grid.Row="0" Grid.ColumnSpan="2" FontSize="12" FontWeight="Bold" > 
             <MenuItem Header="File">
                 <MenuItem 
@@ -76,6 +82,7 @@
         </Menu>
         
         <!-- TODO: need to rename -->
+        <!-- main grid with the DataGrids etc. -->
         <Grid 
             Name="MainGrid" 
             Grid.Row = "2" 
@@ -83,6 +90,7 @@
             RowDefinitions="15, *"
         >
 
+            <!-- stack panel to hold the preview section on the left side -->
             <StackPanel
                 Grid.RowSpan="10"
                 Grid.Column="0"
@@ -91,7 +99,6 @@
 
                 
                 <!-- preview image -->
-                
                 <Image
                     Source="{Binding CurrentlySelectedMod.PreviewImage}"
                     Width="340"
@@ -102,32 +109,38 @@
             
                 </Image>
 
+                <!-- mod name -->
                 <TextBlock
                     Text="{Binding CurrentlySelectedMod.Name, StringFormat='{}{0}'}"
                     FontWeight="Bold"
                     Margin="5, 0, 0, 0"
                 />
-
+                
+                <!-- mod author -->
                 <TextBlock
                     Text="{Binding CurrentlySelectedMod.Author, StringFormat='{}Author: {0}'}"
                     Margin="5, 0, 0, 0"
                 />
 
+                <!-- mod version -->
                 <TextBlock
                     Text="{Binding CurrentlySelectedMod.Version, StringFormat='{}Version: {0}'}"
                     Margin="5, 0, 0, 0"
                 />
 
+                <!-- mod UUID -->
                 <TextBlock
                     Text="{Binding CurrentlySelectedMod.UUID, StringFormat='{}ID: {0}'}"
                     Margin="5, 0, 0, 0"
                 />
 
+                <!-- mod workshop ID -->
                 <TextBlock
                     Text="{Binding CurrentlySelectedMod.WorkshopID, StringFormat='{}Workshop ID: {0}'}"
                     Margin="5, 0, 0, 0"
                 />
 
+                <!-- mod workshop description -->
                 <TextBlock
                     Text="{Binding CurrentlySelectedMod.WorkshopDetails.Description}"
                 />
@@ -135,7 +148,7 @@
         
             </StackPanel>
 
-            <!-- Enabled/Disabled buttons -->
+            <!-- Enabled/Disable buttons -->
             <StackPanel Grid.Row="1" Grid.RowSpan="4" Grid.Column="2" VerticalAlignment="Center" Spacing="4">
                 <Button Content="&lt;" ToolTip.Tip="Enable Selected" Classes="ActionBtn" Click="EnableSelectedItem"/>
                 <Button Content="&lt;&lt;" ToolTip.Tip="Enable ALL" Classes="ActionBtn" Click="EnableAllItems"/>
@@ -143,7 +156,7 @@
                 <Button Content="&gt;&gt;" ToolTip.Tip="Disable ALL" Classes="ActionBtn" Click="DisableAllItems"/>
             </StackPanel>
 
-            <!-- Enabled/Disabled mod count textblocks -->
+            <!-- Enabled mod count -->
             <TextBlock 
                 Grid.Row="0" 
                 Grid.Column="1"
@@ -155,6 +168,7 @@
                 FontSize="12"
             />
 
+            <!-- Disabled mod count -->
             <TextBlock 
                 Text="{Binding DisabledMods.Count, StringFormat='{}{0} Disabled Mods'}" 
                 FontWeight="Bold"
@@ -188,15 +202,17 @@
 
                 <DataGrid.Styles>
 
+                    <!-- style for all rows regardless of status -->
                     <Style Selector="DataGridRow" x:DataType="models:ModInfo">
 
+                       <!-- enable tooltip and use the converter to handle string? -> string -->
                         <Setter 
                             Property="ToolTip.Tip" 
                             Value="{Binding InvalidReason, Converter={x:Static conv:StringToTooltipConverter.Instance}}"
                                 
                         />
 
-
+                        <!-- styling for invalid mods -->
                         <Setter 
                             Property="Background" 
                             Value="{Binding IsValid, Converter={x:Static conv:BoolToRedBrushConverter.Instance}}"
@@ -204,6 +220,7 @@
                     </Style>
                 </DataGrid.Styles>
 
+                <!-- column declaration -->
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="#" Binding="{Binding LoadOrder}" />
                     <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
@@ -235,6 +252,8 @@
                 SelectionChanged="Grid_SelectionChanged"
                 >
 
+                <!-- don't need any valid/invalid logic in disabled mods -->
+                <!-- column declaration -->
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
                     <DataGridTextColumn Header="Version" Binding="{Binding Version}" />
@@ -257,7 +276,7 @@
 
         </Grid>
 
-        
+        <!-- border for the status and profile display text at the bottom -->
         <Border
             Grid.Row="3"
             Background="{DynamicResource SystemControlBackgroundChromeLowBrush}"
@@ -268,12 +287,15 @@
             <DockPanel
 
             >
+                <!-- status text -->
                 <TextBlock
                     Text="{Binding StatusText, StringFormat='{}Status: {0}'}"
                     FontSize="11"
                     Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                     HorizontalAlignment="Left"
                 />
+
+                <!-- current profile display -->
                 <TextBlock
                     Text="{Binding CurrentProfileText, StringFormat='{}Selected Profile: {0}'}"
                     FontSize="11"
