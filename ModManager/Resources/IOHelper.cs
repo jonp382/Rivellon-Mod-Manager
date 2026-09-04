@@ -205,7 +205,7 @@ public static class FileIO
         }
     }
 
-        public async static Task<string?> SelectAnyFolder(string prompt = "Please make a selection")
+    public async static Task<string?> SelectAnyFolder(string prompt = "Please make a selection")
     {
         var provider = StorageService.GetStorageProvider();
         if (provider == null) return null;
