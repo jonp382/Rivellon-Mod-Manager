@@ -26,7 +26,7 @@ public class WebRequest()
 
         // TODO add button to force-update workshop metadata.
         // TOOD add check to see if any mods are missing from the metadata, and if so, fetch new results.
-        if(File.Exists(Path.Combine(IOHelper.CommonPaths.GetResourcesFolderPath(), "steam_api.json"))) return;
+        // if(File.Exists(Path.Combine(IOHelper.CommonPaths.GetResourcesFolderPath(), "steam_api.json"))) return;
 
         var allResults = new List<PublishedFileDetail>();
 
