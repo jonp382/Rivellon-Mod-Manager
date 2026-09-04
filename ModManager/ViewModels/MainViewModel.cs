@@ -518,7 +518,7 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     public async Task EnableAllMods()
     {
-        if(EnabledMods.Count == 0) return;
+        if(DisabledMods.Count == 0) return;
 
         List<Resources.ModInfo> ModsToMove = DisabledMods.ToList();
         await MoveMods(ModsToMove, DisabledMods, EnabledMods);
@@ -537,7 +537,7 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     public async Task DisableAllMods()
     {
-        if(DisabledMods.Count == 0) return;
+        if(EnabledMods.Count == 0) return;
 
         List<Resources.ModInfo> ModsToMove = EnabledMods.ToList();
         await MoveMods(ModsToMove, EnabledMods, DisabledMods);
