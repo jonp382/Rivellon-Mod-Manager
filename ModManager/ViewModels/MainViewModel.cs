@@ -505,4 +505,59 @@ public partial class MainViewModel : ViewModelBase
         
     }
 
+    [RelayCommand]
+    public async Task EnableMod()
+    {
+        if(CurrentlySelectedMod == null || EnabledMods.Contains(CurrentlySelectedMod)) return;
+
+        List<Resources.ModInfo> ModsToMove = [CurrentlySelectedMod];
+
+        await MoveMods(ModsToMove, DisabledMods, EnabledMods);
+    }
+
+    [RelayCommand]
+    public async Task EnableAllMods()
+    {
+        if(EnabledMods.Count == 0) return;
+
+        List<Resources.ModInfo> ModsToMove = DisabledMods.ToList();
+        await MoveMods(ModsToMove, DisabledMods, EnabledMods);
+    }
+
+    [RelayCommand]
+    public async Task DisableMod()
+    {
+        if(CurrentlySelectedMod == null || DisabledMods.Contains(CurrentlySelectedMod)) return;
+
+        List<Resources.ModInfo> ModsToMove = [CurrentlySelectedMod];
+
+        await MoveMods(ModsToMove, EnabledMods, DisabledMods);
+    }
+
+    [RelayCommand]
+    public async Task DisableAllMods()
+    {
+        if(DisabledMods.Count == 0) return;
+
+        List<Resources.ModInfo> ModsToMove = EnabledMods.ToList();
+        await MoveMods(ModsToMove, EnabledMods, DisabledMods);
+    }
+
+
+    public async Task MoveMods(List<Resources.ModInfo> ModsToMove, ObservableCollection<Resources.ModInfo> SourceList, ObservableCollection<Resources.ModInfo> TargetList)
+    {
+        var previousIndex = SourceList.IndexOf(ModsToMove[0]);
+
+        foreach(Resources.ModInfo modToMove in ModsToMove)
+        {
+            if(modToMove == null) continue; // skip null mods
+            SourceList.Remove(modToMove); // remove mod from source list
+            TargetList.Add(modToMove); // add mod to target list
+
+        }
+
+        UpdateLoadOrders();
+
+    }
+
 }

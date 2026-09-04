@@ -191,10 +191,10 @@
 
             <!-- Enabled/Disable buttons -->
             <StackPanel Grid.Row="1" Grid.RowSpan="4" Grid.Column="2" VerticalAlignment="Center" Spacing="4">
-                <Button Content="&lt;" ToolTip.Tip="Enable Selected" Classes="ActionBtn" Click="EnableSelectedItem"/>
-                <Button Content="&lt;&lt;" ToolTip.Tip="Enable ALL" Classes="ActionBtn" Click="EnableAllItems"/>
-                <Button Content="&gt;" ToolTip.Tip="Disable Selected" Classes="ActionBtn" Click="DisableSelectedItem"/>
-                <Button Content="&gt;&gt;" ToolTip.Tip="Disable ALL" Classes="ActionBtn" Click="DisableAllItems"/>
+                <Button Content="&lt;" ToolTip.Tip="Enable Selected" Classes="ActionBtn" Command="{Binding EnableMod}"/>
+                <Button Content="&lt;&lt;" ToolTip.Tip="Enable ALL" Classes="ActionBtn" Command="{Binding EnableAllMods}"/>
+                <Button Content="&gt;" ToolTip.Tip="Disable Selected" Classes="ActionBtn" Command="{Binding DisableMod}"/>
+                <Button Content="&gt;&gt;" ToolTip.Tip="Disable ALL" Classes="ActionBtn" Command="{Binding DisableAllMods}"/>
             </StackPanel>
 
             <!-- Enabled mod count -->
