@@ -27,7 +27,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        DataContext = new MainViewModel();
+        // DataContext = new MainViewModel();
 
         DragDrop.AddDragOverHandler(EnabledGrid, OnDragOver);
         DragDrop.AddDropHandler(EnabledGrid, OnDrop);
