@@ -261,6 +261,25 @@
                     </Style>
                 </DataGrid.Styles>
 
+                <DataGrid.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem 
+                            Header="Open Workshop Page in Browser"
+                            Command="{Binding OpenWorkshopPageCommand}"
+                        >
+                        </MenuItem>
+
+                        <MenuItem 
+                            Header="Open Workshop Page in Steam"
+                            Command="{Binding OpenWorkshopPageSteamCommand}"
+                        >
+                        </MenuItem>
+
+
+                    </ContextMenu>
+                
+                </DataGrid.ContextMenu>
+
                 <!-- column declaration -->
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="#" Binding="{Binding LoadOrder}" />
@@ -292,6 +311,25 @@
                 PointerPressed="OnPointerPressed"
                 SelectionChanged="Grid_SelectionChanged"
                 >
+
+                <DataGrid.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem 
+                            Header="Open Workshop Page in Browser"
+                            Command="{Binding OpenWorkshopPageCommand}"
+                        >
+                        </MenuItem>
+
+                        <MenuItem 
+                            Header="Open Workshop Page in Steam"
+                            Command="{Binding OpenWorkshopPageSteamCommand}"
+                        >
+                        </MenuItem>
+
+
+                    </ContextMenu>
+                
+                </DataGrid.ContextMenu>
 
                 <!-- don't need any valid/invalid logic in disabled mods -->
                 <!-- column declaration -->

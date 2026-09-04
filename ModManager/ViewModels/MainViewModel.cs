@@ -19,6 +19,7 @@ using LSLib.LS;
 using Avalonia.Media.Imaging;
 using System.Text.Json;
 using SteamAPI;
+using Avalonia.Controls;
 
 namespace ModManager.ViewModels;
 
@@ -35,6 +36,15 @@ public partial class MainViewModel : ViewModelBase
 
         Debug.WriteLine($"Constructor complete");
         OnPropertyChanged();
+    }
+
+    private static TopLevel? GetTopLevel()
+    {
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            return TopLevel.GetTopLevel(desktop.MainWindow);
+        }
+        return null;
     }
 
     public async void UpdateWorkshopInfo()
@@ -463,6 +473,36 @@ public partial class MainViewModel : ViewModelBase
                 Debug.WriteLine($"Assigned image to mod {mod.Name} from {imagePath}");
             }
         }
+    }
+
+    [RelayCommand]
+    public async Task OpenWorkshopPage()
+    {
+        var urlStart = "https://steamcommunity.com/sharedfiles/filedetails/?id=";
+        string? ID = CurrentlySelectedMod?.WorkshopID;
+        if(ID == null) return;
+
+        var URL = urlStart + ID;
+
+        var topLevel = GetTopLevel();
+        if(topLevel != null) await WebHelper.WebRequest.OpenURL(URL, topLevel);
+
+        
+    }
+    
+    [RelayCommand]
+    public async Task OpenWorkshopPageSteam()
+    {
+        var urlStart = "steam://url/CommunityFilePage/";
+        string? ID = CurrentlySelectedMod?.WorkshopID;
+        if(ID == null) return;
+
+        var URL = urlStart + ID;
+
+        var topLevel = GetTopLevel();
+        if(topLevel != null) await WebHelper.WebRequest.OpenURL(URL, topLevel);
+
+        
     }
 
 }
