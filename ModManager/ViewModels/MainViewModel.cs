@@ -337,8 +337,13 @@ public partial class MainViewModel : ViewModelBase
 
             string name = Path.GetFileNameWithoutExtension(files[0]);
             Resources.ModInfo? matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.Folder, name, System.StringComparison.OrdinalIgnoreCase));
+            matchingMod ??= AllMods.FirstOrDefault(n => string.Equals($"{n.Folder}_{n.UUID}", name, System.StringComparison.OrdinalIgnoreCase));
 
-            if(matchingMod == null) continue;
+            if(matchingMod == null)
+            {
+                Debug.WriteLine($"No matching installed mod for workshop item {name}");
+                continue;
+            }
 
             matchingMod.WorkshopID = Path.GetFileName(folder);
         }
