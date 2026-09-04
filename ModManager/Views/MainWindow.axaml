@@ -64,10 +64,20 @@
                 />
             </MenuItem>
 
-            <MenuItem Header="Profile">
+            <MenuItem Header="Load Order">
                <MenuItem
-                    Header="Export Order to Game"
+                    Header="{Binding CurrentProfileText, StringFormat='{}Export Load Order to Game (Profile \'{0}\')'}"
                     Command="{Binding ExportLSXToProfileCommand}"
+                />
+
+                <MenuItem
+                    Header="Export Load Order to File"
+                    Command="{Binding ExportLoadOrderToFileCommand}"
+                />
+
+                <MenuItem
+                    Header="Import Load Order from File"
+                    Command="{Binding ImportLoadOrderFromFileCommand}"
                 />
             </MenuItem>
 

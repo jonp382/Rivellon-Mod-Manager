@@ -352,4 +352,59 @@ public partial class MainViewModel : ViewModelBase
         Resources.LSServices.WriteProfileLSX(EnabledMods.ToList());
     }
 
+    [RelayCommand]
+    public void ExportLoadOrderToFile()
+    {
+        // only export enabled mods, no point to export disabled or all mods.
+        // only export UUIDs
+        var ExportList = EnabledMods.Select(n => n.UUID);
+
+        // export to modlists subfolder in base directory
+        var ExportDirectory  = Path.Combine(IOHelper.SharedPaths.GetBaseFolderPath(), "Mod Orders");
+        if(!Directory.Exists(ExportDirectory)) Directory.CreateDirectory(ExportDirectory);
+
+        var file = Path.Combine(ExportDirectory, $"{IOHelper.UserSettings.Default.SelectedProfile}.json");
+
+        var json = JsonSerializer.Serialize(ExportList, new JsonSerializerOptions {WriteIndented=true});
+        File.WriteAllText(file, json);
+
+        Debug.WriteLine($"Exported mod list to {file}!");
+
+        // TODO: check how laughing leader mod manager exports, this should be cross-compatible.
+
+    }
+
+    [RelayCommand]
+    public async Task ImportLoadOrderFromFile()
+    {
+        var file = await IOHelper.OpenFolder.SelectAnyFile("Please select the mod order file you want to import");
+        string? filePath = file?.ToString();
+
+        if(string.IsNullOrWhiteSpace(file)) return;
+
+        List<Resources.ModInfo> tempList = new();
+        var rawText = File.ReadAllText(file);
+        var json = JsonSerializer.Deserialize<List<string>>(rawText);
+        if(json == null) return;
+
+        foreach(string entry in json)
+        {
+            var matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.UUID, entry));
+            if(matchingMod != null)
+            {
+                tempList.Add(matchingMod);
+            }
+
+        }
+
+        EnabledMods.Clear();
+        DisabledMods.Clear();
+        
+        EnabledMods = new(tempList);
+        DisabledMods = new(AllMods.Where(mod => EnabledMods.FirstOrDefault(enabled => enabled.UUID == mod.UUID) == null));
+
+        UpdateLoadOrders();
+
+    }
+
 }
