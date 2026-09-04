@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LSLib.LS;
+using Avalonia.Media.Imaging;
 
 namespace ModManager.ViewModels;
 
@@ -27,8 +28,36 @@ public partial class MainViewModel : ViewModelBase
         IOHelper.UserSettings.Load();
         Update();
 
+        // obtain workshop preview images. only ran in constructor to minimize API usage.
+        UpdateWorkshopInfo();
+
         Debug.WriteLine($"Constructor complete");
         OnPropertyChanged();
+    }
+
+    public async void UpdateWorkshopInfo()
+    {
+        
+        // only download images for missing mods
+        List<Resources.ModInfo> batchIDs = AllMods.Where(
+            n => !string.IsNullOrEmpty(n.WorkshopID)
+            &&
+            !File.Exists(Path.Combine(IOHelper.SharedPaths.GetResourcesFolderPath(), "preview-images", $"{n.Folder}.png")
+            )).ToList();
+
+        await WebHelper.WebRequest.GetWorkshopDetails(batchIDs);
+        await WebHelper.WebRequest.DownloadPreviewImage(batchIDs);
+
+        foreach(Resources.ModInfo mod in AllMods)
+        {
+            var imagePath = Path.Combine(IOHelper.SharedPaths.GetResourcesFolderPath(), "preview-images", $"{mod.Folder}.png");
+            if(File.Exists(imagePath)) 
+            {
+                mod.PreviewImage = new Bitmap(imagePath);
+                Debug.WriteLine($"Assigned image to mod {mod.Name} from {imagePath}");
+            }
+        }
+
     }
 
     [ObservableProperty]
@@ -45,6 +74,9 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _currentProfileText = string.Empty;
+
+    [ObservableProperty]
+    private Resources.ModInfo? _currentlySelectedMod = null;
 
     public void ParseModsDirectory()
     {
@@ -242,8 +274,37 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
+    public async void ParseWorkshopFolder()
+    {
+        var workshopPath = IOHelper.UserSettings.Default.WorkshopFolder;
+        if(string.IsNullOrEmpty(workshopPath)) return;
+
+        string[] folders = Directory.GetDirectories(workshopPath);
+
+        foreach(string folder in folders)
+        {
+            // should have one PAK file per folder
+            string[] files = Directory.GetFiles(folder);
+            if(files.Length > 1)
+            {
+                // if it somehow has more than one file, it's an unusual setup and it should be skipped
+                // so as to not misidentify a mod.
+                Debug.WriteLine($"{folder} has more than one PAK file, skipping.");
+                continue;
+            }
+
+            string name = Path.GetFileNameWithoutExtension(files[0]);
+            Resources.ModInfo? matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.Folder, name, System.StringComparison.OrdinalIgnoreCase));
+
+            if(matchingMod == null) continue;
+
+            matchingMod.WorkshopID = Path.GetFileName(folder);
+        }
+
+    }
+
     // Updates the list of all mods and their load orders after a change to the settings are made.
-    public void Update()
+    public async void Update()
     {
 
         Debug.WriteLine($"Running Update() in MainViewModel");
@@ -254,6 +315,7 @@ public partial class MainViewModel : ViewModelBase
 
         ParseModsDirectory();
         ParseLSXFile();
+        ParseWorkshopFolder();
 
         // update UI profile display
         CurrentProfileText = IOHelper.UserSettings.Default.SelectedProfile;

@@ -12,7 +12,10 @@
         x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="ModManager"
-        Width="800" Height = "500"
+        
+        Width="1050" Height = "550"
+        MinWidth="1050" MinHeight="550"
+
         Background="{DynamicResource AppBackgroundBrush}"
         Foreground="{DynamicResource AppTextBrush}"
         >
@@ -81,8 +84,50 @@
         >
 
             <StackPanel
-                
+                Grid.RowSpan="10"
+                Grid.Column="0"
+                Spacing="5"
             >   
+
+                
+                <!-- preview image -->
+                
+                <Image
+                    Source="{Binding CurrentlySelectedMod.PreviewImage}"
+                    Width="340"
+                    Height="340"
+                    Margin="5"
+                    Stretch="Uniform"
+                >
+            
+                </Image>
+
+                <TextBlock
+                    Text="{Binding CurrentlySelectedMod.Name, StringFormat='{}{0}'}"
+                    FontWeight="Bold"
+                    Margin="5, 0, 0, 0"
+                />
+
+                <TextBlock
+                    Text="{Binding CurrentlySelectedMod.Author, StringFormat='{}Author: {0}'}"
+                    Margin="5, 0, 0, 0"
+                />
+
+                <TextBlock
+                    Text="{Binding CurrentlySelectedMod.Version, StringFormat='{}Version: {0}'}"
+                    Margin="5, 0, 0, 0"
+                />
+
+                <TextBlock
+                    Text="{Binding CurrentlySelectedMod.UUID, StringFormat='{}ID: {0}'}"
+                    Margin="5, 0, 0, 0"
+                />
+
+                <TextBlock
+                    Text="{Binding CurrentlySelectedMod.WorkshopID, StringFormat='{}Workshop ID: {0}'}"
+                    Margin="5, 0, 0, 0"
+                />
+                    
         
             </StackPanel>
 
@@ -134,6 +179,7 @@
 
                 DragDrop.AllowDrop="True"
                 PointerPressed="OnPointerPressed"
+                SelectionChanged="Grid_SelectionChanged"
                 >
 
                 <DataGrid.Styles>
@@ -182,6 +228,7 @@
 
                 DragDrop.AllowDrop="True"
                 PointerPressed="OnPointerPressed"
+                SelectionChanged="Grid_SelectionChanged"
                 >
 
                 <DataGrid.Columns>

@@ -312,4 +312,17 @@ public partial class MainWindow : Window
 
 
     }
+
+    private void Grid_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (DataContext is not MainViewModel vm) return;
+        DataGrid grid = (DataGrid)sender!;
+        
+
+        ModInfo? selected = (ModInfo?)grid.SelectedItem;
+        if(selected != null)
+        {
+            vm.CurrentlySelectedMod = (ModInfo)grid.SelectedItem;
+        }
+    }
 }
