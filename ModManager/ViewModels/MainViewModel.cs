@@ -395,18 +395,44 @@ public partial class MainViewModel : ViewModelBase
     {
         // only export enabled mods, no point to export disabled or all mods.
         // only export UUIDs
-        var ExportList = EnabledMods.Select(n => n.UUID);
+
+
+        // LL order is
+        /*
+            {
+            "Order": [
+                {
+                    "UUID": "mod uuid",
+                    "Name": "mod name"
+                },
+                {
+                    "UUID": "mod uuid",
+                    "Name": "mod name"
+                }
+            }
+        */
+
+        Dictionary<string, List<Dictionary<string, string>>> ModExport = [];
+        List<Dictionary<string, string>> ModsList = [];
+
+        ModExport["Order"] = ModsList;
+        
+        var mods_to_export = EnabledMods; // export all mods
+        foreach(var mod in mods_to_export)
+        {
+            Dictionary<string, string> ModDict = [];
+            ModDict.Add("UUID", mod.UUID);
+            ModDict.Add("Name", mod.Name);
+
+            ModsList.Add(ModDict);
+        }
 
         // export to modlists subfolder in base directory
         var ExportDirectory  = Path.Combine(IOHelper.CommonPaths.GetBaseFolderPath(), "Mod Orders");
         if(!Directory.Exists(ExportDirectory)) Directory.CreateDirectory(ExportDirectory);
 
-        var file = Path.Combine(ExportDirectory, $"{IOHelper.UserSettings.Default.SelectedProfile}.json");
-
-        var json = JsonSerializer.Serialize(ExportList, new JsonSerializerOptions {WriteIndented=true});
+        var json = JsonSerializer.Serialize(ModExport, new JsonSerializerOptions {WriteIndented=true});
         await IOHelper.FileIO.SaveToFile(json, "Save mod-list to JSON file", ExportDirectory);
-
-        // TODO: check how laughing leader mod manager exports, this should be cross-compatible.
 
     }
 
@@ -424,9 +450,9 @@ public partial class MainViewModel : ViewModelBase
 
         List<Resources.ModInfo> tempList = new();
         var rawText = File.ReadAllText(file);
-        List<string>? json;
+        Dictionary<string, List<Dictionary<string, string>>>? json = [];
         
-        try { json = JsonSerializer.Deserialize<List<string>>(rawText); }
+        try { json = JsonSerializer.Deserialize<Dictionary<string, List<Dictionary<string, string>>>>(rawText); }
         catch { json = null; }
 
         if(json == null)
@@ -436,9 +462,14 @@ public partial class MainViewModel : ViewModelBase
         }
 
         List<string> missingMods = [];
-        foreach(string entry in json)
+        List<Dictionary<string, string>> ModsList = json["Order"];
+
+        foreach(var dict in ModsList)
         {
-            var matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.UUID, entry));
+            var modName = dict["Name"];
+            var modUUID = dict["UUID"];
+
+            var matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.UUID, modUUID));
             if(matchingMod != null)
             {
                 tempList.Add(matchingMod);
@@ -446,7 +477,7 @@ public partial class MainViewModel : ViewModelBase
             }
 
             // mod is missing
-            missingMods.Add(entry);
+            missingMods.Add($"{modName} ({modUUID})");
 
         }
 
