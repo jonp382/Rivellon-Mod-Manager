@@ -228,6 +228,7 @@
                 Grid.Column="1"
                 Margin="5"
                 Name="EnabledSearchBox"
+                Text="{Binding EnabledSearchText, Mode=TwoWay}"
             />
 
             <TextBox
@@ -236,11 +237,12 @@
                 Grid.Column="3"
                 Margin="5"
                 Name="DisabledSearchBox"
+                Text="{Binding DisabledSearchText, Mode=TwoWay}"
             />
 
             <!-- Enabled Mods Grid -->
             <DataGrid x:Name="EnabledGrid"
-                ItemsSource="{Binding EnabledMods}"
+                ItemsSource="{Binding EnabledModsView}"
                 Grid.Row="2"
                 Grid.Column="1"
                 IsReadOnly="True"
@@ -299,8 +301,8 @@
 
                 <!-- column declaration -->
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="#" Binding="{Binding LoadOrder}" />
-                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
+                    <DataGridTextColumn Header="#" Binding="{ReflectionBinding LoadOrder}" />
+                    <DataGridTextColumn Header="Name" Binding="{ReflectionBinding Name}" />
                 </DataGrid.Columns>
             </DataGrid>
 
@@ -310,7 +312,7 @@
 
             <!-- Disabled Mods Grid -->
             <DataGrid  x:Name="DisabledGrid"
-                ItemsSource="{Binding DisabledMods}"
+                ItemsSource="{Binding DisabledModsView}"
                 Grid.Row="2"
                 Grid.Column="3"
                 IsReadOnly="True"
@@ -351,9 +353,9 @@
                 <!-- don't need any valid/invalid logic in disabled mods -->
                 <!-- column declaration -->
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
-                    <DataGridTextColumn Header="Version" Binding="{Binding Version}" />
-                    <DataGridTextColumn Header="Author" Binding="{Binding Author}" />
+                    <DataGridTextColumn Header="Name" Binding="{ReflectionBinding Name}" />
+                    <DataGridTextColumn Header="Version" Binding="{ReflectionBinding Version}" />
+                    <DataGridTextColumn Header="Author" Binding="{ReflectionBinding Author}" />
                 </DataGrid.Columns>
             </DataGrid>
 

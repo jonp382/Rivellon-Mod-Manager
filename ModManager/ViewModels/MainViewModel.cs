@@ -20,6 +20,7 @@ using Avalonia.Media.Imaging;
 using System.Text.Json;
 using SteamAPI;
 using Avalonia.Controls;
+using Avalonia.Collections;
 
 namespace ModManager.ViewModels;
 
@@ -31,11 +32,44 @@ public partial class MainViewModel : ViewModelBase
         IOHelper.UserSettings.Load();
         Update();
 
+        EnabledModsView = new DataGridCollectionView(EnabledMods) { Filter = FilterEnabledMods };
+        DisabledModsView = new DataGridCollectionView(DisabledMods) { Filter = FilterDisabledMods };
+
         // obtain workshop preview images. only ran in constructor to minimize API usage.
         UpdateWorkshopInfo();
 
         Debug.WriteLine($"Constructor complete");
         OnPropertyChanged();
+    }
+
+    private bool FilterEnabledMods(object item)
+    {
+        if(item is not Resources.ModInfo mod) return false;
+        if(string.IsNullOrWhiteSpace(EnabledSearchText)) return true;
+
+        return mod.Name.Contains(EnabledSearchText, System.StringComparison.OrdinalIgnoreCase);
+
+
+    }
+
+    private bool FilterDisabledMods(object item)
+    {
+        if(item is not Resources.ModInfo mod) return false;
+        if(string.IsNullOrWhiteSpace(DisabledSearchText)) return true;
+
+        return mod.Name.Contains(DisabledSearchText, System.StringComparison.OrdinalIgnoreCase);
+
+
+    }
+
+    partial void OnEnabledSearchTextChanged(string? oldValue, string newValue)
+    {
+        EnabledModsView.Refresh();
+    }
+
+    partial void OnDisabledSearchTextChanged(string? oldValue, string newValue)
+    {
+        DisabledModsView.Refresh();
     }
 
     private static TopLevel? GetTopLevel()
@@ -95,12 +129,19 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty]
     private ObservableCollection<Resources.ModInfo> _enabledMods = [];
+    public DataGridCollectionView EnabledModsView {get; }
 
     [ObservableProperty]
     private ObservableCollection<Resources.ModInfo> _disabledMods = [];
+    public DataGridCollectionView DisabledModsView {get; }
 
     [ObservableProperty]
     private ObservableCollection<Resources.ModInfo> _allMods = [];
+
+    [ObservableProperty]
+    private string _enabledSearchText = string.Empty;
+    [ObservableProperty]
+    private string _disabledSearchText = string.Empty;
 
     [ObservableProperty]
     private string _currentProfileText = string.Empty;
