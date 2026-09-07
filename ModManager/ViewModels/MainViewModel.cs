@@ -281,8 +281,10 @@ public partial class MainViewModel : ViewModelBase
             EnabledMods.Add(matchingModInAllMods);
         }
 
-        var allDisabledMods = AllMods.Where(mod => EnabledMods.FirstOrDefault(enabled => enabled.UUID == mod.UUID) == null);
-        DisabledMods = new(allDisabledMods.ToList());
+        var allDisabledMods = AllMods.Where(mod => EnabledMods.FirstOrDefault(enabled => enabled.UUID == mod.UUID) == null).ToList();
+        DisabledMods.Clear();
+
+        foreach(var mod in allDisabledMods) { DisabledMods.Add(mod); }
 
         StatusText = $"Reading mod configuration from DOS2 profile {IOHelper.UserSettings.Default.SelectedProfile}... Complete, found {EnabledMods.Count} enabled mods and {DisabledMods.Count} disabled mods!";
 
@@ -305,7 +307,10 @@ public partial class MainViewModel : ViewModelBase
             EnabledMods[i].LoadOrder = i+1;
 
         }
-        EnabledMods = new(EnabledMods.OrderBy(n => n.LoadOrder).ToList());
+        var sorted = EnabledMods.OrderBy(n => n.LoadOrder).ToList();
+        
+        EnabledMods.Clear();
+        foreach(var item in sorted) { EnabledMods.Add(item); }
         
         ValidateLoadOrder();
 
@@ -524,10 +529,10 @@ public partial class MainViewModel : ViewModelBase
 
         EnabledMods.Clear();
         DisabledMods.Clear();
-        
-        EnabledMods = new(tempList);
-        DisabledMods = new(AllMods.Where(mod => EnabledMods.FirstOrDefault(enabled => enabled.UUID == mod.UUID) == null));
 
+        foreach(var mod in tempList) { EnabledMods.Add(mod); }
+        foreach(var mod in AllMods) { if(AllMods.FirstOrDefault(n => string.Equals(n.UUID, mod.UUID)) == null) DisabledMods.Add(mod); }
+        
         UpdateLoadOrders();
 
         await MessageboxHelper.ErrorBox.ErrorMessageBox($"The following mods were not found among your installed list, and could not be enabled: \n{string.Join("\n", missingMods)}");
