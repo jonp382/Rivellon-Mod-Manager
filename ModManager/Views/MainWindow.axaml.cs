@@ -27,7 +27,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        DataContext = new MainViewModel();
+        // DataContext = new MainViewModel();
 
         DragDrop.AddDragOverHandler(EnabledGrid, OnDragOver);
         DragDrop.AddDropHandler(EnabledGrid, OnDrop);
@@ -222,74 +222,7 @@ public partial class MainWindow : Window
         }
         
         vm.UpdateLoadOrders();
-    }
-
-    public void EnableSelectedItem(object? sender, RoutedEventArgs e)
-    {
-        if(DataContext is not MainViewModel vm) return;
-
-        var sourceList = vm.DisabledMods;
-        var targetList = vm.EnabledMods;
-
-        var sourceGrid = DisabledGrid;
-
-        ModInfo? targetMod = (ModInfo)sourceGrid.SelectedItem;
-        if(targetMod == null) return;
-
-        MoveItem([targetMod], sourceList, targetList);
-    }
-
-    public void DisableSelectedItem(object? sender, RoutedEventArgs e)
-    {
-        if(DataContext is not MainViewModel vm) return;
-
-        var sourceList = vm.EnabledMods;
-        var targetList = vm.DisabledMods;
-
-        var sourceGrid = EnabledGrid;
-
-        ModInfo targetMod = (ModInfo)sourceGrid.SelectedItem;
-        if(targetMod == null) return;
-
-        MoveItem([targetMod], sourceList, targetList);
-    }
-
-    public void EnableAllItems(object? sender, RoutedEventArgs e)
-    {
-        if(DataContext is not MainViewModel vm) return;
-
-        var sourceList = vm.DisabledMods;
-        var targetList = vm.EnabledMods;
-
-        MoveItem(sourceList.ToList(), sourceList, targetList);
-
-    }
-
-    public void DisableAllItems(object? sender, RoutedEventArgs e)
-    {
-        if(DataContext is not MainViewModel vm) return;
-
-        var sourceList = vm.EnabledMods;
-        var targetList = vm.DisabledMods;
-
-        MoveItem(sourceList.ToList(), sourceList, targetList);
-    }
-
-    public void MoveItem(List<ModInfo> ModsToMove, ObservableCollection<ModInfo> SourceList, ObservableCollection<ModInfo> TargetList)
-    {
-        if(DataContext is not MainViewModel vm) return;
-
-        foreach(ModInfo modToRemove in ModsToMove)
-        {
-            if(modToRemove == null) continue; // skip null mods
-            SourceList.Remove(modToRemove); // remove mod from source list
-            TargetList.Add(modToRemove); // add mod to target list
-
-        }
-
-        vm.UpdateLoadOrders();
-    }
-    
+    }    
 
     private int GetTargetIndex(DataGrid targetGrid, DragEventArgs e)
     {
@@ -311,5 +244,21 @@ public partial class MainWindow : Window
         return targetGrid == EnabledGrid ? vm.EnabledMods.Count : vm.DisabledMods.Count;
 
 
+    }
+
+    private void Grid_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (DataContext is not MainViewModel vm) return;
+        DataGrid grid = (DataGrid)sender!;
+
+        // var otherGrid = grid == EnabledGrid ? DisabledGrid : EnabledGrid;
+        // otherGrid.SelectedItem = null;
+        
+
+        ModInfo? selected = (ModInfo?)grid.SelectedItem;
+        if(selected != null)
+        {
+            vm.CurrentlySelectedMod = (ModInfo)grid.SelectedItem;
+        }
     }
 }

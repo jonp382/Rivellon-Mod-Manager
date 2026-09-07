@@ -11,7 +11,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
 
-public class SharedPaths
+public class CommonPaths
 {
     public static string GetConfigFolderPath()
     {
@@ -28,6 +28,19 @@ public class SharedPaths
 
             
     }
+
+    public static string GetResourcesFolderPath()
+    {
+        return Path.Combine(
+            AppContext.BaseDirectory,
+            "resources"
+            );
+    }
+
+    // where the EXE is stored
+    public static string GetBaseFolderPath() { return AppContext.BaseDirectory; }
+
+        
 
     public static string GetConfigFile()
     {
@@ -81,7 +94,7 @@ public class SharedPaths
 
         if (OperatingSystem.IsLinux())
         {
-            var steamPath = await OpenFolder.SelectAnyFolder("Please select your steamapps folder in your Steam directory.");
+            var steamPath = await FileIO.SelectAnyFolder("Please select your steamapps folder in your Steam directory.");
             if(string.IsNullOrEmpty(steamPath)) 
             {
                 Debug.WriteLine($"No folder selected");
@@ -106,13 +119,27 @@ public class SharedPaths
 
     }
 
+    public async static Task<string> AutoFindWorkshopFolder()
+    {
+
+        var steamPath = await FileIO.SelectAnyFolder("Please select your steamapps folder in your Steam directory.");
+        if(string.IsNullOrEmpty(steamPath)) 
+        {
+            Debug.WriteLine($"No folder selected");
+            return string.Empty;
+        }
+
+
+        return Path.Combine(steamPath, "workshop", "content", "435150");
+    }
+
     public static string GetLSXFromProfile()
     {
         return string.Empty;
     }
 }
 
-public static class OpenFolder
+public static class FileIO
 {
     public async static Task<string?> SelectModsFolder(string prompt = "Please make a selection")
     {
@@ -178,7 +205,7 @@ public static class OpenFolder
         }
     }
 
-        public async static Task<string?> SelectAnyFolder(string prompt = "Please make a selection")
+    public async static Task<string?> SelectAnyFolder(string prompt = "Please make a selection")
     {
         var provider = StorageService.GetStorageProvider();
         if (provider == null) return null;
@@ -214,6 +241,41 @@ public static class OpenFolder
 
         // Debug.WriteLine($"Selected directory: {IOHelper.UserSettings.Default.SelectedModFolder}");
     }
+
+    public async static Task SaveToFile(string fileText, string prompt = "Please make a selection", string defaultLocation = "")
+    {
+
+        var provider = StorageService.GetStorageProvider();
+        if(provider == null) return;
+
+        if(string.IsNullOrWhiteSpace(defaultLocation)) defaultLocation = CommonPaths.GetBaseFolderPath();
+
+        IStorageFolder? startLocation = null;
+        if(Directory.Exists(defaultLocation))
+        {
+            startLocation = await provider.TryGetFolderFromPathAsync(defaultLocation);
+        }
+
+        var file = await provider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = prompt,
+            DefaultExtension = "json",
+            SuggestedFileName = "modlist",
+            SuggestedStartLocation = startLocation,
+            FileTypeChoices = new[]
+            {
+                new FilePickerFileType("JSON") {Patterns = new[] {"*.json"}}
+            }
+        });
+
+        string? filePath = file?.TryGetLocalPath() ?? null;
+
+        if(!string.IsNullOrWhiteSpace(filePath))
+        {
+            File.WriteAllText(filePath, fileText);
+            Debug.WriteLine($"Saved file {Path.GetFileName(filePath)}");
+        }
+    }
 }
 
 public static class StorageService
@@ -238,13 +300,14 @@ public class UserSettings
     public static UserSettings Default => _instance ??= Load();
     public string SelectedProfile {get; set; } = string.Empty;
     public string DataFolder {get; set; } = string.Empty;
+    public string WorkshopFolder {get; set; } = string.Empty;
     public double WindowWidth {get; set; } = 1200;
     public double WindowHeight {get; set; } = 800;
     public bool EnableDarkTheme {get; set; } = false;
 
     public static UserSettings Load()
     {
-        var configFilePath = SharedPaths.GetConfigFile();
+        var configFilePath = CommonPaths.GetConfigFile();
         if (File.Exists(configFilePath))
         {
             try
@@ -267,10 +330,10 @@ public class UserSettings
 
     public void Save()
     {
-        var directory = SharedPaths.GetConfigFolderPath();
+        var directory = CommonPaths.GetConfigFolderPath();
         if(!Directory.Exists(directory)) Directory.CreateDirectory(directory);
 
-        var configFilePath = SharedPaths.GetConfigFile();
+        var configFilePath = CommonPaths.GetConfigFile();
         try
         {
             File.WriteAllText(configFilePath, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));

@@ -1,3 +1,4 @@
+using Avalonia.Media.Imaging;
 using CommunityToolkit.HighPerformance.Helpers;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LSLib.LS;
@@ -108,6 +109,7 @@ public class LSServices
 
         if(Dependencies.Count > 0)
         {
+            Dependencies.RemoveAll(n => FixedModUUIDs.IDs.Contains(GetAttribute(n, "UUID")));
             foreach(Node dependency in Dependencies)
             {
                 modInfo.Dependencies.Add(GetAttribute(dependency, "UUID"));
@@ -353,7 +355,9 @@ public partial class ModInfo : ObservableObject
     public string Author { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string MD5 {get; set; } = string.Empty; // almost always unused unless its a default fake mod like the base game.
-
+    public string WorkshopID {get; set;} = string.Empty;
+    public SteamAPI.PublishedFileDetail? WorkshopDetails {get; set;} = null;
+    public Bitmap? PreviewImage {get; set; } = null;
 
     public List<string> Dependencies {get; set; } = [];
 }

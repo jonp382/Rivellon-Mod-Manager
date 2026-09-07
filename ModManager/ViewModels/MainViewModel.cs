@@ -16,6 +16,10 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LSLib.LS;
+using Avalonia.Media.Imaging;
+using System.Text.Json;
+using SteamAPI;
+using Avalonia.Controls;
 
 namespace ModManager.ViewModels;
 
@@ -27,8 +31,63 @@ public partial class MainViewModel : ViewModelBase
         IOHelper.UserSettings.Load();
         Update();
 
+        // obtain workshop preview images. only ran in constructor to minimize API usage.
+        UpdateWorkshopInfo();
+
         Debug.WriteLine($"Constructor complete");
         OnPropertyChanged();
+    }
+
+    private static TopLevel? GetTopLevel()
+    {
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            return TopLevel.GetTopLevel(desktop.MainWindow);
+        }
+        return null;
+    }
+
+    public async void UpdateWorkshopInfo()
+    {
+        
+        // only download images for missing mods
+        List<Resources.ModInfo> batchIDs = AllMods.Where(
+            n => !string.IsNullOrEmpty(n.WorkshopID)
+            &&
+            !File.Exists(Path.Combine(IOHelper.CommonPaths.GetResourcesFolderPath(), "preview-images", $"{n.Folder}.png")
+            )).ToList();
+
+        StatusText = "Fetching Steam Workshop details for installed mods...";
+
+        await WebHelper.WebRequest.GetWorkshopDetails(batchIDs);
+
+        ParseWorkshopJson();
+
+        await WebHelper.WebRequest.DownloadAllPreviewImages(batchIDs);
+
+        StatusText = "Downloading missing preview images from Steam Workshop...";
+
+        UpdatePreviewImages();
+
+        StatusText = "Workshop sync complete!";
+
+    }
+
+    public void ParseWorkshopJson()
+    {
+        var jsonPath = Path.Combine(IOHelper.CommonPaths.GetResourcesFolderPath(), "steam_api.json");
+        var rawString = File.ReadAllText(jsonPath);
+
+        var json = JsonSerializer.Deserialize<SteamAPIResponse>(rawString);
+
+        foreach(var mod in AllMods)
+        {
+            if(string.IsNullOrWhiteSpace(mod.WorkshopID)) continue;
+
+            // allow for null results
+            mod.WorkshopDetails = json?.Response.PublishedFileDetails.FirstOrDefault(n => string.Equals(n.PublishedFileId, mod.WorkshopID)) ?? null;
+        }
+
     }
 
     [ObservableProperty]
@@ -46,8 +105,13 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private string _currentProfileText = string.Empty;
 
+    [ObservableProperty]
+    private Resources.ModInfo? _currentlySelectedMod = null;
+
     public void ParseModsDirectory()
     {
+        StatusText = "Retrieving mods from Mods folder...";
+
         string filePath = IOHelper.UserSettings.Default.DataFolder + "/Mods";
 
         Debug.WriteLine($"Attempting to parse mods directory at {filePath}");
@@ -79,32 +143,41 @@ public partial class MainViewModel : ViewModelBase
             AllMods.Add(Resources.LSServices.ExtractMetadata(package));
             
         }
+
+        StatusText = $"Retrieving mods from Mods folder... Complete, found {AllMods.Count} mods!";
         
     }
 
     [RelayCommand]
     public async Task ExtractPakFile()
     {
-        string? FilePath = await IOHelper.OpenFolder.SelectAnyFile("Select the PAK file to extract");
-        if(string.IsNullOrEmpty(FilePath)) return;
+        string? FilePath = await IOHelper.FileIO.SelectAnyFile("Select the PAK file to extract");
+        if(string.IsNullOrEmpty(FilePath))
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox("No file was selected. Please try again.");
+            return;
+        }
 
-        // Debug file output to Downloads folder for testing.
+        
         var outFilePath = 
             Path.Combine(
-                System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile),
-                "Downloads",
-                "Test Folder"
+                IOHelper.CommonPaths.GetBaseFolderPath(),
+                "Extracted PAK Files",
+                Path.GetFileNameWithoutExtension(FilePath)
             );
 
         Resources.LSServices.ExtractPAKFile(FilePath, outFilePath);
+        await MessageboxHelper.InfoBox.InfoMessageBox($"Successfully exported PAK file to {outFilePath}!", "PAK File Exporter");
 
 
     }
 
-    public void ParseLSXFile()
+    public async void ParseLSXFile()
     {
         EnabledMods.Clear();
         DisabledMods.Clear();
+
+        StatusText = $"Reading mod configuration from DOS2 profile {IOHelper.UserSettings.Default.SelectedProfile}...";
 
         string filePath = IOHelper.UserSettings.Default.DataFolder + "/PlayerProfiles" + $"/{IOHelper.UserSettings.Default.SelectedProfile}/" + "modsettings.lsx";
 
@@ -112,11 +185,16 @@ public partial class MainViewModel : ViewModelBase
 
         if(string.IsNullOrEmpty(filePath)) return;
 
-        if(!File.Exists(filePath)) return;
+        if(!File.Exists(filePath))
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox($"The file {filePath} was not found. Please try again.");
+            return;    
+        }
+        
 
         if(AllMods == null || AllMods.Count <= 0)
         {
-            Debug.WriteLine($"Please load the mod folder first!");
+            await MessageboxHelper.ErrorBox.ErrorMessageBox($"The modsettings.lsx file requires the Mods folder to be parsed first. Unable to load profile.");
             return;
         }
 
@@ -165,12 +243,15 @@ public partial class MainViewModel : ViewModelBase
         var allDisabledMods = AllMods.Where(mod => EnabledMods.FirstOrDefault(enabled => enabled.UUID == mod.UUID) == null);
         DisabledMods = new(allDisabledMods.ToList());
 
+        StatusText = $"Reading mod configuration from DOS2 profile {IOHelper.UserSettings.Default.SelectedProfile}... Complete, found {EnabledMods.Count} enabled mods and {DisabledMods.Count} disabled mods!";
+
         OnPropertyChanged();
 
     }
 
     public void UpdateLoadOrders()
     {
+        StatusText = $"Updating load order...";
         // don't sort DisabledMods since we don't care about load orders there.
         // set all load orders to -1 which im using as "invalid" or unloaded.
         foreach(var mod in DisabledMods)
@@ -187,11 +268,14 @@ public partial class MainViewModel : ViewModelBase
         
         ValidateLoadOrder();
 
+        StatusText = "Successfully updated and validated load order!";
+
         
     }
 
     public void ValidateLoadOrder()
     {
+        StatusText = $"Validating load order...";
         // don't sort DisabledMods since we don't care about load orders there.
         
         if(EnabledMods.Count > 0)
@@ -242,11 +326,45 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
+    public async void ParseWorkshopFolder()
+    {
+        var workshopPath = IOHelper.UserSettings.Default.WorkshopFolder;
+        if(string.IsNullOrEmpty(workshopPath)) return;
+
+        string[] folders = Directory.GetDirectories(workshopPath);
+
+        foreach(string folder in folders)
+        {
+            // should have one PAK file per folder
+            string[] files = Directory.GetFiles(folder);
+            if(files.Length > 1)
+            {
+                // if it somehow has more than one file, it's an unusual setup and it should be skipped
+                // so as to not misidentify a mod.
+                Debug.WriteLine($"{folder} has more than one PAK file, skipping.");
+                continue;
+            }
+
+            string name = Path.GetFileNameWithoutExtension(files[0]);
+            Resources.ModInfo? matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.Folder, name, System.StringComparison.OrdinalIgnoreCase));
+            matchingMod ??= AllMods.FirstOrDefault(n => string.Equals($"{n.Folder}_{n.UUID}", name, System.StringComparison.OrdinalIgnoreCase));
+
+            if(matchingMod == null)
+            {
+                Debug.WriteLine($"No matching installed mod for workshop item {name}");
+                continue;
+            }
+
+            matchingMod.WorkshopID = Path.GetFileName(folder);
+        }
+
+    }
+
     // Updates the list of all mods and their load orders after a change to the settings are made.
-    public void Update()
+    public async void Update()
     {
 
-        Debug.WriteLine($"Running Update() in MainViewModel");
+        StatusText = "Updating mods database...";
 
         AllMods.Clear();
         EnabledMods.Clear();
@@ -254,11 +372,15 @@ public partial class MainViewModel : ViewModelBase
 
         ParseModsDirectory();
         ParseLSXFile();
+        ParseWorkshopFolder();
+        UpdatePreviewImages(); // this only re-assigns images, it does not download them
 
         // update UI profile display
         CurrentProfileText = IOHelper.UserSettings.Default.SelectedProfile;
 
         UpdateLoadOrders();
+
+        StatusText = "Update complete!";
 
     }
 
@@ -266,6 +388,267 @@ public partial class MainViewModel : ViewModelBase
     public void ExportLSXToProfile()
     {
         Resources.LSServices.WriteProfileLSX(EnabledMods.ToList());
+    }
+
+    [RelayCommand]
+    public async Task ExportLoadOrderToFile()
+    {
+        // only export enabled mods, no point to export disabled or all mods.
+        // only export UUIDs
+
+
+        // LL order is
+        /*
+            {
+            "Order": [
+                {
+                    "UUID": "mod uuid",
+                    "Name": "mod name"
+                },
+                {
+                    "UUID": "mod uuid",
+                    "Name": "mod name"
+                }
+            }
+        */
+
+        Dictionary<string, List<Dictionary<string, string>>> ModExport = [];
+        List<Dictionary<string, string>> ModsList = [];
+
+        ModExport["Order"] = ModsList;
+        
+        var mods_to_export = EnabledMods; // export all mods
+        foreach(var mod in mods_to_export)
+        {
+            Dictionary<string, string> ModDict = [];
+            ModDict.Add("UUID", mod.UUID);
+            ModDict.Add("Name", mod.Name);
+
+            ModsList.Add(ModDict);
+        }
+
+        // export to modlists subfolder in base directory
+        var ExportDirectory  = Path.Combine(IOHelper.CommonPaths.GetBaseFolderPath(), "Mod Orders");
+        if(!Directory.Exists(ExportDirectory)) Directory.CreateDirectory(ExportDirectory);
+
+        var json = JsonSerializer.Serialize(ModExport, new JsonSerializerOptions {WriteIndented=true});
+        await IOHelper.FileIO.SaveToFile(json, "Save mod-list to JSON file", ExportDirectory);
+
+    }
+
+    [RelayCommand]
+    public async Task ImportLoadOrderFromFile()
+    {
+        var file = await IOHelper.FileIO.SelectAnyFile("Please select the mod order file you want to import");
+        string? filePath = file?.ToString();
+
+        if(string.IsNullOrWhiteSpace(file))
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox($"No file was selected. Please try again.");
+            return;
+        }
+
+        List<Resources.ModInfo> tempList = new();
+        var rawText = File.ReadAllText(file);
+        Dictionary<string, List<Dictionary<string, string>>>? json = [];
+        
+        try { json = JsonSerializer.Deserialize<Dictionary<string, List<Dictionary<string, string>>>>(rawText); }
+        catch { json = null; }
+
+        if(json == null)
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox($"The selected file was of an invalid JSON format, and the mod order could not be imported.");
+            return;
+        }
+
+        List<string> missingMods = [];
+        List<Dictionary<string, string>> ModsList = json["Order"];
+
+        foreach(var dict in ModsList)
+        {
+            var modName = dict["Name"];
+            var modUUID = dict["UUID"];
+
+            var matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.UUID, modUUID));
+            if(matchingMod != null)
+            {
+                tempList.Add(matchingMod);
+                continue;
+            }
+
+            // mod is missing
+            missingMods.Add($"{modName} ({modUUID})");
+
+        }
+
+        EnabledMods.Clear();
+        DisabledMods.Clear();
+        
+        EnabledMods = new(tempList);
+        DisabledMods = new(AllMods.Where(mod => EnabledMods.FirstOrDefault(enabled => enabled.UUID == mod.UUID) == null));
+
+        UpdateLoadOrders();
+
+        await MessageboxHelper.ErrorBox.ErrorMessageBox($"The following mods were not found among your installed list, and could not be enabled: \n{string.Join("\n", missingMods)}");
+
+    }
+
+    public void UpdatePreviewImages()
+    {
+        foreach(Resources.ModInfo mod in AllMods)
+        {
+            var imagePath = Path.Combine(IOHelper.CommonPaths.GetResourcesFolderPath(), "preview-images", $"{mod.Folder}.png");
+            if(File.Exists(imagePath)) 
+            {
+                mod.PreviewImage = new Bitmap(imagePath);
+                Debug.WriteLine($"Assigned image to mod {mod.Name} from {imagePath}");
+            }
+        }
+    }
+
+    [RelayCommand]
+    public async Task OpenWorkshopPage()
+    {
+        var urlStart = "https://steamcommunity.com/sharedfiles/filedetails/?id=";
+        string? ID = CurrentlySelectedMod?.WorkshopID;
+        if(ID == null) return;
+
+        var URL = urlStart + ID;
+
+        var topLevel = GetTopLevel();
+        if(topLevel != null) await WebHelper.WebRequest.OpenURL(URL, topLevel);
+
+        
+    }
+    
+    [RelayCommand]
+    public async Task OpenWorkshopPageSteam()
+    {
+        var urlStart = "steam://url/CommunityFilePage/";
+        string? ID = CurrentlySelectedMod?.WorkshopID;
+        if(ID == null) return;
+
+        var URL = urlStart + ID;
+
+        var topLevel = GetTopLevel();
+        if(topLevel != null) await WebHelper.WebRequest.OpenURL(URL, topLevel);
+
+        
+    }
+
+    [RelayCommand]
+    public async Task EnableMod()
+    {
+        if(CurrentlySelectedMod == null || EnabledMods.Contains(CurrentlySelectedMod)) return;
+
+        List<Resources.ModInfo> ModsToMove = [CurrentlySelectedMod];
+
+        await MoveMods(ModsToMove, DisabledMods, EnabledMods);
+    }
+
+    [RelayCommand]
+    public async Task EnableAllMods()
+    {
+        if(DisabledMods.Count == 0) return;
+
+        List<Resources.ModInfo> ModsToMove = DisabledMods.ToList();
+        await MoveMods(ModsToMove, DisabledMods, EnabledMods);
+    }
+
+    [RelayCommand]
+    public async Task DisableMod()
+    {
+        if(CurrentlySelectedMod == null || DisabledMods.Contains(CurrentlySelectedMod)) return;
+
+        List<Resources.ModInfo> ModsToMove = [CurrentlySelectedMod];
+
+        await MoveMods(ModsToMove, EnabledMods, DisabledMods);
+    }
+
+    [RelayCommand]
+    public async Task DisableAllMods()
+    {
+        if(EnabledMods.Count == 0) return;
+
+        List<Resources.ModInfo> ModsToMove = EnabledMods.ToList();
+        await MoveMods(ModsToMove, EnabledMods, DisabledMods);
+    }
+
+
+    public async Task MoveMods(List<Resources.ModInfo> ModsToMove, ObservableCollection<Resources.ModInfo> SourceList, ObservableCollection<Resources.ModInfo> TargetList)
+    {
+        foreach(Resources.ModInfo modToMove in ModsToMove)
+        {
+            if(modToMove == null) continue; // skip null mods
+            SourceList.Remove(modToMove); // remove mod from source list
+            TargetList.Add(modToMove); // add mod to target list
+
+        }
+
+        UpdateLoadOrders();
+
+    }
+
+    public async Task MoveModsToIndex(List<Resources.ModInfo> ModsToMove, ObservableCollection<Resources.ModInfo> SourceList, ObservableCollection<Resources.ModInfo> TargetList, int targetIndex)
+    {
+        targetIndex = System.Math.Max(0, targetIndex);
+        foreach(Resources.ModInfo modToMove in ModsToMove)
+        {
+            if(modToMove == null) continue; // skip null mods
+
+            Debug.WriteLine($"Attempting to move {modToMove.Name} to index {targetIndex}");
+            SourceList.Remove(modToMove); // remove mod from source list
+            TargetList.Insert(targetIndex, modToMove); // add mod to target list
+            targetIndex ++; // increment so it inserts below the previous mod
+
+        }
+
+        UpdateLoadOrders();
+
+    }
+
+    // im using the word "sort" to refer to resolving dependencies via load order.
+    [RelayCommand]
+    public async Task SortMods()
+    {
+        // use a for loop over a while loop to prevent infinite looping
+        for(int i = 0; i < 1; i++)
+        {
+            // break if all mods are valid.
+            if(EnabledMods.All(n => n.IsValid)) break;
+
+            var modsWithDependencies = EnabledMods.ToList().Where(n => n.Dependencies.Count > 0);
+            foreach(var mod in modsWithDependencies)
+            {
+                // Debug.WriteLine($"Mod with dependencies: {mod.Name}, {mod.Dependencies.Count}");
+                // foreach(var dependency in mod.Dependencies) Debug.WriteLine($"\t{dependency}\t{AllMods.FirstOrDefault(n => string.Equals(n.UUID, dependency, System.StringComparison.OrdinalIgnoreCase))?.Name ?? "Unknown"}");
+                // continue;
+
+                if(mod.IsValid) continue;
+
+                foreach(var dependency in mod.Dependencies)
+                {
+                    var matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.UUID, dependency, System.StringComparison.OrdinalIgnoreCase));
+                    if(matchingMod == null) continue;
+
+                    if(!EnabledMods.Contains(matchingMod))
+                    {
+                        // this means its disabled. Move it first so duplicate mods aren't created.
+                        await MoveMods([matchingMod], DisabledMods, EnabledMods);
+                    }
+
+                    // this dependency is already good relative to this mod so don't move it.
+                    if(EnabledMods.IndexOf(matchingMod) < EnabledMods.IndexOf(mod) && EnabledMods.IndexOf(matchingMod) != -1) continue;
+
+                    var targetIndex = EnabledMods.IndexOf(mod) - 1;
+
+                    await MoveModsToIndex([matchingMod], EnabledMods, EnabledMods, targetIndex);
+                    Debug.WriteLine($"Moved {matchingMod.Name} due to sort (1) to index {targetIndex}");
+                }
+                
+            }
+
+        }
     }
 
 }
