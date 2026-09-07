@@ -97,7 +97,7 @@
             Name="MainGrid" 
             Grid.Row = "2" 
             ColumnDefinitions="360, *, 45, *"
-            RowDefinitions="15, *"
+            RowDefinitions="15, 40, *"
         >
 
             <!-- stack panel to hold the preview section on the left side -->
@@ -222,10 +222,26 @@
                 HorizontalAlignment="Left"
             />
 
+            <TextBox
+                PlaceholderText="Filter Enabled Mods..."
+                Grid.Row="1"
+                Grid.Column="1"
+                Margin="5"
+                Name="EnabledSearchBox"
+            />
+
+            <TextBox
+                PlaceholderText="Filter Disabled Mods..."
+                Grid.Row="1"
+                Grid.Column="3"
+                Margin="5"
+                Name="DisabledSearchBox"
+            />
+
             <!-- Enabled Mods Grid -->
             <DataGrid x:Name="EnabledGrid"
                 ItemsSource="{Binding EnabledMods}"
-                Grid.Row="1"
+                Grid.Row="2"
                 Grid.Column="1"
                 IsReadOnly="True"
                 Margin = "5"
@@ -295,7 +311,7 @@
             <!-- Disabled Mods Grid -->
             <DataGrid  x:Name="DisabledGrid"
                 ItemsSource="{Binding DisabledMods}"
-                Grid.Row="1"
+                Grid.Row="2"
                 Grid.Column="3"
                 IsReadOnly="True"
                 Margin = "5"
