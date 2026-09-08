@@ -21,6 +21,7 @@ using System.Text.Json;
 using SteamAPI;
 using Avalonia.Controls;
 using Avalonia.Collections;
+using System;
 
 namespace ModManager.ViewModels;
 
@@ -110,16 +111,30 @@ public partial class MainViewModel : ViewModelBase
     public void ParseWorkshopJson()
     {
         var jsonPath = Path.Combine(IOHelper.CommonPaths.GetResourcesFolderPath(), "steam_api.json");
-        var rawString = File.ReadAllText(jsonPath);
+        string rawString = string.Empty; 
+        try
+        {
+            rawString = File.ReadAllText(jsonPath);
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine($"ERROR: Could not find file {jsonPath} - {e.Message}");
+            return;
+        }
 
         var json = JsonSerializer.Deserialize<SteamAPIResponse>(rawString);
 
         foreach(var mod in AllMods)
         {
-            if(string.IsNullOrWhiteSpace(mod.WorkshopID)) continue;
+            if(string.IsNullOrWhiteSpace(mod.WorkshopID)) 
+            {
+                Debug.WriteLine($"No workshop ID found for {mod.Name}");
+                continue;
+            }
 
             // allow for null results
             mod.WorkshopDetails = json?.Response.PublishedFileDetails.FirstOrDefault(n => string.Equals(n.PublishedFileId, mod.WorkshopID)) ?? null;
+            if(mod.WorkshopDetails == null) Debug.WriteLine($"No workshop details found for {mod.Name}");
         }
 
     }
