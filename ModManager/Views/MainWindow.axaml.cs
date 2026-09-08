@@ -20,6 +20,7 @@ public partial class MainWindow : Window
     private Point? _pressPosition;
     private static ModInfo? _draggedMod;
     private PointerPressedEventArgs? _pressedEvent;
+    private bool _isSelecting = false;
     private static readonly DataFormat<ModInfo> ModItemFormat = 
         DataFormat.CreateInProcessFormat<ModInfo>("application/x-mod-item");
 
@@ -250,9 +251,13 @@ public partial class MainWindow : Window
     {
         if (DataContext is not MainViewModel vm) return;
         DataGrid grid = (DataGrid)sender!;
+        
+        // so the other grid doesn't fire the same event
+        if(_isSelecting) return;
+        _isSelecting = true;
 
-        // var otherGrid = grid == EnabledGrid ? DisabledGrid : EnabledGrid;
-        // otherGrid.SelectedItem = null;
+        var otherGrid = grid == EnabledGrid ? DisabledGrid : EnabledGrid;
+        otherGrid.SelectedItem = null;  
         
 
         ModInfo? selected = (ModInfo?)grid.SelectedItem;
@@ -260,5 +265,7 @@ public partial class MainWindow : Window
         {
             vm.CurrentlySelectedMod = (ModInfo)grid.SelectedItem;
         }
+
+        _isSelecting = false;
     }
 }
