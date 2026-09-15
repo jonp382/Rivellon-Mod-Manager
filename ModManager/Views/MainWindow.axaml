@@ -97,7 +97,7 @@
             Name="MainGrid" 
             Grid.Row = "2" 
             ColumnDefinitions="360, *, 45, *"
-            RowDefinitions="15, *"
+            RowDefinitions="15, 40, *"
         >
 
             <!-- stack panel to hold the preview section on the left side -->
@@ -113,7 +113,7 @@
                 
                 <!-- preview image -->
                 <Image
-                    Source="{Binding CurrentlySelectedMod.PreviewImage}"
+                    Source="{Binding PreviewMod.PreviewImage}"
                     Width="340"
                     Height="340"
                     Margin="5"
@@ -127,7 +127,7 @@
 
                 <!-- mod name -->
                 <TextBlock
-                    Text="{Binding CurrentlySelectedMod.Name, StringFormat='{}{0}'}"
+                    Text="{Binding PreviewMod.Name, StringFormat='{}{0}'}"
                     FontWeight="Bold"
                     
                     Grid.Row="1"
@@ -137,7 +137,7 @@
                 
                 <!-- mod author -->
                 <TextBlock
-                    Text="{Binding CurrentlySelectedMod.Author, StringFormat='{}Author: {0}'}"
+                    Text="{Binding PreviewMod.Author, StringFormat='{}Author: {0}'}"
 
                     Grid.Row="2"
                     Grid.Column="0"
@@ -146,7 +146,7 @@
 
                 <!-- mod version -->
                 <TextBlock
-                    Text="{Binding CurrentlySelectedMod.Version, StringFormat='{}Version: {0}'}"
+                    Text="{Binding PreviewMod.Version, StringFormat='{}Version: {0}'}"
 
                     Grid.Row="3"
                     Grid.Column="0"
@@ -155,7 +155,7 @@
 
                 <!-- mod UUID -->
                 <TextBlock
-                    Text="{Binding CurrentlySelectedMod.UUID, StringFormat='{}ID: {0}'}"
+                    Text="{Binding PreviewMod.UUID, StringFormat='{}ID: {0}'}"
 
                     Grid.Row="4"
                     Grid.Column="0"
@@ -164,7 +164,7 @@
 
                 <!-- mod workshop ID -->
                 <TextBlock
-                    Text="{Binding CurrentlySelectedMod.WorkshopID, StringFormat='{}Workshop ID: {0}'}"
+                    Text="{Binding PreviewMod.WorkshopID, StringFormat='{}Workshop ID: {0}'}"
 
                     Grid.Row="5"
                     Grid.Column="0"
@@ -177,7 +177,7 @@
                     Grid.Column="0"
                 >
                     <TextBlock
-                        Text="{Binding CurrentlySelectedMod.WorkshopDetails.Description}"
+                        Text="{Binding PreviewMod.WorkshopDetails.Description}"
                         TextWrapping="WrapWithOverflow"
                         
                         ScrollViewer.VerticalScrollBarVisibility="Visible"
@@ -222,10 +222,28 @@
                 HorizontalAlignment="Left"
             />
 
+            <TextBox
+                PlaceholderText="Filter Enabled Mods..."
+                Grid.Row="1"
+                Grid.Column="1"
+                Margin="5"
+                Name="EnabledSearchBox"
+                Text="{Binding EnabledSearchText, Mode=TwoWay}"
+            />
+
+            <TextBox
+                PlaceholderText="Filter Disabled Mods..."
+                Grid.Row="1"
+                Grid.Column="3"
+                Margin="5"
+                Name="DisabledSearchBox"
+                Text="{Binding DisabledSearchText, Mode=TwoWay}"
+            />
+
             <!-- Enabled Mods Grid -->
             <DataGrid x:Name="EnabledGrid"
-                ItemsSource="{Binding EnabledMods}"
-                Grid.Row="1"
+                ItemsSource="{Binding EnabledModsView}"
+                Grid.Row="2"
                 Grid.Column="1"
                 IsReadOnly="True"
                 Margin = "5"
@@ -237,9 +255,12 @@
                 CanUserReorderColumns="True"
                 CanUserSortColumns="True"
 
+                Background="Transparent"
                 DragDrop.AllowDrop="True"
                 PointerPressed="OnPointerPressed"
-                SelectionChanged="Grid_SelectionChanged"
+
+                SelectionMode="Extended"
+                SelectionChanged="OnSelectionChanged"
                 >
 
                 <DataGrid.Styles>
@@ -283,8 +304,8 @@
 
                 <!-- column declaration -->
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="#" Binding="{Binding LoadOrder}" />
-                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
+                    <DataGridTextColumn Header="#" Binding="{ReflectionBinding LoadOrder}" />
+                    <DataGridTextColumn Header="Name" Binding="{ReflectionBinding Name}" />
                 </DataGrid.Columns>
             </DataGrid>
 
@@ -294,8 +315,8 @@
 
             <!-- Disabled Mods Grid -->
             <DataGrid  x:Name="DisabledGrid"
-                ItemsSource="{Binding DisabledMods}"
-                Grid.Row="1"
+                ItemsSource="{Binding DisabledModsView}"
+                Grid.Row="2"
                 Grid.Column="3"
                 IsReadOnly="True"
                 Margin = "5"
@@ -308,9 +329,12 @@
                 CanUserReorderColumns="True"
                 CanUserSortColumns="True"
 
+                Background="Transparent"
                 DragDrop.AllowDrop="True"
                 PointerPressed="OnPointerPressed"
-                SelectionChanged="Grid_SelectionChanged"
+
+                SelectionMode="Extended"
+                SelectionChanged="OnSelectionChanged"
                 >
 
                 <DataGrid.ContextMenu>
@@ -335,9 +359,9 @@
                 <!-- don't need any valid/invalid logic in disabled mods -->
                 <!-- column declaration -->
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
-                    <DataGridTextColumn Header="Version" Binding="{Binding Version}" />
-                    <DataGridTextColumn Header="Author" Binding="{Binding Author}" />
+                    <DataGridTextColumn Header="Name" Binding="{ReflectionBinding Name}" />
+                    <DataGridTextColumn Header="Version" Binding="{ReflectionBinding Version}" />
+                    <DataGridTextColumn Header="Author" Binding="{ReflectionBinding Author}" />
                 </DataGrid.Columns>
             </DataGrid>
 

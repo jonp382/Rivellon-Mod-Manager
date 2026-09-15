@@ -12,16 +12,20 @@ using Avalonia;
 using Avalonia.VisualTree;
 using System;
 using System.Collections.Generic;
+using Avalonia.Controls.Primitives;
 
 namespace ModManager.Views;
 
 public partial class MainWindow : Window
 {
     private Point? _pressPosition;
-    private static ModInfo? _draggedMod;
+    private static List<ModInfo>? _draggedMods;
     private PointerPressedEventArgs? _pressedEvent;
-    private static readonly DataFormat<ModInfo> ModItemFormat = 
-        DataFormat.CreateInProcessFormat<ModInfo>("application/x-mod-item");
+
+    private bool isSelecting = false;
+
+    private static readonly DataFormat<List<ModInfo>> ModItemFormat =
+        DataFormat.CreateInProcessFormat<List<ModInfo>>("application/x-mod-item");
 
     public MainWindow()
     {
@@ -49,7 +53,7 @@ public partial class MainWindow : Window
         Width = IOHelper.UserSettings.Default.WindowWidth;
         Height = IOHelper.UserSettings.Default.WindowHeight;
 
-        Application.Current.RequestedThemeVariant = IOHelper.UserSettings.Default.EnableDarkTheme
+        Application.Current!.RequestedThemeVariant = IOHelper.UserSettings.Default.EnableDarkTheme
                 ? Avalonia.Styling.ThemeVariant.Dark
                 : Avalonia.Styling.ThemeVariant.Light;
 
@@ -67,7 +71,7 @@ public partial class MainWindow : Window
         {
             vm.Update();
 
-            Application.Current.RequestedThemeVariant = IOHelper.UserSettings.Default.EnableDarkTheme
+            Application.Current!.RequestedThemeVariant = IOHelper.UserSettings.Default.EnableDarkTheme
                 ? Avalonia.Styling.ThemeVariant.Dark
                 : Avalonia.Styling.ThemeVariant.Light;
             
@@ -96,13 +100,32 @@ public partial class MainWindow : Window
         Debug.WriteLine($"Firing OnPointerPressed");
         if(sender is not DataGrid srcGrid) return;
 
-        if(srcGrid.SelectedItem is not ModInfo selectedMod) return;
+        List<ModInfo> selectedMods = srcGrid.SelectedItems.OfType<ModInfo>().ToList();
+        if(selectedMods.Count == 0) return;
 
-        _draggedMod = selectedMod;
+        var point = e.GetCurrentPoint(srcGrid);
+        var hitElement = srcGrid.InputHitTest(point.Position) as Visual;
+        var row = hitElement?.FindAncestorOfType<DataGridRow>();
+        
+        // check to see if the clicked mod exists within the selection
+        // this solves an issue where clicking and dragging a selected region instead drags only that clicked mod instead of the region.
+        if (row?.DataContext is ModInfo clickedMod)
+        {
+            if (selectedMods.Contains(clickedMod) && selectedMods.Count > 1 && e.GetCurrentPoint(srcGrid).Properties.IsLeftButtonPressed)
+            {
+                e.Handled = true; 
+            }
+            else if (!selectedMods.Contains(clickedMod))
+            {
+                selectedMods = [clickedMod];
+            }
+        }
+
+        _draggedMods = selectedMods;
         _pressPosition = e.GetPosition(srcGrid);
         _pressedEvent = e;
 
-        var item = DataTransferItem.Create(ModItemFormat, selectedMod);
+        var item = DataTransferItem.Create(ModItemFormat, selectedMods);
 
         var dragData = new DataTransfer();
         dragData.Add(item);
@@ -114,13 +137,13 @@ public partial class MainWindow : Window
         // Clear state if the mouse is released without dragging
         GridDropIndicator.IsVisible = false;
         _pressPosition = null;
-        _draggedMod = null;
+        _draggedMods = null;
         _pressedEvent = null;
     }
 
     private async void OnPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (_pressPosition == null || _draggedMod == null) return;
+        if (_pressPosition == null || _draggedMods == null || _pressedEvent == null) return;
         if (sender is not DataGrid srcGrid) return;
 
         var currentPos = e.GetPosition(srcGrid);
@@ -129,15 +152,15 @@ public partial class MainWindow : Window
         // Require a small movement threshold (e.g., 5 pixels) before starting drag
         if (System.Math.Abs(diff.X) > 5 || System.Math.Abs(diff.Y) > 5)
         {
-            var modToDrag = _draggedMod;
+            var modsToDrag = _draggedMods.ToList();
             var pressEvent = _pressedEvent;
             
             // Clear tracking variables so it doesn't re-trigger
             _pressPosition = null;
-            _draggedMod = null;
+            _draggedMods = null;
             _pressedEvent = null;
 
-            var item = DataTransferItem.Create(ModItemFormat, modToDrag);
+            var item = DataTransferItem.Create(ModItemFormat, modsToDrag);
             var dragData = new DataTransfer();
             dragData.Add(item);
 
@@ -183,7 +206,31 @@ public partial class MainWindow : Window
         }
         else
         {
-            // indicator.IsVisible = false;
+            var lastRow = targetGrid.GetVisualDescendants().OfType<DataGridRow>().LastOrDefault();
+            if(lastRow == null)
+            {
+                // completely empty grid
+                Debug.WriteLine($"empty grid");
+                var gridTopLeft = targetGrid.TranslatePoint(new Point(0,0), MainGrid);
+                if (gridTopLeft.HasValue)
+                {
+                    indicator.Margin = new Thickness(gridTopLeft.Value.X, gridTopLeft.Value.Y + targetGrid.GetVisualDescendants().OfType<DataGridColumnHeadersPresenter>().FirstOrDefault()?.Bounds.Height ?? 0, 0, 0);
+                    indicator.Width = targetGrid.Bounds.Width;
+                    indicator.IsVisible = true;
+                }
+            }
+            else
+            {
+                // non-empty grid
+                Debug.WriteLine($"non-empty grid");
+                var rowTopLeft = lastRow.TranslatePoint(new Point(0,0), MainGrid);
+                if (rowTopLeft.HasValue)
+                {
+                    indicator.Margin = new Thickness(rowTopLeft.Value.X, rowTopLeft.Value.Y + lastRow.Bounds.Height, 0, 0);
+                    indicator.Width = targetGrid.Bounds.Width;
+                    indicator.IsVisible = true;
+                }
+            }
         }
     }
 
@@ -194,31 +241,35 @@ public partial class MainWindow : Window
         if(sender is not DataGrid targetGrid) return;
         if(DataContext is not MainViewModel vm) return;
 
-        if(e.DataTransfer.TryGetValue(ModItemFormat) is not ModInfo droppedMod) return;
+        if(e.DataTransfer.TryGetValue(ModItemFormat) is not List<ModInfo> droppedMods) return;
 
         ObservableCollection<ModInfo> targetList = targetGrid == EnabledGrid ? vm.EnabledMods : vm.DisabledMods;
         
-        ObservableCollection<ModInfo> sourceList = null;
-        if (vm.EnabledMods.Contains(droppedMod))
-        {
-            sourceList = vm.EnabledMods;
-        }
-        else
-        {
-            sourceList = vm.DisabledMods;
-        }
+        ObservableCollection<ModInfo> sourceList;
 
-        int targetIndex = GetTargetIndex(targetGrid, e);
+        foreach(var droppedMod in droppedMods)
+        {
+            if (vm.EnabledMods.Contains(droppedMod))
+            {
+                sourceList = vm.EnabledMods;
+            }
+            else
+            {
+                sourceList = vm.DisabledMods;
+            }
 
-        sourceList.Remove(droppedMod);
-            
-        if(targetIndex < 0 || targetIndex > targetList.Count) 
-        {
-            targetList.Add(droppedMod);
-        }
-        else
-        {
-            targetList.Insert(targetIndex, droppedMod);
+            int targetIndex = GetTargetIndex(targetGrid, e);
+
+            sourceList.Remove(droppedMod);
+                
+            if(targetIndex < 0 || targetIndex > targetList.Count) 
+            {
+                targetList.Add(droppedMod);
+            }
+            else
+            {
+                targetList.Insert(targetIndex, droppedMod);
+            }
         }
         
         vm.UpdateLoadOrders();
@@ -246,19 +297,45 @@ public partial class MainWindow : Window
 
     }
 
-    private void Grid_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    private void OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        if (DataContext is not MainViewModel vm) return;
-        DataGrid grid = (DataGrid)sender!;
+        if(DataContext is not MainViewModel vm) return;
+        if(isSelecting) { Debug.WriteLine($"isSelecting"); return; }
 
-        // var otherGrid = grid == EnabledGrid ? DisabledGrid : EnabledGrid;
-        // otherGrid.SelectedItem = null;
-        
+        isSelecting = true;
 
-        ModInfo? selected = (ModInfo?)grid.SelectedItem;
-        if(selected != null)
+        DataGrid targetGrid;
+        List<ModInfo> targetList = vm.CurrentlySelectedMods;
+        if(sender == EnabledGrid)
         {
-            vm.CurrentlySelectedMod = (ModInfo)grid.SelectedItem;
+            // enabled grid is selected
+            targetGrid = EnabledGrid;
+            DisabledGrid.SelectedItems.Clear();
+            Debug.WriteLine($"Clearing disabled mods selection");
         }
+        else
+        {
+            // disabled grid is selected
+            targetGrid = DisabledGrid;
+            EnabledGrid.SelectedItems.Clear();
+            Debug.WriteLine($"Clearing enabled mods selection");
+        }
+        isSelecting = false;
+
+        ModInfo selectedMod = (ModInfo)targetGrid.SelectedItem;
+        if(selectedMod == null) return;
+
+        targetList.Clear();
+        foreach(var item in targetGrid.SelectedItems)
+        {
+            if(item == null) continue;
+            ModInfo mod = (ModInfo) item;
+            
+            targetList.Add(mod);
+            Debug.WriteLine($"Adding mod {mod.Name}");
+        }
+
+        vm.PreviewMod = targetList.FirstOrDefault();
+
     }
 }

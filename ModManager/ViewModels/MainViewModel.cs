@@ -20,6 +20,8 @@ using Avalonia.Media.Imaging;
 using System.Text.Json;
 using SteamAPI;
 using Avalonia.Controls;
+using Avalonia.Collections;
+using System;
 
 namespace ModManager.ViewModels;
 
@@ -31,11 +33,44 @@ public partial class MainViewModel : ViewModelBase
         IOHelper.UserSettings.Load();
         Update();
 
+        EnabledModsView = new DataGridCollectionView(EnabledMods) { Filter = FilterEnabledMods };
+        DisabledModsView = new DataGridCollectionView(DisabledMods) { Filter = FilterDisabledMods };
+
         // obtain workshop preview images. only ran in constructor to minimize API usage.
         UpdateWorkshopInfo();
 
         Debug.WriteLine($"Constructor complete");
         OnPropertyChanged();
+    }
+
+    private bool FilterEnabledMods(object item)
+    {
+        if(item is not Resources.ModInfo mod) return false;
+        if(string.IsNullOrWhiteSpace(EnabledSearchText)) return true;
+
+        return mod.Name.Contains(EnabledSearchText, System.StringComparison.OrdinalIgnoreCase);
+
+
+    }
+
+    private bool FilterDisabledMods(object item)
+    {
+        if(item is not Resources.ModInfo mod) return false;
+        if(string.IsNullOrWhiteSpace(DisabledSearchText)) return true;
+
+        return mod.Name.Contains(DisabledSearchText, System.StringComparison.OrdinalIgnoreCase);
+
+
+    }
+
+    partial void OnEnabledSearchTextChanged(string? oldValue, string newValue)
+    {
+        EnabledModsView.Refresh();
+    }
+
+    partial void OnDisabledSearchTextChanged(string? oldValue, string newValue)
+    {
+        DisabledModsView.Refresh();
     }
 
     private static TopLevel? GetTopLevel()
@@ -76,16 +111,30 @@ public partial class MainViewModel : ViewModelBase
     public void ParseWorkshopJson()
     {
         var jsonPath = Path.Combine(IOHelper.CommonPaths.GetResourcesFolderPath(), "steam_api.json");
-        var rawString = File.ReadAllText(jsonPath);
+        string rawString = string.Empty; 
+        try
+        {
+            rawString = File.ReadAllText(jsonPath);
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine($"ERROR: Could not find file {jsonPath} - {e.Message}");
+            return;
+        }
 
         var json = JsonSerializer.Deserialize<SteamAPIResponse>(rawString);
 
         foreach(var mod in AllMods)
         {
-            if(string.IsNullOrWhiteSpace(mod.WorkshopID)) continue;
+            if(string.IsNullOrWhiteSpace(mod.WorkshopID)) 
+            {
+                Debug.WriteLine($"No workshop ID found for {mod.Name}");
+                continue;
+            }
 
             // allow for null results
             mod.WorkshopDetails = json?.Response.PublishedFileDetails.FirstOrDefault(n => string.Equals(n.PublishedFileId, mod.WorkshopID)) ?? null;
+            if(mod.WorkshopDetails == null) Debug.WriteLine($"No workshop details found for {mod.Name}");
         }
 
     }
@@ -95,18 +144,27 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty]
     private ObservableCollection<Resources.ModInfo> _enabledMods = [];
+    public DataGridCollectionView EnabledModsView {get; }
 
     [ObservableProperty]
     private ObservableCollection<Resources.ModInfo> _disabledMods = [];
+    public DataGridCollectionView DisabledModsView {get; }
 
     [ObservableProperty]
     private ObservableCollection<Resources.ModInfo> _allMods = [];
 
     [ObservableProperty]
-    private string _currentProfileText = string.Empty;
+    private string _enabledSearchText = string.Empty;
+    [ObservableProperty]
+    private string _disabledSearchText = string.Empty;
 
     [ObservableProperty]
-    private Resources.ModInfo? _currentlySelectedMod = null;
+    private string _currentProfileText = string.Empty;
+
+    public List<Resources.ModInfo> CurrentlySelectedMods = [];
+
+    [ObservableProperty]
+    private Resources.ModInfo? _previewMod = null;
 
     public void ParseModsDirectory()
     {
@@ -240,8 +298,10 @@ public partial class MainViewModel : ViewModelBase
             EnabledMods.Add(matchingModInAllMods);
         }
 
-        var allDisabledMods = AllMods.Where(mod => EnabledMods.FirstOrDefault(enabled => enabled.UUID == mod.UUID) == null);
-        DisabledMods = new(allDisabledMods.ToList());
+        var allDisabledMods = AllMods.Where(mod => EnabledMods.FirstOrDefault(enabled => enabled.UUID == mod.UUID) == null).ToList();
+        DisabledMods.Clear();
+
+        foreach(var mod in allDisabledMods) { DisabledMods.Add(mod); }
 
         StatusText = $"Reading mod configuration from DOS2 profile {IOHelper.UserSettings.Default.SelectedProfile}... Complete, found {EnabledMods.Count} enabled mods and {DisabledMods.Count} disabled mods!";
 
@@ -264,7 +324,10 @@ public partial class MainViewModel : ViewModelBase
             EnabledMods[i].LoadOrder = i+1;
 
         }
-        EnabledMods = new(EnabledMods.OrderBy(n => n.LoadOrder).ToList());
+        var sorted = EnabledMods.OrderBy(n => n.LoadOrder).ToList();
+        
+        EnabledMods.Clear();
+        foreach(var item in sorted) { EnabledMods.Add(item); }
         
         ValidateLoadOrder();
 
@@ -483,10 +546,10 @@ public partial class MainViewModel : ViewModelBase
 
         EnabledMods.Clear();
         DisabledMods.Clear();
-        
-        EnabledMods = new(tempList);
-        DisabledMods = new(AllMods.Where(mod => EnabledMods.FirstOrDefault(enabled => enabled.UUID == mod.UUID) == null));
 
+        foreach(var mod in tempList) { EnabledMods.Add(mod); }
+        foreach(var mod in AllMods) { if(AllMods.FirstOrDefault(n => string.Equals(n.UUID, mod.UUID)) == null) DisabledMods.Add(mod); }
+        
         UpdateLoadOrders();
 
         await MessageboxHelper.ErrorBox.ErrorMessageBox($"The following mods were not found among your installed list, and could not be enabled: \n{string.Join("\n", missingMods)}");
@@ -510,7 +573,7 @@ public partial class MainViewModel : ViewModelBase
     public async Task OpenWorkshopPage()
     {
         var urlStart = "https://steamcommunity.com/sharedfiles/filedetails/?id=";
-        string? ID = CurrentlySelectedMod?.WorkshopID;
+        string? ID = CurrentlySelectedMods?.FirstOrDefault()?.WorkshopID;
         if(ID == null) return;
 
         var URL = urlStart + ID;
@@ -525,7 +588,7 @@ public partial class MainViewModel : ViewModelBase
     public async Task OpenWorkshopPageSteam()
     {
         var urlStart = "steam://url/CommunityFilePage/";
-        string? ID = CurrentlySelectedMod?.WorkshopID;
+        string? ID = CurrentlySelectedMods?.FirstOrDefault()?.WorkshopID;
         if(ID == null) return;
 
         var URL = urlStart + ID;
@@ -539,9 +602,15 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     public async Task EnableMod()
     {
-        if(CurrentlySelectedMod == null || EnabledMods.Contains(CurrentlySelectedMod)) return;
+        if (CurrentlySelectedMods == null) return;
 
-        List<Resources.ModInfo> ModsToMove = [CurrentlySelectedMod];
+        List<Resources.ModInfo> ModsToMove = [];
+        foreach(var mod in CurrentlySelectedMods)
+        {
+            if(mod == null || EnabledMods.Contains(mod)) continue;
+            ModsToMove.Add(mod);
+        }
+
 
         await MoveMods(ModsToMove, DisabledMods, EnabledMods);
     }
@@ -551,16 +620,29 @@ public partial class MainViewModel : ViewModelBase
     {
         if(DisabledMods.Count == 0) return;
 
-        List<Resources.ModInfo> ModsToMove = DisabledMods.ToList();
+        List<Resources.ModInfo> ModsToMove = [];
+        foreach(Resources.ModInfo mod in DisabledMods)
+        {
+            if(DisabledModsView.Contains(mod)) ModsToMove.Add(mod);
+        }
+        Debug.WriteLine($"Found {ModsToMove.Count} mods to move");
+
+        // Disabled -> Enabled so Disabled is SOURCE, Enabled is TARGET
         await MoveMods(ModsToMove, DisabledMods, EnabledMods);
     }
 
     [RelayCommand]
     public async Task DisableMod()
     {
-        if(CurrentlySelectedMod == null || DisabledMods.Contains(CurrentlySelectedMod)) return;
-
-        List<Resources.ModInfo> ModsToMove = [CurrentlySelectedMod];
+        
+        if (CurrentlySelectedMods == null) return;
+        List<Resources.ModInfo> ModsToMove = [];
+        foreach(var mod in CurrentlySelectedMods)
+        {
+            if(mod == null || DisabledMods.Contains(mod)) continue;
+            ModsToMove.Add(mod);
+        }
+        
 
         await MoveMods(ModsToMove, EnabledMods, DisabledMods);
     }
@@ -570,7 +652,15 @@ public partial class MainViewModel : ViewModelBase
     {
         if(EnabledMods.Count == 0) return;
 
-        List<Resources.ModInfo> ModsToMove = EnabledMods.ToList();
+        // List<Resources.ModInfo> ModsToMove = EnabledMods.ToList();
+        List<Resources.ModInfo> ModsToMove = [];
+        foreach(Resources.ModInfo mod in EnabledMods)
+        {
+            if(EnabledModsView.Contains(mod)) ModsToMove.Add(mod);
+        }
+        Debug.WriteLine($"Found {ModsToMove.Count} mods to move");
+
+        // Enabled -> Disabled so Enabled is SOURCE, Disabled is TARGET
         await MoveMods(ModsToMove, EnabledMods, DisabledMods);
     }
 

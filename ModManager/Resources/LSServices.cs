@@ -69,16 +69,13 @@ public class LSServices
 
     private static ModInfo ParseResource(Resource resource)
     {
-        Node moduleInfoNode = resource.Regions["Config"]
-            .Children["ModuleInfo"].FirstOrDefault();
+        Node? moduleInfoNode = resource.Regions["Config"]
+            .Children["ModuleInfo"].FirstOrDefault() 
+            ?? throw new InvalidDataException("Invalid meta.lsx structure. Unable to parse ModuleInfo.");
 
-        if (moduleInfoNode == null)
-        {
-            throw new InvalidDataException("Invalid meta.lsx structure. Unable to parse ModuleInfo.");
-        }
 
         string GetAttribute(Node node, string name) =>
-            node.Attributes.TryGetValue(name, out var attr) ? attr.Value?.ToString() : string.Empty;
+            node.Attributes.TryGetValue(name, out var attr) ? attr.Value.ToString()! : string.Empty;
 
         ModInfo modInfo = new ModInfo
         {
@@ -284,7 +281,7 @@ public class LSServices
         foreach(Node modOrderNode in ModOrderNodes)
         {
             string GetAttribute(string name) =>
-                modOrderNode.Attributes.TryGetValue(name, out var attr) ? attr.Value?.ToString() : string.Empty;
+                modOrderNode.Attributes.TryGetValue(name, out var attr) ? attr.Value?.ToString()! : string.Empty;
 
             ModInfo mod = new ModInfo
             {
@@ -313,7 +310,7 @@ public class LSServices
         foreach(Node modNode in ModsNodes)
         {
             string GetAttribute(string name) =>
-                modNode.Attributes.TryGetValue(name, out var attr) ? attr.Value?.ToString() : string.Empty;
+                modNode.Attributes.TryGetValue(name, out var attr) ? attr.Value?.ToString()! : string.Empty;
             
 
             ModInfo mod = new ModInfo
