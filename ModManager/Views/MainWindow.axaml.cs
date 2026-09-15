@@ -53,7 +53,7 @@ public partial class MainWindow : Window
         Width = IOHelper.UserSettings.Default.WindowWidth;
         Height = IOHelper.UserSettings.Default.WindowHeight;
 
-        Application.Current.RequestedThemeVariant = IOHelper.UserSettings.Default.EnableDarkTheme
+        Application.Current!.RequestedThemeVariant = IOHelper.UserSettings.Default.EnableDarkTheme
                 ? Avalonia.Styling.ThemeVariant.Dark
                 : Avalonia.Styling.ThemeVariant.Light;
 
@@ -71,7 +71,7 @@ public partial class MainWindow : Window
         {
             vm.Update();
 
-            Application.Current.RequestedThemeVariant = IOHelper.UserSettings.Default.EnableDarkTheme
+            Application.Current!.RequestedThemeVariant = IOHelper.UserSettings.Default.EnableDarkTheme
                 ? Avalonia.Styling.ThemeVariant.Dark
                 : Avalonia.Styling.ThemeVariant.Light;
             
@@ -143,7 +143,7 @@ public partial class MainWindow : Window
 
     private async void OnPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (_pressPosition == null || _draggedMods == null) return;
+        if (_pressPosition == null || _draggedMods == null || _pressedEvent == null) return;
         if (sender is not DataGrid srcGrid) return;
 
         var currentPos = e.GetPosition(srcGrid);
@@ -245,7 +245,7 @@ public partial class MainWindow : Window
 
         ObservableCollection<ModInfo> targetList = targetGrid == EnabledGrid ? vm.EnabledMods : vm.DisabledMods;
         
-        ObservableCollection<ModInfo> sourceList = null;
+        ObservableCollection<ModInfo> sourceList;
 
         foreach(var droppedMod in droppedMods)
         {
