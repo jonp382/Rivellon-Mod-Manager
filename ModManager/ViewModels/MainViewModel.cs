@@ -620,7 +620,14 @@ public partial class MainViewModel : ViewModelBase
     {
         if(DisabledMods.Count == 0) return;
 
-        List<Resources.ModInfo> ModsToMove = DisabledMods.ToList();
+        List<Resources.ModInfo> ModsToMove = [];
+        foreach(Resources.ModInfo mod in DisabledMods)
+        {
+            if(DisabledModsView.Contains(mod)) ModsToMove.Add(mod);
+        }
+        Debug.WriteLine($"Found {ModsToMove.Count} mods to move");
+
+        // Disabled -> Enabled so Disabled is SOURCE, Enabled is TARGET
         await MoveMods(ModsToMove, DisabledMods, EnabledMods);
     }
 
@@ -645,7 +652,15 @@ public partial class MainViewModel : ViewModelBase
     {
         if(EnabledMods.Count == 0) return;
 
-        List<Resources.ModInfo> ModsToMove = EnabledMods.ToList();
+        // List<Resources.ModInfo> ModsToMove = EnabledMods.ToList();
+        List<Resources.ModInfo> ModsToMove = [];
+        foreach(Resources.ModInfo mod in EnabledMods)
+        {
+            if(EnabledModsView.Contains(mod)) ModsToMove.Add(mod);
+        }
+        Debug.WriteLine($"Found {ModsToMove.Count} mods to move");
+
+        // Enabled -> Disabled so Enabled is SOURCE, Disabled is TARGET
         await MoveMods(ModsToMove, EnabledMods, DisabledMods);
     }
 
