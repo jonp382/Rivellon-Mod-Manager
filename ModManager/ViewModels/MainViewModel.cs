@@ -161,8 +161,10 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private string _currentProfileText = string.Empty;
 
+    public List<Resources.ModInfo> CurrentlySelectedMods = [];
+
     [ObservableProperty]
-    private Resources.ModInfo? _currentlySelectedMod = null;
+    private Resources.ModInfo? _previewMod = null;
 
     public void ParseModsDirectory()
     {
@@ -571,7 +573,7 @@ public partial class MainViewModel : ViewModelBase
     public async Task OpenWorkshopPage()
     {
         var urlStart = "https://steamcommunity.com/sharedfiles/filedetails/?id=";
-        string? ID = CurrentlySelectedMod?.WorkshopID;
+        string? ID = CurrentlySelectedMods?.FirstOrDefault()?.WorkshopID;
         if(ID == null) return;
 
         var URL = urlStart + ID;
@@ -586,7 +588,7 @@ public partial class MainViewModel : ViewModelBase
     public async Task OpenWorkshopPageSteam()
     {
         var urlStart = "steam://url/CommunityFilePage/";
-        string? ID = CurrentlySelectedMod?.WorkshopID;
+        string? ID = CurrentlySelectedMods?.FirstOrDefault()?.WorkshopID;
         if(ID == null) return;
 
         var URL = urlStart + ID;
@@ -600,9 +602,15 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     public async Task EnableMod()
     {
-        if(CurrentlySelectedMod == null || EnabledMods.Contains(CurrentlySelectedMod)) return;
+        if (CurrentlySelectedMods == null) return;
 
-        List<Resources.ModInfo> ModsToMove = [CurrentlySelectedMod];
+        List<Resources.ModInfo> ModsToMove = [];
+        foreach(var mod in CurrentlySelectedMods)
+        {
+            if(mod == null || EnabledMods.Contains(mod)) continue;
+            ModsToMove.Add(mod);
+        }
+
 
         await MoveMods(ModsToMove, DisabledMods, EnabledMods);
     }
@@ -619,9 +627,15 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     public async Task DisableMod()
     {
-        if(CurrentlySelectedMod == null || DisabledMods.Contains(CurrentlySelectedMod)) return;
-
-        List<Resources.ModInfo> ModsToMove = [CurrentlySelectedMod];
+        
+        if (CurrentlySelectedMods == null) return;
+        List<Resources.ModInfo> ModsToMove = [];
+        foreach(var mod in CurrentlySelectedMods)
+        {
+            if(mod == null || DisabledMods.Contains(mod)) continue;
+            ModsToMove.Add(mod);
+        }
+        
 
         await MoveMods(ModsToMove, EnabledMods, DisabledMods);
     }

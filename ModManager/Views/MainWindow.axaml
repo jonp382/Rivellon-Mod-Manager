@@ -113,7 +113,7 @@
                 
                 <!-- preview image -->
                 <Image
-                    Source="{Binding CurrentlySelectedMod.PreviewImage}"
+                    Source="{Binding PreviewMod.PreviewImage}"
                     Width="340"
                     Height="340"
                     Margin="5"
@@ -127,7 +127,7 @@
 
                 <!-- mod name -->
                 <TextBlock
-                    Text="{Binding CurrentlySelectedMod.Name, StringFormat='{}{0}'}"
+                    Text="{Binding PreviewMod.Name, StringFormat='{}{0}'}"
                     FontWeight="Bold"
                     
                     Grid.Row="1"
@@ -137,7 +137,7 @@
                 
                 <!-- mod author -->
                 <TextBlock
-                    Text="{Binding CurrentlySelectedMod.Author, StringFormat='{}Author: {0}'}"
+                    Text="{Binding PreviewMod.Author, StringFormat='{}Author: {0}'}"
 
                     Grid.Row="2"
                     Grid.Column="0"
@@ -146,7 +146,7 @@
 
                 <!-- mod version -->
                 <TextBlock
-                    Text="{Binding CurrentlySelectedMod.Version, StringFormat='{}Version: {0}'}"
+                    Text="{Binding PreviewMod.Version, StringFormat='{}Version: {0}'}"
 
                     Grid.Row="3"
                     Grid.Column="0"
@@ -155,7 +155,7 @@
 
                 <!-- mod UUID -->
                 <TextBlock
-                    Text="{Binding CurrentlySelectedMod.UUID, StringFormat='{}ID: {0}'}"
+                    Text="{Binding PreviewMod.UUID, StringFormat='{}ID: {0}'}"
 
                     Grid.Row="4"
                     Grid.Column="0"
@@ -164,7 +164,7 @@
 
                 <!-- mod workshop ID -->
                 <TextBlock
-                    Text="{Binding CurrentlySelectedMod.WorkshopID, StringFormat='{}Workshop ID: {0}'}"
+                    Text="{Binding PreviewMod.WorkshopID, StringFormat='{}Workshop ID: {0}'}"
 
                     Grid.Row="5"
                     Grid.Column="0"
@@ -177,7 +177,7 @@
                     Grid.Column="0"
                 >
                     <TextBlock
-                        Text="{Binding CurrentlySelectedMod.WorkshopDetails.Description}"
+                        Text="{Binding PreviewMod.WorkshopDetails.Description}"
                         TextWrapping="WrapWithOverflow"
                         
                         ScrollViewer.VerticalScrollBarVisibility="Visible"
@@ -257,7 +257,9 @@
 
                 DragDrop.AllowDrop="True"
                 PointerPressed="OnPointerPressed"
-                SelectionChanged="Grid_SelectionChanged"
+
+                SelectionMode="Extended"
+                SelectionChanged="OnSelectionChanged"
                 >
 
                 <DataGrid.Styles>
@@ -328,7 +330,9 @@
 
                 DragDrop.AllowDrop="True"
                 PointerPressed="OnPointerPressed"
-                SelectionChanged="Grid_SelectionChanged"
+
+                SelectionMode="Extended"
+                SelectionChanged="OnSelectionChanged"
                 >
 
                 <DataGrid.ContextMenu>

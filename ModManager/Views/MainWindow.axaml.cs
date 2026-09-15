@@ -20,8 +20,10 @@ public partial class MainWindow : Window
     private Point? _pressPosition;
     private static ModInfo? _draggedMod;
     private PointerPressedEventArgs? _pressedEvent;
-    private bool _isSelecting = false;
-    private static readonly DataFormat<ModInfo> ModItemFormat = 
+
+    private bool isSelecting = false;
+
+    private static readonly DataFormat<ModInfo> ModItemFormat =
         DataFormat.CreateInProcessFormat<ModInfo>("application/x-mod-item");
 
     public MainWindow()
@@ -247,25 +249,45 @@ public partial class MainWindow : Window
 
     }
 
-    private void Grid_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    private void OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        if (DataContext is not MainViewModel vm) return;
-        DataGrid grid = (DataGrid)sender!;
-        
-        // so the other grid doesn't fire the same event
-        if(_isSelecting) return;
-        _isSelecting = true;
+        if(DataContext is not MainViewModel vm) return;
+        if(isSelecting) { Debug.WriteLine($"isSelecting"); return; }
 
-        var otherGrid = grid == EnabledGrid ? DisabledGrid : EnabledGrid;
-        otherGrid.SelectedItem = null;  
-        
+        isSelecting = true;
 
-        ModInfo? selected = (ModInfo?)grid.SelectedItem;
-        if(selected != null)
+        DataGrid targetGrid;
+        List<ModInfo> targetList = vm.CurrentlySelectedMods;
+        if(sender == EnabledGrid)
         {
-            vm.CurrentlySelectedMod = (ModInfo)grid.SelectedItem;
+            // enabled grid is selected
+            targetGrid = EnabledGrid;
+            DisabledGrid.SelectedItems.Clear();
+            Debug.WriteLine($"Clearing disabled mods selection");
+        }
+        else
+        {
+            // disabled grid is selected
+            targetGrid = DisabledGrid;
+            EnabledGrid.SelectedItems.Clear();
+            Debug.WriteLine($"Clearing enabled mods selection");
+        }
+        isSelecting = false;
+
+        ModInfo selectedMod = (ModInfo)targetGrid.SelectedItem;
+        if(selectedMod == null) return;
+
+        targetList.Clear();
+        foreach(var item in targetGrid.SelectedItems)
+        {
+            if(item == null) continue;
+            ModInfo mod = (ModInfo) item;
+            
+            targetList.Add(mod);
+            Debug.WriteLine($"Adding mod {mod.Name}");
         }
 
-        _isSelecting = false;
+        vm.PreviewMod = targetList.FirstOrDefault();
+
     }
 }
