@@ -573,13 +573,18 @@ public partial class MainViewModel : ViewModelBase
     public async Task OpenWorkshopPage()
     {
         var urlStart = "https://steamcommunity.com/sharedfiles/filedetails/?id=";
-        string? ID = CurrentlySelectedMods?.FirstOrDefault()?.WorkshopID;
-        if(ID == null) return;
 
-        var URL = urlStart + ID;
+        foreach(var mod in CurrentlySelectedMods)
+        {
+            string ID = mod.WorkshopID;
+            if(string.IsNullOrEmpty(ID)) continue;
 
-        var topLevel = GetTopLevel();
-        if(topLevel != null) await WebHelper.WebRequest.OpenURL(URL, topLevel);
+            var URL = urlStart + ID;
+
+            var topLevel = GetTopLevel();
+            if(topLevel != null) await WebHelper.WebRequest.OpenURL(URL, topLevel);
+        }
+
 
         
     }
@@ -588,6 +593,12 @@ public partial class MainViewModel : ViewModelBase
     public async Task OpenWorkshopPageSteam()
     {
         var urlStart = "steam://url/CommunityFilePage/";
+        if(CurrentlySelectedMods.Count > 1)
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox("Cannot open multiple mod pages via Steam at once. Please use the browser for this.");
+            return;
+        }
+
         string? ID = CurrentlySelectedMods?.FirstOrDefault()?.WorkshopID;
         if(ID == null) return;
 
