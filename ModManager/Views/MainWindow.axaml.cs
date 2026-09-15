@@ -12,6 +12,7 @@ using Avalonia;
 using Avalonia.VisualTree;
 using System;
 using System.Collections.Generic;
+using Avalonia.Controls.Primitives;
 
 namespace ModManager.Views;
 
@@ -205,7 +206,31 @@ public partial class MainWindow : Window
         }
         else
         {
-            // indicator.IsVisible = false;
+            var lastRow = targetGrid.GetVisualDescendants().OfType<DataGridRow>().LastOrDefault();
+            if(lastRow == null)
+            {
+                // completely empty grid
+                Debug.WriteLine($"empty grid");
+                var gridTopLeft = targetGrid.TranslatePoint(new Point(0,0), MainGrid);
+                if (gridTopLeft.HasValue)
+                {
+                    indicator.Margin = new Thickness(gridTopLeft.Value.X, gridTopLeft.Value.Y + targetGrid.GetVisualDescendants().OfType<DataGridColumnHeadersPresenter>().FirstOrDefault()?.Bounds.Height ?? 0, 0, 0);
+                    indicator.Width = targetGrid.Bounds.Width;
+                    indicator.IsVisible = true;
+                }
+            }
+            else
+            {
+                // non-empty grid
+                Debug.WriteLine($"non-empty grid");
+                var rowTopLeft = lastRow.TranslatePoint(new Point(0,0), MainGrid);
+                if (rowTopLeft.HasValue)
+                {
+                    indicator.Margin = new Thickness(rowTopLeft.Value.X, rowTopLeft.Value.Y + lastRow.Bounds.Height, 0, 0);
+                    indicator.Width = targetGrid.Bounds.Width;
+                    indicator.IsVisible = true;
+                }
+            }
         }
     }
 

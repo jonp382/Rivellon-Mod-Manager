@@ -255,6 +255,7 @@
                 CanUserReorderColumns="True"
                 CanUserSortColumns="True"
 
+                Background="Transparent"
                 DragDrop.AllowDrop="True"
                 PointerPressed="OnPointerPressed"
 
@@ -328,6 +329,7 @@
                 CanUserReorderColumns="True"
                 CanUserSortColumns="True"
 
+                Background="Transparent"
                 DragDrop.AllowDrop="True"
                 PointerPressed="OnPointerPressed"
 
