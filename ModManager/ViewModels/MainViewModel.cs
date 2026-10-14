@@ -58,6 +58,8 @@ public partial class MainViewModel : ViewModelBase
         string PakFilePath;
 
         string fileExtension = Path.GetExtension(filePath).ToUpperInvariant();
+        List<string> FilesToMove = [];
+
         switch (fileExtension)
         {
             case ".ZIP": // supporetd
@@ -68,43 +70,27 @@ public partial class MainViewModel : ViewModelBase
 
                 await using (ZipArchive zip = await ZipFile.OpenReadAsync(filePath))
                 {
-                    // foreach(var item in zip.Entries)
-                    // {
-                    //     Console.WriteLine($"Found {item.FullName} in zip file");
-                    // }
-
                     if(zip.Entries.Count == 0)
                     {
                         await MessageboxHelper.ErrorBox.ErrorMessageBox("The selected zip file is empty, and has no extractable filse! Please select a valid file.");
                         return;
                     }
-                    else if (zip.Entries.Count > 1)
-                    {
-                        await MessageboxHelper.ErrorBox.ErrorMessageBox("The selected zip file has more than one item, and the mod manager is not set up to handle this (only one contained .PAK file was expected). Please select a valid file.");
-                        return;
-                    }
-
-                    if(!string.Equals(Path.GetExtension(zip.Entries[0].FullName), ".PAK", StringComparison.OrdinalIgnoreCase))
-                    {
-                        await MessageboxHelper.ErrorBox.ErrorMessageBox("The selected zip file does not contain a PAK file. Please select a valid file.");
-                        return;
-                    }
-
                 }
                 Console.WriteLine($"Exporting ZIP to directory {tempDir}");
                 await ZipFile.ExtractToDirectoryAsync(filePath, tempDir, overwriteFiles: true);
 
-                // only one file expected, and it should be a .PAK
-                var files = Directory.GetFiles(tempDir);
-                PakFilePath = files[0];
-                Console.WriteLine($"Found exported file {PakFilePath}");
+                // extract everything but only move PAK files into mods folder.
+                foreach(string file in Directory.GetFiles(tempDir))
+                {
+                    if(string.Equals(Path.GetExtension(file), ".pak", StringComparison.OrdinalIgnoreCase)) FilesToMove.Add(file);
+                }
 
                 break;
 
             case ".PAK": // supported
                 
-                PakFilePath = filePath;
-                Console.WriteLine($"Found selected PAK file {PakFilePath}");
+                FilesToMove.Add(filePath);
+                Console.WriteLine($"Found selected PAK file {filePath}");
 
                 break;
 
@@ -118,8 +104,12 @@ public partial class MainViewModel : ViewModelBase
 
         string modsPath = Path.Combine(IOHelper.UserSettings.Default.DataFolder, "Mods");
         
-        Console.WriteLine($"Attempting to move {PakFilePath} to {Path.Combine(modsPath, Path.GetFileName(PakFilePath))}");
-        File.Move(PakFilePath, Path.Combine(modsPath, Path.GetFileName(PakFilePath)));
+        foreach(string file in FilesToMove)
+        {
+            Console.WriteLine($"Attempting to move {file} to {Path.Combine(modsPath, Path.GetFileName(file))}");
+            File.Move(file, Path.Combine(modsPath, Path.GetFileName(file)));
+            Console.WriteLine($"Success");
+        }
 
         Console.WriteLine($"Updating mods list...");
         Update();
