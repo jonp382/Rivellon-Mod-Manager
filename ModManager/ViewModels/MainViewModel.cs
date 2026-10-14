@@ -1,15 +1,13 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Avalonia.Platform.Storage;
 using System.Threading.Tasks;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia;
 
 using System.Collections.ObjectModel;
 
-using System.Xml.Linq;
-
 using System.IO;
+using System.IO.Compression;
 
 using System.Diagnostics;
 using System.Collections.Generic;
@@ -22,6 +20,7 @@ using SteamAPI;
 using Avalonia.Controls;
 using Avalonia.Collections;
 using System;
+using Tmds.DBus.Protocol;
 
 namespace ModManager.ViewModels;
 
@@ -41,6 +40,77 @@ public partial class MainViewModel : ViewModelBase
 
         Debug.WriteLine($"Constructor complete");
         OnPropertyChanged();
+    }
+
+    [RelayCommand]
+    public async Task ImportMod()
+    {
+        string? filePath = await IOHelper.FileIO.SelectAnyFile("Please select the file you wish to import.");
+        if(string.IsNullOrWhiteSpace(filePath))
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox("The selected file was invalid. Please select a valid file.");
+            return;
+        } 
+
+        Console.WriteLine($"Found selected file at {filePath}");
+
+        string fileExtension = Path.GetExtension(filePath).ToUpperInvariant();
+        List<string> FilesToMove = [];
+
+        switch (fileExtension)
+        {
+            case ".ZIP": // supporetd
+                // assume there's a PAK file inside the ZIP
+                string tempDir = Path.Combine(AppContext.BaseDirectory, "temp_extract", Path.GetFileNameWithoutExtension(filePath));
+                Console.WriteLine($"Creating temporary export directory at {tempDir}");
+                Directory.CreateDirectory(tempDir);
+
+                await using (ZipArchive zip = await ZipFile.OpenReadAsync(filePath))
+                {
+                    if(zip.Entries.Count == 0)
+                    {
+                        await MessageboxHelper.ErrorBox.ErrorMessageBox("The selected zip file is empty, and has no extractable filse! Please select a valid file.");
+                        return;
+                    }
+                }
+                Console.WriteLine($"Exporting ZIP to directory {tempDir}");
+                await ZipFile.ExtractToDirectoryAsync(filePath, tempDir, overwriteFiles: true);
+
+                // extract everything but only move PAK files into mods folder.
+                foreach(string file in Directory.GetFiles(tempDir))
+                {
+                    if(string.Equals(Path.GetExtension(file), ".pak", StringComparison.OrdinalIgnoreCase)) FilesToMove.Add(file);
+                }
+
+                break;
+
+            case ".PAK": // supported
+                
+                FilesToMove.Add(filePath);
+                Console.WriteLine($"Found selected PAK file {filePath}");
+
+                break;
+
+
+            default:
+                await MessageboxHelper.ErrorBox.ErrorMessageBox($"The file extension {fileExtension} is not supported!");
+                return;
+
+
+        }
+
+        string modsPath = Path.Combine(IOHelper.UserSettings.Default.DataFolder, "Mods");
+        
+        foreach(string file in FilesToMove)
+        {
+            Console.WriteLine($"Attempting to move {file} to {Path.Combine(modsPath, Path.GetFileName(file))}");
+            File.Move(file, Path.Combine(modsPath, Path.GetFileName(file)));
+            Console.WriteLine($"Success");
+        }
+
+        Console.WriteLine($"Updating mods list...");
+        Update();
+        Console.WriteLine($"Done!");
     }
 
     private bool FilterEnabledMods(object item)
@@ -105,6 +175,54 @@ public partial class MainViewModel : ViewModelBase
         UpdatePreviewImages();
 
         StatusText = "Workshop sync complete!";
+
+    }
+
+    [RelayCommand]
+    public async Task DownloadScriptExtender()
+    {
+        string? outFilePath = await WebHelper.WebRequest.DownloadScriptExtender();
+        if (string.IsNullOrWhiteSpace(outFilePath))
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox("The Mod Manager was unable to download the script extender.");
+            return;
+        }
+
+        string rootDirectory = Path.GetDirectoryName(outFilePath)!;
+        await ZipFile.ExtractToDirectoryAsync(outFilePath, rootDirectory, true);
+
+        string? DLL = Directory.GetFiles(rootDirectory).FirstOrDefault(file => string.Equals(Path.GetFileName(file), "dxgi.dll", StringComparison.OrdinalIgnoreCase));
+        if (string.IsNullOrWhiteSpace(DLL))
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox("The Mod Manager was unable to download the script extender. The downloaded file did not contain a 'dxgi.dll' file, which was expected.");
+            return;
+        }
+
+        string destination = Path.Combine(IOHelper.UserSettings.Default.GameFolder, "DefEd", "bin", Path.GetFileName(DLL));
+        try
+        {
+            File.Copy(DLL, destination, true);
+        }
+        catch(DirectoryNotFoundException ex)
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox($"The Game Directory in the settings menu did not match the expected format, and the script extender was unable to be copied over. Please review the settings, and try again.\n\n{ex.Message}");
+            return;
+        }
+        catch(Exception ex)
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox($"The mod manager was not able to copy the script extender DLL into the game directory.\n\n{ex.Message}");
+            return;
+        }
+
+        // check to make sure the file is present
+        if (File.Exists(destination))
+        {
+            await MessageboxHelper.InfoBox.InfoMessageBox($"The script extender was successfully downloaded and moved to the DefEd/Bin folder. You can find it at: \n\n{destination}");
+        }
+        else
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox("The script extender did not successfully downloaded or move to the DefEd/Bin folder. Please review your settings (file paths specifically) and try again.");
+        }
 
     }
 

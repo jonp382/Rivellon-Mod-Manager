@@ -37,7 +37,7 @@ public class CommonPaths
             );
     }
 
-    // where the EXE is stored
+    // where the Mod Manager EXE is stored
     public static string GetBaseFolderPath() { return AppContext.BaseDirectory; }
 
         
@@ -131,6 +131,20 @@ public class CommonPaths
 
 
         return Path.Combine(steamPath, "workshop", "content", "435150");
+    }
+
+    public async static Task<string> AutoFindGameFolder()
+    {
+
+        var steamPath = await FileIO.SelectAnyFolder("Please select your steamapps folder in your Steam directory.");
+        if(string.IsNullOrEmpty(steamPath)) 
+        {
+            Debug.WriteLine($"No folder selected");
+            return string.Empty;
+        }
+
+
+        return Path.Combine(steamPath, "common", "Divinity Original Sin 2");
     }
 
     public static string GetLSXFromProfile()
@@ -301,6 +315,7 @@ public class UserSettings
     public string SelectedProfile {get; set; } = string.Empty;
     public string DataFolder {get; set; } = string.Empty;
     public string WorkshopFolder {get; set; } = string.Empty;
+    public string GameFolder {get; set; } = string.Empty;
     public double WindowWidth {get; set; } = 1200;
     public double WindowHeight {get; set; } = 800;
     public bool EnableDarkTheme {get; set; } = false;

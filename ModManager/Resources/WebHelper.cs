@@ -138,4 +138,38 @@ public class WebRequest()
             await topLevel.Launcher.LaunchUriAsync(uri);
         }
     }   
+
+    public static async Task<string?> DownloadScriptExtender()
+    {
+        string URL = "https://api.github.com/repos/Norbyte/ositools/releases/latest";
+
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("ModManager");
+        var response = await client.GetAsync(URL);
+        response.EnsureSuccessStatusCode();
+
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        // Console.WriteLine($"Json file: \n{json}");
+
+        var assets = json.RootElement.GetProperty("assets");
+
+        var asset = assets.EnumerateArray().First (a => a.GetProperty("name").GetString()?.StartsWith("ScriptExtender-Updater-v") ?? false);
+        
+        if (string.IsNullOrWhiteSpace(asset.GetProperty("name").GetString()))
+        {
+            return null;
+        }
+
+        var url = asset.GetProperty("browser_download_url").GetString();
+        
+
+        string outDir = Path.Combine(IOHelper.CommonPaths.GetBaseFolderPath(), "temp-downloads");
+        Directory.CreateDirectory(outDir);
+
+        string outFile = Path.Combine(outDir, asset.GetProperty("name").GetString()!);
+
+        var zipBytes = await client.GetByteArrayAsync(url);
+        await File.WriteAllBytesAsync(Path.Combine(outFile), zipBytes);
+
+        return outFile;
+    }
 }

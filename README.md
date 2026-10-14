@@ -1,6 +1,4 @@
 # Rivellon Mod Manager
-NOTE! This app is a work in progress.
-
 This Mod Manager supports Divinity: Original Sin 2, by Larian Studios.
 
 ![Overview Image](Images/Overview.png)
@@ -22,13 +20,15 @@ Currently, it supports:
 * Saving and exporting the current load order to the target profile
 * Saving and exporting the current load order to a JSON file
 * Steam Workshop metadata retrieval and display
-
-# Planned Features
-Features that are planned, but not yet implemented, include:
 * Importing mods from ZIP, PAK formats via the mod manager
-* Script extender detection and management
+* Script extender installation (see [OSITools](https://github.com/Norbyte/ositools))
+
+## Planned features
+* Script extender detection in mod metadata to verify whether a mod needs the extender, and whether the extender is installed for it.
 
 # Credits
 * [LaughingLeader](https://github.com/LaughingLeader) for their [Divinity Mod Manager](https://github.com/LaughingLeader-DOS2-Mods/DivinityModManager) and [BG3 Mod Manager](https://github.com/laughingleader/bg3modmanager) apps.
-* [Norbyte](https://github.com/Norbyte) for [LSLib](https://github.com/Norbyte/lslib). This is used extensively to manage Larian's file formats.
+* [Norbyte](https://github.com/Norbyte) for: 
+  * [LSLib](https://github.com/Norbyte/lslib). This is used extensively to manage Larian's file formats.
+  * [OSITools](https://github.com/Norbyte/ositools) for the Script Extender, which this mod manager downloads and extracts to the game data folder.
 * Larian Studios, for their excellent Divinity: Original Sin 2 game.

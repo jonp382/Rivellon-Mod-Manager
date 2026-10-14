@@ -34,3 +34,19 @@ public static class InfoBox
         await box.ShowWindowAsync();
     }
 }
+
+public static class PromptBox
+{
+    public static async Task<ButtonResult> PromptMessagebox(string text, string title = "Mod Manager")
+    {
+        var box = MessageBoxManager.GetMessageBoxStandard(
+            title: title,
+            text: text,
+            ButtonEnum.YesNoCancel,
+            Icon.Info
+        );
+
+        ButtonResult result = await box.ShowWindowAsync();
+        return result;
+    }
+}
