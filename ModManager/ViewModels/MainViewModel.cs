@@ -1,13 +1,10 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Avalonia.Platform.Storage;
 using System.Threading.Tasks;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia;
 
 using System.Collections.ObjectModel;
-
-using System.Xml.Linq;
 
 using System.IO;
 using System.IO.Compression;
@@ -23,7 +20,6 @@ using SteamAPI;
 using Avalonia.Controls;
 using Avalonia.Collections;
 using System;
-using Tmds.DBus.Protocol;
 
 namespace ModManager.ViewModels;
 
