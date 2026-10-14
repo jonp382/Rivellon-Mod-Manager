@@ -37,7 +37,7 @@ public class CommonPaths
             );
     }
 
-    // where the EXE is stored
+    // where the Mod Manager EXE is stored
     public static string GetBaseFolderPath() { return AppContext.BaseDirectory; }
 
         
