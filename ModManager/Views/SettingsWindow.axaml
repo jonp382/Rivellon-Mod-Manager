@@ -10,8 +10,9 @@
         Background="{DynamicResource AppBackgroundBrush}"
         Foreground="{DynamicResource AppTextBrush}">
 
-        <Grid RowDefinitions="40, 40, 40, 50, 40, 40" ColumnDefinitions="175, *, 75, 75" Margin="10">
+        <Grid RowDefinitions="40, 40, 40, 50, 40, 40, 40" ColumnDefinitions="175, *, 75, 75" Margin="10">
 
+        <!-- Divinity Data Folder -->
             <TextBlock
                 Text="Divinity Data Folder"
                 Grid.Row="0"
@@ -28,6 +29,7 @@
                 Margin="5"
                 VerticalAlignment="Center"
                 TextChanged="DataFolderTextbox_TextChanged"
+                PlaceholderText="Where your save data and mods are stored"
             />
 
             <Button
@@ -50,9 +52,55 @@
                 Command="{Binding AutoSelectDataDirectory}"
             />
 
+        <!-- Divinity WORKSHOP folder -->
+            <TextBlock
+                Text="Workshop Folder"
+                Grid.Row="1"
+                Margin="5"
+                VerticalAlignment="Center"
+            />
+
+            <TextBox
+                Text="{Binding WorkshopDirectory}"
+                Grid.Row="1"
+                Grid.Column="1"
+                Margin="5"
+                VerticalAlignment="Center"
+                PlaceholderText="Where the workshop mods are stored, in your steam directory"
+            />
+
+            <Button
+                Name="WorkshopFolderButton"
+                Content="Select"
+                Grid.Row="1"
+                Grid.Column="2"
+                Margin="5"
+                VerticalAlignment="Center"
+                Command="{Binding SelectWorkshopDirectoryCommand}"
+            />
+
+            <Button
+                Name="AutoWorkshopFolderButton"
+                Content="Auto"
+                Grid.Row="1"
+                Grid.Column="3"
+                Margin="5"
+                VerticalAlignment="Center"
+                Command="{Binding AutoSelectWorkshopDirectory}"
+            />
+
+        <!-- Current Profile Dropdown Selection -->
             <TextBlock
                 Text="Current Profile"
-                Grid.Row="1"
+                Grid.Row="3"
+                Grid.Column="0"
+                Margin="5"
+                VerticalAlignment="Center"
+            />
+
+             <TextBlock
+                Text="Current Profile"
+                Grid.Row="3"
                 Grid.Column="0"
                 Margin="5"
                 VerticalAlignment="Center"
@@ -62,68 +110,74 @@
                 Name="ProfileComboBox"
                 ItemsSource="{Binding AllProfiles}"
                 SelectedItem="{Binding CurrentProfile}"
-                Grid.Row="1"
+                Grid.Row="3"
                 Grid.Column="1"
                 Margin="5"
                 VerticalAlignment="Center"
             />
 
+        <!-- Divinity Game Directory -->
+
             <TextBlock
-                Text="Workshop Folder"
+                Text="Game Folder"
                 Grid.Row="2"
                 Margin="5"
                 VerticalAlignment="Center"
             />
 
             <TextBox
-                Text="{Binding WorkshopDirectory}"
+                Text="{Binding GameDirectory}"
                 Grid.Row="2"
                 Grid.Column="1"
                 Margin="5"
                 VerticalAlignment="Center"
+                PlaceholderText="Where the game is installed on Steam"
             />
 
             <Button
-                Name="WorkshopFolderButton"
+                Name="GameFolderButton"
                 Content="Select"
                 Grid.Row="2"
                 Grid.Column="2"
                 Margin="5"
                 VerticalAlignment="Center"
+                Command="{Binding SelectGameDirectoryCommand}"
             />
 
             <Button
-                Name="AutoWorkshopFolderButton"
+                Name="AutoGameFolderButton"
                 Content="Auto"
                 Grid.Row="2"
                 Grid.Column="3"
                 Margin="5"
                 VerticalAlignment="Center"
-                Command="{Binding AutoSelectWorkshopDirectory}"
+                Command="{Binding AutoSelectGameDirectory}"
             />
-            
+
+        <!-- Dark Mode Toggle -->
             <TextBlock
                 Text="Enable Dark Theme"
-                Grid.Row="3"
+                Grid.Row="4"
                 Grid.Column="0"
                 VerticalAlignment="Center"
                 Margin="5"
             />
 
             <CheckBox
-                Grid.Row="3"
+                Grid.Row="4"
                 Grid.Column="1"
                 Margin="5"
                 VerticalAlignment="Center"
                 HorizontalAlignment="Left"
                 IsChecked="{Binding EnableDarkTheme}"
             />
-            
+
+        <!-- Apply/Cancel buttons -->
             <Button
                 Content="Apply"
                 Name="ApplyButton"
                 Click="ApplyButton_Click"
-                Grid.Row="4"
+                Grid.Row="5"
                 Grid.Column="0"
                 VerticalAlignment="Bottom"
             />
@@ -132,14 +186,15 @@
                 Content="Cancel"
                 Name="CancelButton"
                 Click="CancelButton_Click"
-                Grid.Row="4"
+                Grid.Row="5"
                 Grid.Column="1"
                 VerticalAlignment="Bottom"
             />
-
+        
+        <!-- Config disclaimer -->
             <TextBlock
                 Text="Config is saved in the 'config' sub-folder, next to the program executable"
-                Grid.Row="5"
+                Grid.Row="6"
                 Grid.ColumnSpan="4"
                 Grid.Column="0"
                 TextWrapping="NoWrap"
