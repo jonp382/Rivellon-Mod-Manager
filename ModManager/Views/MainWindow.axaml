@@ -68,6 +68,11 @@
                     Header="Extract PAK File"
                     Command="{Binding ExtractPakFileCommand}"
                 />
+
+                <MenuItem
+                    Header="Download Norbyte's Script Extender (latest)"
+                    Command="{Binding DownloadScriptExtenderCommand}"
+                />
             </MenuItem>
 
             <MenuItem Header="Load Order">
