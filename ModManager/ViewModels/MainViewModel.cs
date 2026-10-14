@@ -53,10 +53,6 @@ public partial class MainViewModel : ViewModelBase
 
         Console.WriteLine($"Found selected file at {filePath}");
 
-        // game data folder/mods/SubFolder <-- drop here
-
-        string PakFilePath;
-
         string fileExtension = Path.GetExtension(filePath).ToUpperInvariant();
         List<string> FilesToMove = [];
 
