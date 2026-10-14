@@ -3,14 +3,14 @@
         xmlns:vm="using:ModManager.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="300"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="400"
         x:Class="ModManager.Views.SettingsWindow"
         x:DataType="vm:SettingsViewModel"
         Title="Settings" Width="1200" Height="300"
         Background="{DynamicResource AppBackgroundBrush}"
         Foreground="{DynamicResource AppTextBrush}">
 
-        <Grid RowDefinitions="40, 40, 40, 50, 40, 40, 40" ColumnDefinitions="175, *, 75, 75" Margin="10">
+        <Grid RowDefinitions="40, 40, 40, 50, 40, 40, 40, 40" ColumnDefinitions="175, *, 75, 75" Margin="10">
 
         <!-- Divinity Data Folder -->
             <TextBlock
@@ -92,7 +92,7 @@
         <!-- Current Profile Dropdown Selection -->
             <TextBlock
                 Text="Current Profile"
-                Grid.Row="3"
+                Grid.Row="4"
                 Grid.Column="0"
                 Margin="5"
                 VerticalAlignment="Center"
@@ -100,7 +100,7 @@
 
              <TextBlock
                 Text="Current Profile"
-                Grid.Row="3"
+                Grid.Row="4"
                 Grid.Column="0"
                 Margin="5"
                 VerticalAlignment="Center"
@@ -110,7 +110,7 @@
                 Name="ProfileComboBox"
                 ItemsSource="{Binding AllProfiles}"
                 SelectedItem="{Binding CurrentProfile}"
-                Grid.Row="3"
+                Grid.Row="4"
                 Grid.Column="1"
                 Margin="5"
                 VerticalAlignment="Center"
@@ -154,17 +154,32 @@
                 Command="{Binding AutoSelectGameDirectory}"
             />
 
+        <!-- Auto Select all folders -->
+            <Button
+                Name="AutoSelectFolders"
+                Content="Auto Select all Folders"
+                Grid.Row="3"
+                Grid.Column="0"
+                Grid.ColumnSpan="4"
+                Margin="5"
+                Width="300"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                HorizontalContentAlignment="Center"
+                Command="{Binding AutoDetermineFoldersCommand}"
+            />
+
         <!-- Dark Mode Toggle -->
             <TextBlock
                 Text="Enable Dark Theme"
-                Grid.Row="4"
+                Grid.Row="5"
                 Grid.Column="0"
                 VerticalAlignment="Center"
                 Margin="5"
             />
 
             <CheckBox
-                Grid.Row="4"
+                Grid.Row="5"
                 Grid.Column="1"
                 Margin="5"
                 VerticalAlignment="Center"
@@ -177,7 +192,7 @@
                 Content="Apply"
                 Name="ApplyButton"
                 Click="ApplyButton_Click"
-                Grid.Row="5"
+                Grid.Row="6"
                 Grid.Column="0"
                 VerticalAlignment="Bottom"
             />
@@ -186,7 +201,7 @@
                 Content="Cancel"
                 Name="CancelButton"
                 Click="CancelButton_Click"
-                Grid.Row="5"
+                Grid.Row="6"
                 Grid.Column="1"
                 VerticalAlignment="Bottom"
             />
@@ -194,7 +209,7 @@
         <!-- Config disclaimer -->
             <TextBlock
                 Text="Config is saved in the 'config' sub-folder, next to the program executable"
-                Grid.Row="6"
+                Grid.Row="7"
                 Grid.ColumnSpan="4"
                 Grid.Column="0"
                 TextWrapping="NoWrap"

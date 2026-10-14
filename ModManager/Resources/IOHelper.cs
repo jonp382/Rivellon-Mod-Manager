@@ -147,6 +147,45 @@ public class CommonPaths
         return Path.Combine(steamPath, "common", "Divinity Original Sin 2");
     }
 
+    public async static Task<Dictionary<string, string?>?> AutoDetermineAllFolders()
+    {
+        // if the user selects the steam folder we can get the game folder and workshop folder on windows, and all 3 on linux.
+        // on windows, the data folder is typically under Documents so i'll assume that here.
+        var steamPath = await FileIO.SelectAnyFolder("Please select your steamapps folder in your Steam directory.");
+        if(string.IsNullOrEmpty(steamPath)) 
+        {
+            Debug.WriteLine($"No folder selected. Please try again.");
+            return null;
+        }
+
+        string? gameFolder = Path.Combine(steamPath, "common", "Divinity Original Sin 2");
+        string? workshopFolder = Path.Combine(steamPath, "workshop", "content", "435150");
+        string? dataFolder;
+
+        if (OperatingSystem.IsLinux())
+        {
+            dataFolder = Path.Combine(steamPath, "compatdata", "435150", "pfx", "drive_c", "users", "steamuser", "Documents", "Larian Studios", "Divinity Original Sin 2 Definitive Edition");
+        }
+        else if(OperatingSystem.IsWindows()){
+            var home = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            dataFolder = Path.Combine(home, "Larian Studios", "Divinity Original Sin 2 Definitive Edition");
+        }
+        else
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox("Invalid operating system. The path detection system is configured to support Windows and Linux. Please manually enter your file paths!");
+            dataFolder = null;
+        }
+
+        Dictionary<string, string?> returnDict = [];
+        returnDict.Add("Game", gameFolder);
+        returnDict.Add("Workshop", workshopFolder);
+        returnDict.Add("Data", dataFolder);
+
+        return returnDict;
+
+
+    }
+
     public static string GetLSXFromProfile()
     {
         return string.Empty;

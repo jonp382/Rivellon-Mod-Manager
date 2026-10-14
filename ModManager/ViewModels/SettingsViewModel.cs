@@ -125,4 +125,16 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
+    [RelayCommand]
+    public async Task AutoDetermineFolders()
+    {
+        var returnDict = await IOHelper.CommonPaths.AutoDetermineAllFolders();
+        if(returnDict == null) return; // assume the error message box is handled in the iohelper function
+
+        GameDirectory = returnDict["Game"]!;
+        DataDirectory = returnDict["Data"]!;
+        WorkshopDirectory = returnDict["Workshop"]!;
+
+    }
+
 }
