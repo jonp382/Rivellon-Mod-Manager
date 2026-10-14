@@ -10,6 +10,7 @@ using System.Collections.ObjectModel;
 using System.Xml.Linq;
 
 using System.IO;
+using System.IO.Compression;
 
 using System.Diagnostics;
 using System.Collections.Generic;
@@ -22,6 +23,7 @@ using SteamAPI;
 using Avalonia.Controls;
 using Avalonia.Collections;
 using System;
+using Tmds.DBus.Protocol;
 
 namespace ModManager.ViewModels;
 
@@ -41,6 +43,91 @@ public partial class MainViewModel : ViewModelBase
 
         Debug.WriteLine($"Constructor complete");
         OnPropertyChanged();
+    }
+
+    [RelayCommand]
+    public async Task ImportMod()
+    {
+        string? filePath = await IOHelper.FileIO.SelectAnyFile("Please select the file you wish to import.");
+        if(string.IsNullOrWhiteSpace(filePath))
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox("The selected file was invalid. Please select a valid file.");
+            return;
+        } 
+
+        Console.WriteLine($"Found selected file at {filePath}");
+
+        // game data folder/mods/SubFolder <-- drop here
+
+        string PakFilePath;
+
+        string fileExtension = Path.GetExtension(filePath).ToUpperInvariant();
+        switch (fileExtension)
+        {
+            case ".ZIP": // supporetd
+                // assume there's a PAK file inside the ZIP
+                string tempDir = Path.Combine(AppContext.BaseDirectory, "temp_extract", Path.GetFileNameWithoutExtension(filePath));
+                Console.WriteLine($"Creating temporary export directory at {tempDir}");
+                Directory.CreateDirectory(tempDir);
+
+                await using (ZipArchive zip = await ZipFile.OpenReadAsync(filePath))
+                {
+                    // foreach(var item in zip.Entries)
+                    // {
+                    //     Console.WriteLine($"Found {item.FullName} in zip file");
+                    // }
+
+                    if(zip.Entries.Count == 0)
+                    {
+                        await MessageboxHelper.ErrorBox.ErrorMessageBox("The selected zip file is empty, and has no extractable filse! Please select a valid file.");
+                        return;
+                    }
+                    else if (zip.Entries.Count > 1)
+                    {
+                        await MessageboxHelper.ErrorBox.ErrorMessageBox("The selected zip file has more than one item, and the mod manager is not set up to handle this (only one contained .PAK file was expected). Please select a valid file.");
+                        return;
+                    }
+
+                    if(!string.Equals(Path.GetExtension(zip.Entries[0].FullName), ".PAK", StringComparison.OrdinalIgnoreCase))
+                    {
+                        await MessageboxHelper.ErrorBox.ErrorMessageBox("The selected zip file does not contain a PAK file. Please select a valid file.");
+                        return;
+                    }
+
+                }
+                Console.WriteLine($"Exporting ZIP to directory {tempDir}");
+                await ZipFile.ExtractToDirectoryAsync(filePath, tempDir, overwriteFiles: true);
+
+                // only one file expected, and it should be a .PAK
+                var files = Directory.GetFiles(tempDir);
+                PakFilePath = files[0];
+                Console.WriteLine($"Found exported file {PakFilePath}");
+
+                break;
+
+            case ".PAK": // supported
+                
+                PakFilePath = filePath;
+                Console.WriteLine($"Found selected PAK file {PakFilePath}");
+
+                break;
+
+
+            default:
+                await MessageboxHelper.ErrorBox.ErrorMessageBox($"The file extension {fileExtension} is not supported!");
+                return;
+
+
+        }
+
+        string modsPath = Path.Combine(IOHelper.UserSettings.Default.DataFolder, "Mods");
+        
+        Console.WriteLine($"Attempting to move {PakFilePath} to {Path.Combine(modsPath, Path.GetFileName(PakFilePath))}");
+        File.Move(PakFilePath, Path.Combine(modsPath, Path.GetFileName(PakFilePath)));
+
+        Console.WriteLine($"Updating mods list...");
+        Update();
+        Console.WriteLine($"Done!");
     }
 
     private bool FilterEnabledMods(object item)
