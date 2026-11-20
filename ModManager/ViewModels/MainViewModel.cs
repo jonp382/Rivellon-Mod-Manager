@@ -332,7 +332,16 @@ public partial class MainViewModel : ViewModelBase
             return;
         }
 
-        var json = JsonSerializer.Deserialize<SteamAPIResponse>(rawString);
+        SteamAPIResponse? json;
+        try
+        {
+            json = JsonSerializer.Deserialize<SteamAPIResponse>(rawString);
+        }
+        catch (JsonException e)
+        {
+            Debug.WriteLine($"ERROR: Could not parse {jsonPath} - {e.Message}");
+            return;
+        }
 
         foreach(var mod in AllMods)
         {
@@ -667,6 +676,7 @@ public partial class MainViewModel : ViewModelBase
             ParseModsDirectory();
             await ParseLSXFile();
             ParseWorkshopFolder();
+            ParseWorkshopJson(); // re-attach cached workshop details, since AllMods was rebuilt above
             UpdatePreviewImages(); // this only re-assigns images, it does not download them
 
             // update UI profile display
