@@ -43,6 +43,20 @@
             <Setter Property="Padding" Value="8,4"/>
         </Style>
 
+        <Style Selector="DataGrid">
+            <Setter Property="RowHeight" Value="44"/>
+        </Style>
+
+        <!-- rounded thumbnail in the mod lists, shows a plain square while the image is missing -->
+        <Style Selector="Border.Thumbnail">
+            <Setter Property="Width" Value="34"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="CornerRadius" Value="5"/>
+            <Setter Property="ClipToBounds" Value="True"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}"/>
+        </Style>
+
         <!-- action button styling -->
 
         <Style Selector="Button.ActionBtn">
@@ -314,6 +328,16 @@
                 <!-- column declaration -->
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="#" Binding="{ReflectionBinding LoadOrder}" />
+                    <!-- small preview image, uses the images already downloaded from the workshop -->
+                    <DataGridTemplateColumn Width="52" CanUserSort="False" CanUserResize="False" CanUserReorder="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="models:ModInfo">
+                                <Border Classes="Thumbnail">
+                                    <Image Source="{Binding PreviewImage}" Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     <DataGridTextColumn Header="Name" Binding="{ReflectionBinding Name}" />
                 </DataGrid.Columns>
             </DataGrid>
@@ -368,6 +392,16 @@
                 <!-- don't need any valid/invalid logic in disabled mods -->
                 <!-- column declaration -->
                 <DataGrid.Columns>
+                    <!-- small preview image, uses the images already downloaded from the workshop -->
+                    <DataGridTemplateColumn Width="52" CanUserSort="False" CanUserResize="False" CanUserReorder="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="models:ModInfo">
+                                <Border Classes="Thumbnail">
+                                    <Image Source="{Binding PreviewImage}" Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     <DataGridTextColumn Header="Name" Binding="{ReflectionBinding Name}" />
                     <DataGridTextColumn Header="Version" Binding="{ReflectionBinding DisplayVersion}" SortMemberPath="VersionNumber" />
                     <DataGridTextColumn Header="Author" Binding="{ReflectionBinding Author}" />
