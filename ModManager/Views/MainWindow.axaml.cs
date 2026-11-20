@@ -4,8 +4,6 @@ using Avalonia.Interactivity;
 
 using ModManager.ViewModels;
 using ModManager.Resources;
-
-using System.Diagnostics;
 using System.Linq;
 using System.Collections.ObjectModel;
 using Avalonia;
@@ -19,7 +17,7 @@ namespace ModManager.Views;
 public partial class MainWindow : Window
 {
     private Point? _pressPosition;
-    private static List<ModInfo>? _draggedMods;
+    private List<ModInfo>? _draggedMods;
     private PointerPressedEventArgs? _pressedEvent;
 
     private bool isSelecting = false;
@@ -30,8 +28,6 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-
-        // DataContext = new MainViewModel();
 
         DragDrop.AddDragOverHandler(EnabledGrid, OnDragOver);
         DragDrop.AddDropHandler(EnabledGrid, OnDrop);
@@ -95,7 +91,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void OnPointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+    private void OnPointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
     {
         Log.Debug($"Firing OnPointerPressed");
         if(sender is not DataGrid srcGrid) return;
@@ -124,12 +120,6 @@ public partial class MainWindow : Window
         _draggedMods = selectedMods;
         _pressPosition = e.GetPosition(srcGrid);
         _pressedEvent = e;
-
-        var item = DataTransferItem.Create(ModItemFormat, selectedMods);
-
-        var dragData = new DataTransfer();
-        dragData.Add(item);
-
     }
 
     private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)

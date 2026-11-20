@@ -3,7 +3,6 @@ namespace IOHelper;
 using ModManager.Resources;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -21,13 +20,6 @@ public class CommonPaths
                 AppContext.BaseDirectory,
                 "config"
                 );
-        // return Path.Combine(
-        //     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        //     "ModManager",
-        //     "Config"
-        //     );
-
-            
     }
 
     public static string GetResourcesFolderPath()
@@ -186,11 +178,6 @@ public class CommonPaths
 
 
     }
-
-    public static string GetLSXFromProfile()
-    {
-        return string.Empty;
-    }
 }
 
 public static class FileIO
@@ -217,7 +204,6 @@ public static class FileIO
                 return null;
             }
 
-            // IOHelper.UserSettings.Default.SelectedModFolder = FilePathMods;
             return FilePathMods;
         }
         else
@@ -225,8 +211,6 @@ public static class FileIO
             Log.Info($"No directory selected. Please try again.");
             return null;
         }
-
-        // Log.Info($"Selected directory: {IOHelper.UserSettings.Default.SelectedModFolder}");
     }
 
     public async static Task<string?> SelectAnyFile(string prompt = "Please make a selection")
@@ -249,7 +233,6 @@ public static class FileIO
                 Log.Warn($"Invalid file path (path was blank). Please try again.");
                 return null;
             }
-            // IOHelper.UserSettings.Default.SelectedModLSX = files[0].Path.LocalPath;
             return FilePath;
         }
         else
@@ -284,7 +267,6 @@ public static class FileIO
                 return null;
             }
 
-            // IOHelper.UserSettings.Default.SelectedModFolder = FilePathMods;
             return FilePathMods;
         }
         else
@@ -292,8 +274,6 @@ public static class FileIO
             Log.Info($"No directory selected. Please try again.");
             return null;
         }
-
-        // Log.Info($"Selected directory: {IOHelper.UserSettings.Default.SelectedModFolder}");
     }
 
     public async static Task SaveToFile(string fileText, string prompt = "Please make a selection", string defaultLocation = "")

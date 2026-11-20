@@ -9,8 +9,6 @@ using System.Collections.ObjectModel;
 
 using System.IO;
 using System.IO.Compression;
-
-using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -21,7 +19,6 @@ using SteamAPI;
 using Avalonia.Controls;
 using Avalonia.Collections;
 using System;
-using Tmds.DBus.Protocol;
 
 namespace ModManager.ViewModels;
 
@@ -30,8 +27,6 @@ public partial class MainViewModel : ViewModelBase
 
     public MainViewModel()
     {
-        IOHelper.UserSettings.Load();
-
         EnabledModsView = new DataGridCollectionView(EnabledMods) { Filter = FilterEnabledMods };
         DisabledModsView = new DataGridCollectionView(DisabledMods) { Filter = FilterDisabledMods };
 
@@ -935,7 +930,6 @@ public partial class MainViewModel : ViewModelBase
     {
         if(EnabledMods.Count == 0) return;
 
-        // List<Resources.ModInfo> ModsToMove = EnabledMods.ToList();
         List<Resources.ModInfo> ModsToMove = [];
         foreach(Resources.ModInfo mod in EnabledMods)
         {
@@ -955,24 +949,6 @@ public partial class MainViewModel : ViewModelBase
             if(modToMove == null) continue; // skip null mods
             SourceList.Remove(modToMove); // remove mod from source list
             TargetList.Add(modToMove); // add mod to target list
-
-        }
-
-        UpdateLoadOrders();
-
-    }
-
-    public async Task MoveModsToIndex(List<Resources.ModInfo> ModsToMove, ObservableCollection<Resources.ModInfo> SourceList, ObservableCollection<Resources.ModInfo> TargetList, int targetIndex)
-    {
-        targetIndex = System.Math.Max(0, targetIndex);
-        foreach(Resources.ModInfo modToMove in ModsToMove)
-        {
-            if(modToMove == null) continue; // skip null mods
-
-            Log.Info($"Attempting to move {modToMove.Name} to index {targetIndex}");
-            SourceList.Remove(modToMove); // remove mod from source list
-            TargetList.Insert(targetIndex, modToMove); // add mod to target list
-            targetIndex ++; // increment so it inserts below the previous mod
 
         }
 

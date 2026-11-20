@@ -1,10 +1,8 @@
 using Avalonia.Media.Imaging;
-using CommunityToolkit.HighPerformance.Helpers;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LSLib.LS;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 namespace ModManager.Resources;
@@ -15,7 +13,6 @@ public class LSServices
     {
 
         if(File.Exists(Path)){
-            using var stream = File.OpenRead(Path);
             var reader = new PackageReader();
             Log.Info($"Selected PAK Path: {Path}");
             var package = reader.Read(Path);
@@ -31,18 +28,12 @@ public class LSServices
     public static ModInfo ExtractMetadata(Package package)
     {
 
-        // foreach(var file in package.Files)
-        // {
-        //     Log.Info($"Found file {file.Name}");
-        // }
-
         var MetaFile = package.Files.FirstOrDefault(file => file.Name.EndsWith("meta.lsx", System.StringComparison.OrdinalIgnoreCase)) ?? throw new FileNotFoundException("meta.lsx not found in PAK archive");
         using var stream = MetaFile.CreateContentReader();
         
         using var resourceReader = new LSXReader(stream);
         Resource resource = resourceReader.Read();
         
-        // Log.Info($"Parsing resource");
         return ParseResource(resource);
         
     }

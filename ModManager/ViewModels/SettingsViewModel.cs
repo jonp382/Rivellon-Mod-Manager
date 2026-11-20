@@ -1,12 +1,8 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Threading.Tasks;
-using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using LSLib.LS.Enums;
-using ModManager.Resources;
 
 namespace ModManager.ViewModels;
 
