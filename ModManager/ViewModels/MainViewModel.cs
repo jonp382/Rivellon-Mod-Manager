@@ -52,64 +52,133 @@ public partial class MainViewModel : ViewModelBase
             return;
         } 
 
+        string modsPath = Path.Combine(IOHelper.UserSettings.Default.DataFolder, "Mods");
+        if(string.IsNullOrWhiteSpace(IOHelper.UserSettings.Default.DataFolder) || !Directory.Exists(modsPath))
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox($"The Mods folder could not be found at:\n\n{modsPath}\n\nPlease check the data folder in the settings menu.");
+            return;
+        }
+
         Console.WriteLine($"Found selected file at {filePath}");
 
         string fileExtension = Path.GetExtension(filePath).ToUpperInvariant();
-        List<string> FilesToMove = [];
+        List<string> FilesToCopy = [];
+        string importSummary = string.Empty;
 
-        switch (fileExtension)
+        // only used for zip files, always deleted at the end
+        string tempDir = Path.Combine(AppContext.BaseDirectory, "temp_extract", Path.GetFileNameWithoutExtension(filePath));
+
+        try
         {
-            case ".ZIP": // supporetd
-                // assume there's a PAK file inside the ZIP
-                string tempDir = Path.Combine(AppContext.BaseDirectory, "temp_extract", Path.GetFileNameWithoutExtension(filePath));
-                Console.WriteLine($"Creating temporary export directory at {tempDir}");
-                Directory.CreateDirectory(tempDir);
+            switch (fileExtension)
+            {
+                case ".ZIP": // supported
+                    // clear out anything left over from a previous import of the same zip
+                    if(Directory.Exists(tempDir)) Directory.Delete(tempDir, recursive: true);
+                    Console.WriteLine($"Creating temporary export directory at {tempDir}");
+                    Directory.CreateDirectory(tempDir);
 
-                await using (ZipArchive zip = await ZipFile.OpenReadAsync(filePath))
-                {
-                    if(zip.Entries.Count == 0)
+                    await using (ZipArchive zip = await ZipFile.OpenReadAsync(filePath))
                     {
-                        await MessageboxHelper.ErrorBox.ErrorMessageBox("The selected zip file is empty, and has no extractable filse! Please select a valid file.");
+                        if(zip.Entries.Count == 0)
+                        {
+                            await MessageboxHelper.ErrorBox.ErrorMessageBox("The selected zip file is empty, and has no extractable files! Please select a valid file.");
+                            return;
+                        }
+                    }
+                    Console.WriteLine($"Exporting ZIP to directory {tempDir}");
+                    await ZipFile.ExtractToDirectoryAsync(filePath, tempDir, overwriteFiles: true);
+
+                    // extract everything but only copy PAK files into mods folder.
+                    // search subfolders too, since some zips keep their PAK files inside a folder.
+                    FilesToCopy.AddRange(Directory.GetFiles(tempDir, "*.pak", new EnumerationOptions
+                    {
+                        RecurseSubdirectories = true,
+                        MatchCasing = MatchCasing.CaseInsensitive
+                    }));
+
+                    if(FilesToCopy.Count == 0)
+                    {
+                        await MessageboxHelper.ErrorBox.ErrorMessageBox("The selected zip file does not contain any PAK files.");
                         return;
                     }
-                }
-                Console.WriteLine($"Exporting ZIP to directory {tempDir}");
-                await ZipFile.ExtractToDirectoryAsync(filePath, tempDir, overwriteFiles: true);
 
-                // extract everything but only move PAK files into mods folder.
-                foreach(string file in Directory.GetFiles(tempDir))
+                    break;
+
+                case ".PAK": // supported
+                    
+                    FilesToCopy.Add(filePath);
+                    Console.WriteLine($"Found selected PAK file {filePath}");
+
+                    break;
+
+                default:
+                    await MessageboxHelper.ErrorBox.ErrorMessageBox($"The file extension {fileExtension} is not supported!");
+                    return;
+            }
+
+            // decide what to do about every already-installed mod before copying anything,
+            // so that cancelling leaves the mods folder untouched.
+            var conflicts = FilesToCopy.Where(file => File.Exists(Path.Combine(modsPath, Path.GetFileName(file)))).ToList();
+            bool multipleConflicts = conflicts.Count > 1;
+            MessageboxHelper.OverwriteChoice? applyToAll = null;
+            List<string> skippedMods = [];
+
+            foreach(string file in conflicts)
+            {
+                var choice = applyToAll ?? await MessageboxHelper.OverwritePromptBox.PromptOverwrite(Path.GetFileName(file), multipleConflicts);
+
+                switch (choice)
                 {
-                    if(string.Equals(Path.GetExtension(file), ".pak", StringComparison.OrdinalIgnoreCase)) FilesToMove.Add(file);
+                    case MessageboxHelper.OverwriteChoice.Cancel:
+                        Console.WriteLine($"Import cancelled by user");
+                        return;
+                    case MessageboxHelper.OverwriteChoice.YesToAll:
+                        applyToAll = MessageboxHelper.OverwriteChoice.YesToAll;
+                        break;
+                    case MessageboxHelper.OverwriteChoice.NoToAll:
+                        applyToAll = MessageboxHelper.OverwriteChoice.NoToAll;
+                        skippedMods.Add(file);
+                        break;
+                    case MessageboxHelper.OverwriteChoice.No:
+                        skippedMods.Add(file);
+                        break;
                 }
+            }
 
-                break;
+            int importedCount = 0;
+            foreach(string file in FilesToCopy.Except(skippedMods))
+            {
+                string destination = Path.Combine(modsPath, Path.GetFileName(file));
+                Console.WriteLine($"Attempting to copy {file} to {destination}");
+                // copy rather than move, so importing a single PAK doesn't remove the user's original file
+                File.Copy(file, destination, overwrite: true);
+                importedCount++;
+                Console.WriteLine($"Success");
+            }
 
-            case ".PAK": // supported
-                
-                FilesToMove.Add(filePath);
-                Console.WriteLine($"Found selected PAK file {filePath}");
-
-                break;
-
-
-            default:
-                await MessageboxHelper.ErrorBox.ErrorMessageBox($"The file extension {fileExtension} is not supported!");
-                return;
-
-
+            importSummary = $"Imported {importedCount} mod(s), skipped {skippedMods.Count}.";
         }
-
-        string modsPath = Path.Combine(IOHelper.UserSettings.Default.DataFolder, "Mods");
-        
-        foreach(string file in FilesToMove)
+        catch (Exception ex)
         {
-            Console.WriteLine($"Attempting to move {file} to {Path.Combine(modsPath, Path.GetFileName(file))}");
-            File.Move(file, Path.Combine(modsPath, Path.GetFileName(file)));
-            Console.WriteLine($"Success");
+            await MessageboxHelper.ErrorBox.ErrorMessageBox($"The mod could not be imported.\n\n{ex.Message}");
+            return;
+        }
+        finally
+        {
+            try
+            {
+                if(Directory.Exists(tempDir)) Directory.Delete(tempDir, recursive: true);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to clean up temporary directory {tempDir}: {ex.Message}");
+            }
         }
 
         Console.WriteLine($"Updating mods list...");
         Update();
+        StatusText = importSummary;
         Console.WriteLine($"Done!");
     }
 

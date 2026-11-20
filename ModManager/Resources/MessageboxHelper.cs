@@ -1,4 +1,8 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Avalonia.Controls;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Models;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 
@@ -48,5 +52,48 @@ public static class PromptBox
 
         ButtonResult result = await box.ShowWindowAsync();
         return result;
+    }
+}
+
+public enum OverwriteChoice
+{
+    Yes,
+    YesToAll,
+    No,
+    NoToAll,
+    Cancel
+}
+
+public static class OverwritePromptBox
+{
+    // asks whether an existing file should be overwritten. the "to all" options are only shown
+    // when there is more than one conflict, since they're meaningless for a single file.
+    public static async Task<OverwriteChoice> PromptOverwrite(string fileName, bool multipleConflicts, string title = "Mod Manager")
+    {
+        var buttons = new List<ButtonDefinition> { new() { Name = "Yes", IsDefault = true } };
+        if (multipleConflicts) buttons.Add(new() { Name = "Yes to All" });
+        buttons.Add(new() { Name = "No" });
+        if (multipleConflicts) buttons.Add(new() { Name = "No to All" });
+        buttons.Add(new() { Name = "Cancel", IsCancel = true });
+
+        var box = MessageBoxManager.GetMessageBoxCustom(new MessageBoxCustomParams
+        {
+            ContentTitle = title,
+            ContentMessage = $"A mod named '{fileName}' is already installed. Do you want to overwrite it?",
+            ButtonDefinitions = buttons,
+            Icon = Icon.Warning,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
+        });
+
+        string result = await box.ShowWindowAsync();
+
+        return result switch
+        {
+            "Yes" => OverwriteChoice.Yes,
+            "Yes to All" => OverwriteChoice.YesToAll,
+            "No" => OverwriteChoice.No,
+            "No to All" => OverwriteChoice.NoToAll,
+            _ => OverwriteChoice.Cancel // closing the window counts as cancel
+        };
     }
 }
