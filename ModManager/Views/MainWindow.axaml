@@ -415,7 +415,20 @@
 
                             <!-- column declaration -->
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="#" Binding="{ReflectionBinding LoadOrder}" />
+                                <!-- load order, with a warning icon when the mod has a load order problem (details in the row tooltip) -->
+                    <DataGridTemplateColumn Header="#" SortMemberPath="LoadOrder">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="models:ModInfo">
+                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="12,0,8,0">
+                                    <TextBlock Text="{Binding LoadOrder}" VerticalAlignment="Center" FontSize="12"/>
+                                    <Panel Width="16" Height="16" VerticalAlignment="Center" IsVisible="{Binding !IsValid}">
+                                        <Path Data="M 8 1.5 L 15 14 H 1 Z" Fill="{DynamicResource AppWarningBrush}"/>
+                                        <Path Data="M 8 6 V 9.5 M 8 11.8 V 12" Stroke="{DynamicResource AppSurfaceBrush}" StrokeThickness="1.6" StrokeLineCap="Round"/>
+                                    </Panel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                                 <!-- small preview image, uses the images already downloaded from the workshop -->
                                 <DataGridTemplateColumn Width="52" CanUserSort="False" CanUserResize="False" CanUserReorder="False">
                                     <DataGridTemplateColumn.CellTemplate>

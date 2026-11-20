@@ -16,6 +16,7 @@
                     <SolidColorBrush x:Key="AppBorderBrush" Color="#2E2E35" />
                     <SolidColorBrush x:Key="AppTextBrush" Color="#E6E6E9" />
                     <SolidColorBrush x:Key="AppMutedTextBrush" Color="#9A9AA6" />
+                    <SolidColorBrush x:Key="AppWarningBrush" Color="#F2555A" />
                     <!-- dark text on the amber accent buttons, white is hard to read on it -->
                     <SolidColorBrush x:Key="AccentButtonForeground" Color="#1F1606" />
                     <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="#1F1606" />
@@ -28,6 +29,7 @@
                     <SolidColorBrush x:Key="AppBorderBrush" Color="#DDE1E7" />
                     <SolidColorBrush x:Key="AppTextBrush" Color="#102A43" />
                     <SolidColorBrush x:Key="AppMutedTextBrush" Color="#5F6B7A" />
+                    <SolidColorBrush x:Key="AppWarningBrush" Color="#D93036" />
                 </ResourceDictionary>
 
             </ResourceDictionary.ThemeDictionaries>
