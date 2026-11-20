@@ -78,10 +78,10 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
-        [RelayCommand]
+    [RelayCommand]
     public async Task SelectWorkshopDirectory()
     {
-        var path = await IOHelper.FileIO.SelectModsFolder("Select the Divinity 2 parent folder that contains Mods, PlayerProfiles etc.");
+        var path = await IOHelper.FileIO.SelectModsFolder("Select the Divinity 2 workshop folder, typically found at steamapps > workshop > content > 435150");
 
         // only update if a valid path was selected.
         if(path != null)
