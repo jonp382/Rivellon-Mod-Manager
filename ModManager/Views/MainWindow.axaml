@@ -67,28 +67,6 @@
             <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}"/>
         </Style>
 
-        <!-- panels (preview, enabled mods, disabled mods) -->
-
-        <Style Selector="Border.Card">
-            <Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="10"/>
-        </Style>
-
-        <Style Selector="TextBlock.CardTitle">
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-
-        <Style Selector="TextBlock.Muted">
-            <Setter Property="Foreground" Value="{DynamicResource AppMutedTextBrush}"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-        </Style>
-
         <Style Selector="TextBlock.EmptyMessage">
             <Setter Property="Foreground" Value="{DynamicResource AppMutedTextBrush}"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -110,12 +88,6 @@
         <Style Selector="Border.Badge > TextBlock">
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="Foreground" Value="{DynamicResource AppMutedTextBrush}"/>
-        </Style>
-
-        <Style Selector="Button.Small">
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="10,4"/>
-            <Setter Property="CornerRadius" Value="6"/>
         </Style>
 
         <!-- small pill showing how many mods are in a list -->
@@ -144,23 +116,6 @@
         <Style Selector="Button.ActionBtn StackPanel">
             <Setter Property="Spacing" Value="4"/>
         </Style>
-        <!-- line icons drawn with a Path, they follow the button's text colour -->
-        <Style Selector="Path.Icon">
-            <Setter Property="Width" Value="16"/>
-            <Setter Property="Height" Value="16"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="Stroke" Value="{Binding $self.(TextElement.Foreground)}"/>
-            <Setter Property="StrokeThickness" Value="1.8"/>
-            <Setter Property="StrokeLineCap" Value="Round"/>
-            <Setter Property="StrokeJoin" Value="Round"/>
-        </Style>
-        <Style Selector=":is(Button).Toolbar">
-            <Setter Property="Padding" Value="12,6"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="ToolTip.ShowDelay" Value="400"/>
-        </Style>
-
         <Style Selector="Button.ActionBtn TextBlock">
             <Setter Property="FontSize" Value="10"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
