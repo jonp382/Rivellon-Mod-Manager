@@ -284,6 +284,9 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private Resources.ModInfo? _previewMod = null;
 
+    // PAK files that couldn't be read during the last scan of the mods folder
+    private readonly List<string> _skippedFiles = [];
+
     public void ParseModsDirectory()
     {
         StatusText = "Retrieving mods from Mods folder...";
@@ -296,31 +299,42 @@ public partial class MainViewModel : ViewModelBase
 
         if(!Directory.Exists(filePath)) return;
 
-        List<ModInfo> Mods = new List<ModInfo>();
-
+        _skippedFiles.Clear();
 
         foreach(string file in Directory.GetFiles(filePath))
         {
-            var Extension = Path.GetExtension(file);
-            if(Extension != ".pak") continue;
+            if(!string.Equals(Path.GetExtension(file), ".pak", StringComparison.OrdinalIgnoreCase)) continue;
 
             var Name = Path.GetFileNameWithoutExtension(file);
 
             Debug.WriteLine($"Found PAK file {Name}");
 
-            Package? package = Resources.LSServices.GetPakAsPackage(file);
-
-            if(package == null)
+            // one broken or unusual PAK file shouldn't stop the rest of the mods from loading
+            try
             {
-                Debug.WriteLine($"Null package found: {file}");
-                continue;
-            }
+                Package? package = Resources.LSServices.GetPakAsPackage(file);
 
-            AllMods.Add(Resources.LSServices.ExtractMetadata(package));
-            
+                if(package == null)
+                {
+                    Debug.WriteLine($"Null package found: {file}");
+                    _skippedFiles.Add(Path.GetFileName(file));
+                    continue;
+                }
+
+                AllMods.Add(Resources.LSServices.ExtractMetadata(package));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to read PAK file {file}: {ex.Message}");
+                _skippedFiles.Add(Path.GetFileName(file));
+            }
         }
 
         StatusText = $"Retrieving mods from Mods folder... Complete, found {AllMods.Count} mods!";
+        if(_skippedFiles.Count > 0)
+        {
+            StatusText += $" Skipped {_skippedFiles.Count} unreadable file(s): {string.Join(", ", _skippedFiles)}";
+        }
         
     }
 
@@ -561,7 +575,9 @@ public partial class MainViewModel : ViewModelBase
 
         UpdateLoadOrders();
 
-        StatusText = "Update complete!";
+        StatusText = _skippedFiles.Count > 0
+            ? $"Update complete! Skipped {_skippedFiles.Count} unreadable file(s): {string.Join(", ", _skippedFiles)}"
+            : "Update complete!";
 
     }
 
