@@ -6,7 +6,7 @@ using MsBox.Avalonia.Models;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 
-namespace MessageboxHelper;
+namespace ModManager.MessageboxHelper;
 
 public static class ErrorBox
 {

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace SteamAPI;
+namespace ModManager.Models;
 
 public class SteamAPIResponse
 {

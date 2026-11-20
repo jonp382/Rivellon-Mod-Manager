@@ -1,3 +1,4 @@
+using ModManager.Models;
 using ModManager.Resources;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -13,9 +14,10 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LSLib.LS;
+// LSLib has its own ModInfo class, so make it clear which one is meant
+using ModInfo = ModManager.Models.ModInfo;
 using Avalonia.Media.Imaging;
 using System.Text.Json;
-using SteamAPI;
 using Avalonia.Controls;
 using Avalonia.Collections;
 using System;
@@ -200,7 +202,7 @@ public partial class MainViewModel : ViewModelBase
 
     private static bool MatchesSearch(object item, string searchText)
     {
-        if(item is not Resources.ModInfo mod) return false;
+        if(item is not ModInfo mod) return false;
         if(string.IsNullOrWhiteSpace(searchText)) return true;
 
         return mod.Name.Contains(searchText, System.StringComparison.OrdinalIgnoreCase);
@@ -229,7 +231,7 @@ public partial class MainViewModel : ViewModelBase
     {
         
         // only download images for missing mods
-        List<Resources.ModInfo> batchIDs = AllMods.Where(
+        List<ModInfo> batchIDs = AllMods.Where(
             n => !string.IsNullOrEmpty(n.WorkshopID)
             &&
             !File.Exists(Path.Combine(IOHelper.CommonPaths.GetResourcesFolderPath(), "preview-images", $"{n.Folder}.png")
@@ -351,15 +353,15 @@ public partial class MainViewModel : ViewModelBase
     private string _statusText = string.Empty;
 
     [ObservableProperty]
-    private ObservableCollection<Resources.ModInfo> _enabledMods = [];
+    private ObservableCollection<ModInfo> _enabledMods = [];
     public DataGridCollectionView EnabledModsView {get; }
 
     [ObservableProperty]
-    private ObservableCollection<Resources.ModInfo> _disabledMods = [];
+    private ObservableCollection<ModInfo> _disabledMods = [];
     public DataGridCollectionView DisabledModsView {get; }
 
     [ObservableProperty]
-    private ObservableCollection<Resources.ModInfo> _allMods = [];
+    private ObservableCollection<ModInfo> _allMods = [];
 
     [ObservableProperty]
     private string _enabledSearchText = string.Empty;
@@ -369,10 +371,10 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private string _currentProfileText = string.Empty;
 
-    public List<Resources.ModInfo> CurrentlySelectedMods = [];
+    public List<ModInfo> CurrentlySelectedMods = [];
 
     [ObservableProperty]
-    private Resources.ModInfo? _previewMod = null;
+    private ModInfo? _previewMod = null;
 
     // PAK files that couldn't be read during the last scan of the mods folder
     private readonly List<string> _skippedFiles = [];
@@ -494,10 +496,10 @@ public partial class MainViewModel : ViewModelBase
         // to Disabled Mods. or maybe copy it and removeall that are in enabled, not sure
         // which is faster.
 
-        Dictionary<string, List<Resources.ModInfo>> ModSettings = Resources.LSServices.ReadModSettings(filePath);
+        Dictionary<string, List<ModInfo>> ModSettings = Resources.LSServices.ReadModSettings(filePath);
 
-        List<Resources.ModInfo> Mods = ModSettings["Mods"];
-        List<Resources.ModInfo> ModOrder = ModSettings["ModOrder"];
+        List<ModInfo> Mods = ModSettings["Mods"];
+        List<ModInfo> ModOrder = ModSettings["ModOrder"];
 
         Log.Info($"Found {Mods.Count} mods, and {ModOrder.Count} mod order entries in ModSettings.LSX.");
 
@@ -573,7 +575,7 @@ public partial class MainViewModel : ViewModelBase
         StatusText = $"Validating load order...";
         // don't sort DisabledMods since we don't care about load orders there.
 
-        foreach(Resources.ModInfo Mod in EnabledMods)
+        foreach(ModInfo Mod in EnabledMods)
         {
             // collect every problem with the mod, so the tooltip shows all of them instead of just the last one found
             List<string> reasons = [];
@@ -585,7 +587,7 @@ public partial class MainViewModel : ViewModelBase
 
             foreach(var dep in Mod.Dependencies)
             {
-                if(Resources.FixedModUUIDs.IDs.Contains(dep)) continue;
+                if(FixedModUUIDs.IDs.Contains(dep)) continue;
 
                 var matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.UUID, dep, System.StringComparison.OrdinalIgnoreCase));
                 if(matchingMod == null) 
@@ -634,7 +636,7 @@ public partial class MainViewModel : ViewModelBase
             }
 
             string name = Path.GetFileNameWithoutExtension(files[0]);
-            Resources.ModInfo? matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.Folder, name, System.StringComparison.OrdinalIgnoreCase));
+            ModInfo? matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.Folder, name, System.StringComparison.OrdinalIgnoreCase));
             matchingMod ??= AllMods.FirstOrDefault(n => string.Equals($"{n.Folder}_{n.UUID}", name, System.StringComparison.OrdinalIgnoreCase));
 
             if(matchingMod == null)
@@ -768,7 +770,7 @@ public partial class MainViewModel : ViewModelBase
             return;
         }
 
-        List<Resources.ModInfo> tempList = new();
+        List<ModInfo> tempList = new();
         var rawText = File.ReadAllText(file);
         Dictionary<string, List<Dictionary<string, string>>>? json = [];
         
@@ -817,7 +819,7 @@ public partial class MainViewModel : ViewModelBase
 
     public void UpdatePreviewImages()
     {
-        foreach(Resources.ModInfo mod in AllMods)
+        foreach(ModInfo mod in AllMods)
         {
             var imagePath = Path.Combine(IOHelper.CommonPaths.GetResourcesFolderPath(), "preview-images", $"{mod.Folder}.png");
             if(File.Exists(imagePath)) 
@@ -882,14 +884,14 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     public void DisableAllMods() => MoveVisibleMods(EnabledMods, EnabledModsView, DisabledMods);
 
-    private void MoveSelectedMods(ObservableCollection<Resources.ModInfo> SourceList, ObservableCollection<Resources.ModInfo> TargetList)
+    private void MoveSelectedMods(ObservableCollection<ModInfo> SourceList, ObservableCollection<ModInfo> TargetList)
     {
         // only move selected mods that are actually in the source list
         var ModsToMove = CurrentlySelectedMods.Where(mod => mod != null && SourceList.Contains(mod)).ToList();
         MoveMods(ModsToMove, SourceList, TargetList);
     }
 
-    private void MoveVisibleMods(ObservableCollection<Resources.ModInfo> SourceList, DataGridCollectionView SourceView, ObservableCollection<Resources.ModInfo> TargetList)
+    private void MoveVisibleMods(ObservableCollection<ModInfo> SourceList, DataGridCollectionView SourceView, ObservableCollection<ModInfo> TargetList)
     {
         if(SourceList.Count == 0) return;
 
@@ -899,9 +901,9 @@ public partial class MainViewModel : ViewModelBase
         MoveMods(ModsToMove, SourceList, TargetList);
     }
 
-    public void MoveMods(List<Resources.ModInfo> ModsToMove, ObservableCollection<Resources.ModInfo> SourceList, ObservableCollection<Resources.ModInfo> TargetList)
+    public void MoveMods(List<ModInfo> ModsToMove, ObservableCollection<ModInfo> SourceList, ObservableCollection<ModInfo> TargetList)
     {
-        foreach(Resources.ModInfo modToMove in ModsToMove)
+        foreach(ModInfo modToMove in ModsToMove)
         {
             if(modToMove == null) continue; // skip null mods
             SourceList.Remove(modToMove); // remove mod from source list
@@ -917,11 +919,11 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     public async Task SortMods()
     {
-        Resources.ModInfo? FindMod(string uuid) =>
+        ModInfo? FindMod(string uuid) =>
             AllMods.FirstOrDefault(n => string.Equals(n.UUID, uuid, StringComparison.OrdinalIgnoreCase));
 
         // enable any disabled dependencies first, following chains so dependencies of dependencies are enabled too.
-        var toCheck = new Queue<Resources.ModInfo>(EnabledMods);
+        var toCheck = new Queue<ModInfo>(EnabledMods);
         while(toCheck.Count > 0)
         {
             var mod = toCheck.Dequeue();
@@ -941,10 +943,10 @@ public partial class MainViewModel : ViewModelBase
         var remaining = EnabledMods.ToList();
         var dependencyMap = remaining.ToDictionary(
             mod => mod,
-            mod => mod.Dependencies.Select(FindMod).Where(dep => dep != null && dep != mod && remaining.Contains(dep)).Cast<Resources.ModInfo>().ToList()
+            mod => mod.Dependencies.Select(FindMod).Where(dep => dep != null && dep != mod && remaining.Contains(dep)).Cast<ModInfo>().ToList()
         );
 
-        List<Resources.ModInfo> sorted = [];
+        List<ModInfo> sorted = [];
         while(remaining.Count > 0)
         {
             // pick the highest mod in the current order whose dependencies have all been placed already

@@ -1,4 +1,4 @@
-namespace IOHelper;
+namespace ModManager.IOHelper;
 
 using ModManager.Resources;
 using System;

@@ -1,3 +1,4 @@
+using ModManager.Models;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
