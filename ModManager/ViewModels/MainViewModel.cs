@@ -394,8 +394,8 @@ public partial class MainViewModel : ViewModelBase
             // no sorting that would break the list
 
             // can't use direct Mods.Contains(mod) because they're different object instances
-            var matchingModInOrder = ModOrder.FirstOrDefault(n => n.UUID == mod.UUID);
-            if (matchingModInOrder == null)
+            var matchingModInMods = Mods.FirstOrDefault(n => string.Equals(n.UUID, mod.UUID, StringComparison.OrdinalIgnoreCase));
+            if (matchingModInMods == null)
             {
                 Debug.WriteLine($"The mod UUID {mod.UUID} has no matching mod in the Mods section of the modsettings.lsx file! Skipping.");
                 continue;
