@@ -4,6 +4,7 @@
         xmlns:vm="using:ModManager.ViewModels"
         xmlns:models="using:ModManager.Models"
         xmlns:conv="using:ModManager.Converters"
+        xmlns:controls="using:ModManager.Controls"
 
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -187,13 +188,10 @@
                     Grid.Row="6"
                     Grid.Column="0"
                 >
-                    <TextBlock
-                        Text="{Binding PreviewMod.WorkshopDetails.Description}"
-                        TextWrapping="WrapWithOverflow"
-                        
-                        ScrollViewer.VerticalScrollBarVisibility="Visible"
-                        
-                        
+                    <!-- renders the steam BBCode ([h1], [b], [list] etc.) instead of showing raw tags -->
+                    <controls:BBCodeTextBlock
+                        BBCode="{Binding PreviewMod.WorkshopDetails.Description}"
+                        TextWrapping="Wrap"
                     />
                 </ScrollViewer>
                     
