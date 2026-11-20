@@ -158,10 +158,14 @@ public class LSServices
         return AllFakeNodes;
     }
 
-    public static void WriteProfileLSX(List<ModInfo> EnabledMods)
+    // returns the path that was written to, or null if the profile's modsettings.lsx couldn't be found.
+    public static string? WriteProfileLSX(List<ModInfo> EnabledMods)
     {
         var LSXPath = GetLSXFromProfile();
-        if(LSXPath == null) return;
+        if(LSXPath == null) return null;
+
+        // keep a copy of the previous file in case the export goes wrong
+        File.Copy(LSXPath, LSXPath + ".bak", overwrite: true);
 
         Debug.WriteLine($"Writing to {LSXPath}");
 
@@ -221,7 +225,7 @@ public class LSServices
             writer.Write(resource);
         }
 
-
+        return LSXPath;
     }
 
     public static Node CreateNodeFromModInfo(ModInfo mod)
@@ -245,7 +249,8 @@ public class LSServices
         };
         modEntry.Attributes["Version"] = new NodeAttribute(LSLib.LS.AttributeType.Int)
         {
-           Value=int.Parse(mod.Version)
+           // some mods have a blank or non-numeric version, which shouldn't stop the export
+           Value=int.TryParse(mod.Version, out int version) ? version : 0
         };
 
         return modEntry;

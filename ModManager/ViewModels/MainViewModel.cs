@@ -566,9 +566,27 @@ public partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public void ExportLSXToProfile()
+    public async Task ExportLSXToProfile()
     {
-        Resources.LSServices.WriteProfileLSX(EnabledMods.ToList());
+        string? writtenPath;
+        try
+        {
+            writtenPath = Resources.LSServices.WriteProfileLSX(EnabledMods.ToList());
+        }
+        catch (Exception ex)
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox($"The load order could not be saved to the profile.\n\n{ex.Message}");
+            return;
+        }
+
+        if(writtenPath == null)
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox($"Could not find a modsettings.lsx file for the profile '{IOHelper.UserSettings.Default.SelectedProfile}'. Please check your settings.");
+            return;
+        }
+
+        StatusText = "Saved load order to profile!";
+        await MessageboxHelper.InfoBox.InfoMessageBox($"The load order was saved to:\n\n{writtenPath}\n\nA backup of the previous file was saved as {Path.GetFileName(writtenPath)}.bak");
     }
 
     [RelayCommand]
