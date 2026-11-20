@@ -459,7 +459,17 @@ public partial class MainViewModel : ViewModelBase
                 Path.GetFileNameWithoutExtension(FilePath)
             );
 
-        Resources.LSServices.ExtractPAKFile(FilePath, outFilePath);
+        try
+        {
+            Resources.LSServices.ExtractPAKFile(FilePath, outFilePath);
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"Failed to extract PAK file {FilePath}", ex);
+            await MessageboxHelper.ErrorBox.ErrorMessageBox($"The PAK file could not be extracted.\n\n{ex.Message}");
+            return;
+        }
+
         await MessageboxHelper.InfoBox.InfoMessageBox($"Successfully exported PAK file to {outFilePath}!", "PAK File Exporter");
 
 

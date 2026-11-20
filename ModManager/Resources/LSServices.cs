@@ -56,14 +56,8 @@ public class LSServices
         var packager = new Packager();
         Log.Info($"Extracting {Path} to {Destination}");
 
-        try
-        {
-            packager.UncompressPackage(Path, Destination);
-        }
-        catch (Exception ex)
-        {
-            Log.Warn($"An error occurred while extracting the PAK file. {ex.Message}");
-        }
+        // errors are left for the caller to handle, so the user is told when extraction fails
+        packager.UncompressPackage(Path, Destination);
         
     }
 
