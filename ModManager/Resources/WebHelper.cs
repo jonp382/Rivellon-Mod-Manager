@@ -58,27 +58,55 @@ public class WebRequest()
             }
 
             // don't match here. match elsewhere. keep this function only for web request.
-            // foreach(ModInfo mod in workshopItems)
-            // {
-            //     var matchingResult = allResults.FirstOrDefault(x => x.PublishedFileId == mod.WorkshopID);
-            //     mod.WorkshopDetails = matchingResult;
-            // }
 
             Debug.WriteLine($"Successfully queried steam API and obtained {allResults.Count} results.");
 
-            File.WriteAllText(
-                Path.Combine(IOHelper.CommonPaths.GetResourcesFolderPath(), "steam_api.json"), 
-                jsonResponse
-            );
-            
-
-            
+            MergeIntoCache(allResults);
         }
         catch (System.Exception ex)
         {
             Debug.WriteLine($"Request failed: {ex.Message}");
         }
         return;
+    }
+
+    // the request only asks for mods that are missing a preview image, so merge the new
+    // results into the existing cache instead of overwriting it, otherwise every other mod
+    // loses its workshop details.
+    private static void MergeIntoCache(List<PublishedFileDetail> newResults)
+    {
+        var resourcesFolder = IOHelper.CommonPaths.GetResourcesFolderPath();
+        Directory.CreateDirectory(resourcesFolder);
+        var cachePath = Path.Combine(resourcesFolder, "steam_api.json");
+
+        var cache = new SteamAPIResponse();
+        if(File.Exists(cachePath))
+        {
+            try
+            {
+                cache = JsonSerializer.Deserialize<SteamAPIResponse>(File.ReadAllText(cachePath)) ?? new SteamAPIResponse();
+            }
+            catch (System.Exception ex)
+            {
+                Debug.WriteLine($"Existing steam cache was unreadable, starting a new one: {ex.Message}");
+            }
+        }
+
+        var merged = cache.Response.PublishedFileDetails
+            .Where(n => !string.IsNullOrEmpty(n.PublishedFileId))
+            .ToDictionary(n => n.PublishedFileId);
+
+        // new results replace old ones with the same ID
+        foreach(var detail in newResults)
+        {
+            if(string.IsNullOrEmpty(detail.PublishedFileId)) continue;
+            merged[detail.PublishedFileId] = detail;
+        }
+
+        cache.Response.PublishedFileDetails = merged.Values.ToList();
+        cache.Response.ResultCount = cache.Response.PublishedFileDetails.Count;
+
+        File.WriteAllText(cachePath, JsonSerializer.Serialize(cache));
     }
 
 

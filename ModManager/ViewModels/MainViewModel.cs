@@ -168,9 +168,9 @@ public partial class MainViewModel : ViewModelBase
 
         ParseWorkshopJson();
 
-        await WebHelper.WebRequest.DownloadAllPreviewImages(batchIDs);
-
         StatusText = "Downloading missing preview images from Steam Workshop...";
+
+        await WebHelper.WebRequest.DownloadAllPreviewImages(batchIDs);
 
         UpdatePreviewImages();
 
