@@ -33,6 +33,10 @@ public partial class MainViewModel : ViewModelBase
         DisabledModsView = new DataGridCollectionView(DisabledMods) { Filter = FilterDisabledMods };
 
         // constructors can't await, so start loading here and let it run in the background
+        EnabledMods.CollectionChanged += (_, _) => UpdateEmptyMessages();
+        DisabledMods.CollectionChanged += (_, _) => UpdateEmptyMessages();
+        UpdateEmptyMessages();
+
         _ = InitializeAsync();
 
         Log.Info($"Constructor complete");
@@ -200,6 +204,26 @@ public partial class MainViewModel : ViewModelBase
 
     private bool FilterDisabledMods(object item) => MatchesSearch(item, DisabledSearchText);
 
+    // message shown over a list when it has nothing to show, empty when the list has mods in it
+    [ObservableProperty]
+    private string _enabledEmptyMessage = string.Empty;
+
+    [ObservableProperty]
+    private string _disabledEmptyMessage = string.Empty;
+
+    private void UpdateEmptyMessages()
+    {
+        EnabledEmptyMessage = GetEmptyMessage(EnabledMods, EnabledSearchText, "No mods enabled yet.\nDrag mods here, or select them and press Enable.");
+        DisabledEmptyMessage = GetEmptyMessage(DisabledMods, DisabledSearchText, "Every installed mod is enabled.");
+    }
+
+    private static string GetEmptyMessage(ObservableCollection<ModInfo> mods, string searchText, string emptyMessage)
+    {
+        if(mods.Count == 0) return emptyMessage;
+        if(!mods.Any(mod => MatchesSearch(mod, searchText))) return $"No mods match \"{searchText}\".";
+        return string.Empty;
+    }
+
     private static bool MatchesSearch(object item, string searchText)
     {
         if(item is not ModInfo mod) return false;
@@ -211,11 +235,13 @@ public partial class MainViewModel : ViewModelBase
     partial void OnEnabledSearchTextChanged(string? oldValue, string newValue)
     {
         EnabledModsView.Refresh();
+        UpdateEmptyMessages();
     }
 
     partial void OnDisabledSearchTextChanged(string? oldValue, string newValue)
     {
         DisabledModsView.Refresh();
+        UpdateEmptyMessages();
     }
 
     private static TopLevel? GetTopLevel()

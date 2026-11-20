@@ -89,6 +89,16 @@
             <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
         </Style>
 
+        <Style Selector="TextBlock.EmptyMessage">
+            <Setter Property="Foreground" Value="{DynamicResource AppMutedTextBrush}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="20"/>
+            <Setter Property="IsHitTestVisible" Value="False"/>
+        </Style>
+
         <!-- small pills for details like the version in the preview panel -->
         <Style Selector="Border.Badge">
             <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}"/>
@@ -442,6 +452,14 @@
                                 <DataGridTextColumn Header="Name" Binding="{ReflectionBinding Name}" />
                             </DataGrid.Columns>
                         </DataGrid>
+
+                    <!-- shown over the list when it's empty or the filter matches nothing. doesn't block drag and drop -->
+                    <TextBlock
+                        Grid.Row="2"
+                        Classes="EmptyMessage"
+                        Text="{Binding EnabledEmptyMessage}"
+                        IsVisible="{Binding EnabledEmptyMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                    />
                 </Grid>
             </Border>
 
@@ -556,6 +574,14 @@
                                 <DataGridTextColumn Header="Author" Binding="{ReflectionBinding Author}" />
                             </DataGrid.Columns>
                         </DataGrid>
+
+                    <!-- shown over the list when it's empty or the filter matches nothing. doesn't block drag and drop -->
+                    <TextBlock
+                        Grid.Row="2"
+                        Classes="EmptyMessage"
+                        Text="{Binding DisabledEmptyMessage}"
+                        IsVisible="{Binding DisabledEmptyMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                    />
                 </Grid>
             </Border>
 
