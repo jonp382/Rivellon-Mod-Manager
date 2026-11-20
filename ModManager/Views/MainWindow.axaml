@@ -158,7 +158,7 @@
 
                 <!-- mod version -->
                 <TextBlock
-                    Text="{Binding PreviewMod.Version, StringFormat='{}Version: {0}'}"
+                    Text="{Binding PreviewMod.DisplayVersion, StringFormat='{}Version: {0}'}"
 
                     Grid.Row="3"
                     Grid.Column="0"
@@ -369,7 +369,7 @@
                 <!-- column declaration -->
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Name" Binding="{ReflectionBinding Name}" />
-                    <DataGridTextColumn Header="Version" Binding="{ReflectionBinding Version}" />
+                    <DataGridTextColumn Header="Version" Binding="{ReflectionBinding DisplayVersion}" SortMemberPath="VersionNumber" />
                     <DataGridTextColumn Header="Author" Binding="{ReflectionBinding Author}" />
                 </DataGrid.Columns>
             </DataGrid>

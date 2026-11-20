@@ -22,6 +22,20 @@ public partial class ModInfo : ObservableObject
     public string UUID { get; set; } = string.Empty;
     public string Folder { get; set; } = string.Empty;
     public string Version { get; set; } = string.Empty;
+
+    // the raw version as a number, used for sorting the version column correctly
+    public long VersionNumber => long.TryParse(Version, out long v) ? v : 0;
+
+    // DOS2 packs the version into one 32-bit number: major (4 bits), minor (4 bits),
+    // revision (8 bits) and build (16 bits). e.g. 268435456 is 1.0.0.0
+    public string DisplayVersion
+    {
+        get
+        {
+            if (!long.TryParse(Version, out long v) || v < 0) return Version;
+            return $"{(v >> 28) & 0xF}.{(v >> 24) & 0xF}.{(v >> 16) & 0xFF}.{v & 0xFFFF}";
+        }
+    }
     public string Author { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string MD5 {get; set; } = string.Empty; // almost always unused unless its a default fake mod like the base game.
