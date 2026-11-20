@@ -89,6 +89,25 @@
             <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
         </Style>
 
+        <!-- small pills for details like the version in the preview panel -->
+        <Style Selector="Border.Badge">
+            <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="8,2"/>
+        </Style>
+        <Style Selector="Border.Badge > TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{DynamicResource AppMutedTextBrush}"/>
+        </Style>
+
+        <Style Selector="Button.Small">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="CornerRadius" Value="6"/>
+        </Style>
+
         <!-- small pill showing how many mods are in a list -->
         <Style Selector="Border.CountBadge">
             <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}"/>
@@ -213,47 +232,107 @@
 
             <!-- preview card on the left side -->
             <Border Grid.Column="0" Classes="Card" Margin="0,0,10,0">
-                <Grid RowDefinitions="Auto, Auto, Auto, *">
+                <Panel>
 
-                    <!-- preview image -->
-                    <Border Grid.Row="0" CornerRadius="6" ClipToBounds="True" Background="{DynamicResource AppBackgroundBrush}" Height="300">
-                        <Image
-                            Source="{Binding PreviewMod.PreviewImage}"
-                            Stretch="Uniform"
-                            RenderOptions.BitmapInterpolationMode="HighQuality"
-                        />
-                    </Border>
-
-                    <!-- mod name -->
-                    <TextBlock
-                        Grid.Row="1"
-                        Margin="2,12,2,6"
-                        Text="{Binding PreviewMod.Name}"
-                        FontSize="16"
-                        FontWeight="Bold"
-                        TextWrapping="Wrap"
-                    />
-
-                    <!-- mod details -->
-                    <StackPanel Grid.Row="2" Margin="2,0,2,10" Spacing="2">
-                        <TextBlock Classes="Muted" Text="{Binding PreviewMod.Author, StringFormat='{}Author: {0}'}"/>
-                        <TextBlock Classes="Muted" Text="{Binding PreviewMod.DisplayVersion, StringFormat='{}Version: {0}'}"/>
-                        <TextBlock Classes="Muted" Text="{Binding PreviewMod.UUID, StringFormat='{}ID: {0}'}"/>
-                        <TextBlock Classes="Muted" Text="{Binding PreviewMod.WorkshopID, StringFormat='{}Workshop ID: {0}'}"/>
+                    <!-- shown when no mod is selected -->
+                    <StackPanel
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Spacing="6"
+                        IsVisible="{Binding PreviewMod, Converter={x:Static ObjectConverters.IsNull}}"
+                    >
+                        <TextBlock Text="No mod selected" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                        <TextBlock Classes="Muted" Text="Select a mod from either list to see its details." HorizontalAlignment="Center"/>
                     </StackPanel>
 
-                    <!-- mod workshop description -->
-                    <Border Grid.Row="3" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,1,0,0" Padding="0,10,0,0">
-                        <ScrollViewer>
-                            <!-- renders the steam BBCode ([h1], [b], [list] etc.) instead of showing raw tags -->
-                            <controls:BBCodeTextBlock
-                                BBCode="{Binding PreviewMod.WorkshopDetails.Description}"
-                                TextWrapping="Wrap"
-                                Margin="2,0,12,0"
-                            />
-                        </ScrollViewer>
-                    </Border>
-                </Grid>
+                    <Grid
+                        RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, *"
+                        IsVisible="{Binding PreviewMod, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    >
+
+                        <!-- preview image, or a placeholder if the mod has none -->
+                        <Border Grid.Row="0" CornerRadius="6" ClipToBounds="True" Background="{DynamicResource AppBackgroundBrush}" Height="300">
+                            <Panel>
+                                <TextBlock
+                                    Classes="Muted"
+                                    Text="No preview image"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    IsVisible="{Binding PreviewMod.PreviewImage, Converter={x:Static ObjectConverters.IsNull}}"
+                                />
+                                <Image
+                                    Source="{Binding PreviewMod.PreviewImage}"
+                                    Stretch="Uniform"
+                                    RenderOptions.BitmapInterpolationMode="HighQuality"
+                                />
+                            </Panel>
+                        </Border>
+
+                        <!-- mod name and author -->
+                        <TextBlock
+                            Grid.Row="1"
+                            Margin="2,12,2,0"
+                            Text="{Binding PreviewMod.Name}"
+                            FontSize="17"
+                            FontWeight="Bold"
+                            TextWrapping="Wrap"
+                        />
+                        <TextBlock
+                            Grid.Row="2"
+                            Classes="Muted"
+                            Margin="2,2,2,0"
+                            Text="{Binding PreviewMod.Author, StringFormat='{}by {0}'}"
+                            IsVisible="{Binding PreviewMod.Author, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                        />
+
+                        <!-- version and workshop badges -->
+                        <WrapPanel Grid.Row="3" Margin="0,10,0,0" ItemSpacing="6" LineSpacing="6">
+                            <Border Classes="Badge">
+                                <TextBlock Text="{Binding PreviewMod.DisplayVersion, StringFormat='{}v{0}'}"/>
+                            </Border>
+                            <Border Classes="Badge" IsVisible="{Binding PreviewMod.WorkshopID, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                <TextBlock Text="{Binding PreviewMod.WorkshopID, StringFormat='{}Workshop {0}'}"/>
+                            </Border>
+                            <Border Classes="Badge" IsVisible="{Binding PreviewMod.WorkshopID, Converter={x:Static StringConverters.IsNullOrEmpty}}">
+                                <TextBlock Text="Local mod"/>
+                            </Border>
+                        </WrapPanel>
+
+                        <!-- UUID, selectable so it can be copied -->
+                        <SelectableTextBlock
+                            Grid.Row="4"
+                            Margin="2,8,2,0"
+                            Text="{Binding PreviewMod.UUID}"
+                            FontSize="11"
+                            Foreground="{DynamicResource AppMutedTextBrush}"
+                            ToolTip.Tip="Mod UUID, select it to copy"
+                        />
+
+                        <!-- workshop links, only for mods that came from the workshop -->
+                        <StackPanel
+                            Grid.Row="5"
+                            Orientation="Horizontal"
+                            Spacing="6"
+                            Margin="0,10,0,10"
+                            IsVisible="{Binding PreviewMod.WorkshopID, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                        >
+                            <Button Classes="Small" Command="{Binding OpenWorkshopPageCommand}" Content="Open Workshop Page"/>
+                            <Button Classes="Small" Command="{Binding OpenWorkshopPageSteamCommand}" Content="Open in Steam"/>
+                        </StackPanel>
+
+                        <!-- mod workshop description -->
+                        <Border Grid.Row="6" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,6,0,0">
+                            <ScrollViewer>
+                                <!-- renders the steam BBCode ([h1], [b], [list] etc.) instead of showing raw tags -->
+                                <controls:BBCodeTextBlock
+                                    BBCode="{Binding PreviewMod.WorkshopDetails.Description}"
+                                    TextWrapping="Wrap"
+                                    Margin="2,0,12,0"
+                                />
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </Panel>
             </Border>
 
             <!-- enabled mods card -->
