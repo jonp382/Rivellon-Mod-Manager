@@ -1,5 +1,6 @@
 namespace IOHelper;
 
+using ModManager.Resources;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -52,7 +53,7 @@ public class CommonPaths
 
     public static List<string>? GetAllProfiles(string folder)
     {
-        Debug.WriteLine($"Trying to get all profiles from {folder}");
+        Log.Info($"Trying to get all profiles from {folder}");
         if(folder.EndsWith("/") || folder.EndsWith(@"\"))
         {
             folder = folder.Remove(folder.Length-1,1);
@@ -61,7 +62,7 @@ public class CommonPaths
             !folder.EndsWith("Divinity Original Sin 2 Definitive Edition", StringComparison.OrdinalIgnoreCase)
             ) 
         {
-            Debug.WriteLine($"Invalid data folder");
+            Log.Warn($"Invalid data folder");
             return null;
         }
         try
@@ -69,7 +70,7 @@ public class CommonPaths
             var ProfilesPath = Directory.GetDirectories(folder + "/PlayerProfiles");
             if (ProfilesPath == null) 
             {
-                Debug.WriteLine($"no profiles found");
+                Log.Info($"no profiles found");
                 return null;
             }
 
@@ -81,7 +82,7 @@ public class CommonPaths
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Exception occurred when getting all profiles: {ex.Message}");
+            Log.Warn($"Exception occurred when getting all profiles: {ex.Message}");
             return null;
         }
     }
@@ -97,7 +98,7 @@ public class CommonPaths
             var steamPath = await FileIO.SelectAnyFolder("Please select your steamapps folder in your Steam directory.");
             if(string.IsNullOrEmpty(steamPath)) 
             {
-                Debug.WriteLine($"No folder selected");
+                Log.Info($"No folder selected");
                 return string.Empty;
             }
 
@@ -113,7 +114,7 @@ public class CommonPaths
         }
         else
         {
-            Debug.WriteLine($"Invalid operating system!");
+            Log.Warn($"Invalid operating system!");
             return string.Empty;
         }
 
@@ -125,7 +126,7 @@ public class CommonPaths
         var steamPath = await FileIO.SelectAnyFolder("Please select your steamapps folder in your Steam directory.");
         if(string.IsNullOrEmpty(steamPath)) 
         {
-            Debug.WriteLine($"No folder selected");
+            Log.Info($"No folder selected");
             return string.Empty;
         }
 
@@ -139,7 +140,7 @@ public class CommonPaths
         var steamPath = await FileIO.SelectAnyFolder("Please select your steamapps folder in your Steam directory.");
         if(string.IsNullOrEmpty(steamPath)) 
         {
-            Debug.WriteLine($"No folder selected");
+            Log.Info($"No folder selected");
             return string.Empty;
         }
 
@@ -154,7 +155,7 @@ public class CommonPaths
         var steamPath = await FileIO.SelectAnyFolder("Please select your steamapps folder in your Steam directory.");
         if(string.IsNullOrEmpty(steamPath)) 
         {
-            Debug.WriteLine($"No folder selected. Please try again.");
+            Log.Info($"No folder selected. Please try again.");
             return null;
         }
 
@@ -212,7 +213,7 @@ public static class FileIO
 
             if (string.IsNullOrEmpty(FilePathMods))
             {
-                Debug.WriteLine($"Invalid directory path (path was blank). Please try again.");
+                Log.Warn($"Invalid directory path (path was blank). Please try again.");
                 return null;
             }
 
@@ -221,11 +222,11 @@ public static class FileIO
         }
         else
         {
-            Debug.WriteLine($"No directory selected. Please try again.");
+            Log.Info($"No directory selected. Please try again.");
             return null;
         }
 
-        // Debug.WriteLine($"Selected directory: {IOHelper.UserSettings.Default.SelectedModFolder}");
+        // Log.Info($"Selected directory: {IOHelper.UserSettings.Default.SelectedModFolder}");
     }
 
     public async static Task<string?> SelectAnyFile(string prompt = "Please make a selection")
@@ -245,7 +246,7 @@ public static class FileIO
 
             if (string.IsNullOrEmpty(FilePath))
             {
-                Debug.WriteLine($"Invalid file path (path was blank). Please try again.");
+                Log.Warn($"Invalid file path (path was blank). Please try again.");
                 return null;
             }
             // IOHelper.UserSettings.Default.SelectedModLSX = files[0].Path.LocalPath;
@@ -253,7 +254,7 @@ public static class FileIO
         }
         else
         {
-            Debug.WriteLine($"No file selected. Please try again.");
+            Log.Info($"No file selected. Please try again.");
             return null;
         }
     }
@@ -279,7 +280,7 @@ public static class FileIO
 
             if (string.IsNullOrEmpty(FilePathMods))
             {
-                Debug.WriteLine($"Invalid directory path (path was blank). Please try again.");
+                Log.Warn($"Invalid directory path (path was blank). Please try again.");
                 return null;
             }
 
@@ -288,11 +289,11 @@ public static class FileIO
         }
         else
         {
-            Debug.WriteLine($"No directory selected. Please try again.");
+            Log.Info($"No directory selected. Please try again.");
             return null;
         }
 
-        // Debug.WriteLine($"Selected directory: {IOHelper.UserSettings.Default.SelectedModFolder}");
+        // Log.Info($"Selected directory: {IOHelper.UserSettings.Default.SelectedModFolder}");
     }
 
     public async static Task SaveToFile(string fileText, string prompt = "Please make a selection", string defaultLocation = "")
@@ -326,7 +327,7 @@ public static class FileIO
         if(!string.IsNullOrWhiteSpace(filePath))
         {
             File.WriteAllText(filePath, fileText);
-            Debug.WriteLine($"Saved file {Path.GetFileName(filePath)}");
+            Log.Info($"Saved file {Path.GetFileName(filePath)}");
         }
     }
 }
@@ -367,12 +368,12 @@ public class UserSettings
             try
             {
                 string json = File.ReadAllText(configFilePath);
-                Debug.WriteLine($"Read in user-config file from {configFilePath}");
+                Log.Info($"Read in user-config file from {configFilePath}");
                 return JsonSerializer.Deserialize<UserSettings>(json) ?? new UserSettings();
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Failed to read and deserialize the config file at {configFilePath}: {ex.Message}");
+                Log.Warn($"Failed to read and deserialize the config file at {configFilePath}: {ex.Message}");
                 return new UserSettings();
             }
         }
@@ -391,11 +392,11 @@ public class UserSettings
         try
         {
             File.WriteAllText(configFilePath, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
-            Debug.WriteLine($"Saved user settings to {configFilePath}!");
+            Log.Info($"Saved user settings to {configFilePath}!");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Failed to save the UserSettings file at {configFilePath}: {ex.Message}");
+            Log.Warn($"Failed to save the UserSettings file at {configFilePath}: {ex.Message}");
         }
     }
 

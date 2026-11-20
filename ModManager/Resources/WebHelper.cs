@@ -31,7 +31,7 @@ public class WebRequest()
     {
         if(workshopItems is null || workshopItems.Count == 0 || workshopItems.Any(n => string.IsNullOrEmpty(n.WorkshopID)))
         {
-            Debug.WriteLine($"Null input in GetWorkshopDetails. Exiting.");
+            Log.Info($"Null input in GetWorkshopDetails. Exiting.");
             return;
         }
 
@@ -68,13 +68,13 @@ public class WebRequest()
 
             // don't match here. match elsewhere. keep this function only for web request.
 
-            Debug.WriteLine($"Successfully queried steam API and obtained {allResults.Count} results.");
+            Log.Info($"Successfully queried steam API and obtained {allResults.Count} results.");
 
             MergeIntoCache(allResults);
         }
         catch (System.Exception ex)
         {
-            Debug.WriteLine($"Request failed: {ex.Message}");
+            Log.Warn($"Request failed: {ex.Message}");
         }
         return;
     }
@@ -97,7 +97,7 @@ public class WebRequest()
             }
             catch (System.Exception ex)
             {
-                Debug.WriteLine($"Existing steam cache was unreadable, starting a new one: {ex.Message}");
+                Log.Info($"Existing steam cache was unreadable, starting a new one: {ex.Message}");
             }
         }
 
@@ -160,11 +160,11 @@ public class WebRequest()
             await using var steamToWriteTo = File.Create(filePath);
             await streamToReadFrom.CopyToAsync(steamToWriteTo, cancellationToken);
 
-            Debug.WriteLine($"Downloaded preview image {fileName}");
+            Log.Info($"Downloaded preview image {fileName}");
         }
         catch (System.Exception ex)
         {
-            Debug.WriteLine($"[✗] Failed to download preview image {mod.Folder}: {ex.Message}");
+            Log.Warn($"Failed to download preview image {mod.Folder}: {ex.Message}");
         }
     }
 
@@ -190,7 +190,7 @@ public class WebRequest()
 
             if(!json.RootElement.TryGetProperty("assets", out var assets) || assets.ValueKind != JsonValueKind.Array)
             {
-                Debug.WriteLine($"Script extender release had no assets list");
+                Log.Info($"Script extender release had no assets list");
                 return null;
             }
 
@@ -206,7 +206,7 @@ public class WebRequest()
 
             if(asset == null)
             {
-                Debug.WriteLine($"No ScriptExtender-Updater asset found in the latest release");
+                Log.Info($"No ScriptExtender-Updater asset found in the latest release");
                 return null;
             }
 
@@ -227,7 +227,7 @@ public class WebRequest()
         }
         catch (System.Exception ex)
         {
-            Debug.WriteLine($"Failed to download the script extender: {ex.Message}");
+            Log.Warn($"Failed to download the script extender: {ex.Message}");
             return null;
         }
     }

@@ -17,7 +17,7 @@ public class LSServices
         if(File.Exists(Path)){
             using var stream = File.OpenRead(Path);
             var reader = new PackageReader();
-            Debug.WriteLine($"Selected PAK Path: {Path}");
+            Log.Info($"Selected PAK Path: {Path}");
             var package = reader.Read(Path);
 
             return package;
@@ -33,7 +33,7 @@ public class LSServices
 
         // foreach(var file in package.Files)
         // {
-        //     Debug.WriteLine($"Found file {file.Name}");
+        //     Log.Info($"Found file {file.Name}");
         // }
 
         var MetaFile = package.Files.FirstOrDefault(file => file.Name.EndsWith("meta.lsx", System.StringComparison.OrdinalIgnoreCase)) ?? throw new FileNotFoundException("meta.lsx not found in PAK archive");
@@ -42,7 +42,7 @@ public class LSServices
         using var resourceReader = new LSXReader(stream);
         Resource resource = resourceReader.Read();
         
-        // Debug.WriteLine($"Parsing resource");
+        // Log.Info($"Parsing resource");
         return ParseResource(resource);
         
     }
@@ -54,7 +54,7 @@ public class LSServices
         Directory.CreateDirectory(Destination);
 
         var packager = new Packager();
-        Debug.WriteLine($"Extracting {Path} to {Destination}");
+        Log.Info($"Extracting {Path} to {Destination}");
 
         try
         {
@@ -62,7 +62,7 @@ public class LSServices
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"An error occurred while extracting the PAK file. {ex.Message}");
+            Log.Warn($"An error occurred while extracting the PAK file. {ex.Message}");
         }
         
     }
@@ -87,7 +87,7 @@ public class LSServices
             Description = GetAttribute(moduleInfoNode, "Description")
         };
 
-        Debug.WriteLine($"Accessing dependencies for {modInfo.Name}");
+        Log.Info($"Accessing dependencies for {modInfo.Name}");
         
         List<Node> Dependencies;
         try
@@ -95,11 +95,11 @@ public class LSServices
             Dependencies = resource.Regions["Config"]
                 .Children["Dependencies"].FirstOrDefault()?.Children["ModuleShortDesc"] ?? new List<Node>();
             
-            Debug.WriteLine($"Mod {modInfo.Name} has {Dependencies.Count} dependencies");
+            Log.Info($"Mod {modInfo.Name} has {Dependencies.Count} dependencies");
         }
         catch
         {
-            Debug.WriteLine($"No dependencies node found for {modInfo.Name}");
+            Log.Info($"No dependencies node found for {modInfo.Name}");
             Dependencies = [];
         }
 
@@ -126,14 +126,14 @@ public class LSServices
         var profilePath = Directory.GetDirectories(playerProfilesPath).FirstOrDefault(n => n.EndsWith(IOHelper.UserSettings.Default.SelectedProfile, StringComparison.OrdinalIgnoreCase));
         if(profilePath == null)
         {
-            Debug.WriteLine($"Unable to find ProfilePath for {IOHelper.UserSettings.Default.SelectedProfile} from DataPath");
+            Log.Warn($"Unable to find ProfilePath for {IOHelper.UserSettings.Default.SelectedProfile} from DataPath");
             return null;
         }
 
         var files = Directory.GetFiles(profilePath).Where(n => n.EndsWith("modsettings.lsx", StringComparison.OrdinalIgnoreCase)).ToList();
         if(files == null || files.Count == 0)
         {
-            Debug.WriteLine($"Unable to find any .lsx files in {profilePath}");
+            Log.Warn($"Unable to find any .lsx files in {profilePath}");
             return null;
         }
 
@@ -167,7 +167,7 @@ public class LSServices
         // keep a copy of the previous file in case the export goes wrong
         File.Copy(LSXPath, LSXPath + ".bak", overwrite: true);
 
-        Debug.WriteLine($"Writing to {LSXPath}");
+        Log.Info($"Writing to {LSXPath}");
 
         var resource = new Resource();
         var region = new Region
@@ -278,7 +278,7 @@ public class LSServices
             ? modOrderModules
             : new List<Node>();
 
-        Debug.WriteLine($"Found {ModOrderNodes.Count} ModOrder nodes in the LSX file");
+        Log.Info($"Found {ModOrderNodes.Count} ModOrder nodes in the LSX file");
 
         Dictionary<string, List<ModInfo>> ReturnDict = [];
 
@@ -308,7 +308,7 @@ public class LSServices
             ? modModules
             : new List<Node>();
 
-        Debug.WriteLine($"Found {ModsNodes.Count} Mod nodes in the LSX file");
+        Log.Info($"Found {ModsNodes.Count} Mod nodes in the LSX file");
 
         List<ModInfo> Mods = [];
 

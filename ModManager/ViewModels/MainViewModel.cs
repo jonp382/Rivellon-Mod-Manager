@@ -1,3 +1,4 @@
+using ModManager.Resources;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Threading.Tasks;
@@ -37,7 +38,7 @@ public partial class MainViewModel : ViewModelBase
         // constructors can't await, so start loading here and let it run in the background
         _ = InitializeAsync();
 
-        Debug.WriteLine($"Constructor complete");
+        Log.Info($"Constructor complete");
         OnPropertyChanged();
     }
 
@@ -52,7 +53,7 @@ public partial class MainViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Workshop sync failed: {ex.Message}");
+            Log.Error("Workshop sync failed", ex);
             StatusText = $"Workshop sync failed: {ex.Message}";
         }
     }
@@ -74,7 +75,7 @@ public partial class MainViewModel : ViewModelBase
             return;
         }
 
-        Console.WriteLine($"Found selected file at {filePath}");
+        Log.Info($"Found selected file at {filePath}");
 
         string fileExtension = Path.GetExtension(filePath).ToUpperInvariant();
         List<string> FilesToCopy = [];
@@ -90,7 +91,7 @@ public partial class MainViewModel : ViewModelBase
                 case ".ZIP": // supported
                     // clear out anything left over from a previous import of the same zip
                     if(Directory.Exists(tempDir)) Directory.Delete(tempDir, recursive: true);
-                    Console.WriteLine($"Creating temporary export directory at {tempDir}");
+                    Log.Info($"Creating temporary export directory at {tempDir}");
                     Directory.CreateDirectory(tempDir);
 
                     await using (ZipArchive zip = await ZipFile.OpenReadAsync(filePath))
@@ -101,7 +102,7 @@ public partial class MainViewModel : ViewModelBase
                             return;
                         }
                     }
-                    Console.WriteLine($"Exporting ZIP to directory {tempDir}");
+                    Log.Info($"Exporting ZIP to directory {tempDir}");
                     await ZipFile.ExtractToDirectoryAsync(filePath, tempDir, overwriteFiles: true);
 
                     // extract everything but only copy PAK files into mods folder.
@@ -123,7 +124,7 @@ public partial class MainViewModel : ViewModelBase
                 case ".PAK": // supported
                     
                     FilesToCopy.Add(filePath);
-                    Console.WriteLine($"Found selected PAK file {filePath}");
+                    Log.Info($"Found selected PAK file {filePath}");
 
                     break;
 
@@ -146,7 +147,7 @@ public partial class MainViewModel : ViewModelBase
                 switch (choice)
                 {
                     case MessageboxHelper.OverwriteChoice.Cancel:
-                        Console.WriteLine($"Import cancelled by user");
+                        Log.Info($"Import cancelled by user");
                         return;
                     case MessageboxHelper.OverwriteChoice.YesToAll:
                         applyToAll = MessageboxHelper.OverwriteChoice.YesToAll;
@@ -165,17 +166,18 @@ public partial class MainViewModel : ViewModelBase
             foreach(string file in FilesToCopy.Except(skippedMods))
             {
                 string destination = Path.Combine(modsPath, Path.GetFileName(file));
-                Console.WriteLine($"Attempting to copy {file} to {destination}");
+                Log.Info($"Attempting to copy {file} to {destination}");
                 // copy rather than move, so importing a single PAK doesn't remove the user's original file
                 File.Copy(file, destination, overwrite: true);
                 importedCount++;
-                Console.WriteLine($"Success");
+                Log.Info($"Success");
             }
 
             importSummary = $"Imported {importedCount} mod(s), skipped {skippedMods.Count}.";
         }
         catch (Exception ex)
         {
+            Log.Error($"Failed to import {filePath}", ex);
             await MessageboxHelper.ErrorBox.ErrorMessageBox($"The mod could not be imported.\n\n{ex.Message}");
             return;
         }
@@ -187,14 +189,14 @@ public partial class MainViewModel : ViewModelBase
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Failed to clean up temporary directory {tempDir}: {ex.Message}");
+                Log.Warn($"Failed to clean up temporary directory {tempDir}: {ex.Message}");
             }
         }
 
-        Console.WriteLine($"Updating mods list...");
+        Log.Info($"Updating mods list...");
         await Update();
         StatusText = importSummary;
-        Console.WriteLine($"Done!");
+        Log.Info($"Done!");
     }
 
     private bool FilterEnabledMods(object item)
@@ -328,7 +330,7 @@ public partial class MainViewModel : ViewModelBase
         }
         catch (Exception e)
         {
-            Debug.WriteLine($"ERROR: Could not find file {jsonPath} - {e.Message}");
+            Log.Info($"No steam workshop cache found at {jsonPath} - {e.Message}");
             return;
         }
 
@@ -339,7 +341,7 @@ public partial class MainViewModel : ViewModelBase
         }
         catch (JsonException e)
         {
-            Debug.WriteLine($"ERROR: Could not parse {jsonPath} - {e.Message}");
+            Log.Warn($"Could not parse {jsonPath} - {e.Message}");
             return;
         }
 
@@ -347,13 +349,13 @@ public partial class MainViewModel : ViewModelBase
         {
             if(string.IsNullOrWhiteSpace(mod.WorkshopID)) 
             {
-                Debug.WriteLine($"No workshop ID found for {mod.Name}");
+                Log.Info($"No workshop ID found for {mod.Name}");
                 continue;
             }
 
             // allow for null results
             mod.WorkshopDetails = json?.Response.PublishedFileDetails.FirstOrDefault(n => string.Equals(n.PublishedFileId, mod.WorkshopID)) ?? null;
-            if(mod.WorkshopDetails == null) Debug.WriteLine($"No workshop details found for {mod.Name}");
+            if(mod.WorkshopDetails == null) Log.Info($"No workshop details found for {mod.Name}");
         }
 
     }
@@ -394,7 +396,7 @@ public partial class MainViewModel : ViewModelBase
 
         string filePath = IOHelper.UserSettings.Default.DataFolder + "/Mods";
 
-        Debug.WriteLine($"Attempting to parse mods directory at {filePath}");
+        Log.Info($"Attempting to parse mods directory at {filePath}");
 
         if(string.IsNullOrEmpty(filePath)) return;
 
@@ -408,7 +410,7 @@ public partial class MainViewModel : ViewModelBase
 
             var Name = Path.GetFileNameWithoutExtension(file);
 
-            Debug.WriteLine($"Found PAK file {Name}");
+            Log.Info($"Found PAK file {Name}");
 
             // one broken or unusual PAK file shouldn't stop the rest of the mods from loading
             try
@@ -417,7 +419,7 @@ public partial class MainViewModel : ViewModelBase
 
                 if(package == null)
                 {
-                    Debug.WriteLine($"Null package found: {file}");
+                    Log.Info($"Null package found: {file}");
                     _skippedFiles.Add(Path.GetFileName(file));
                     continue;
                 }
@@ -426,7 +428,7 @@ public partial class MainViewModel : ViewModelBase
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Failed to read PAK file {file}: {ex.Message}");
+                Log.Warn($"Failed to read PAK file {file}: {ex.Message}");
                 _skippedFiles.Add(Path.GetFileName(file));
             }
         }
@@ -472,7 +474,7 @@ public partial class MainViewModel : ViewModelBase
 
         string filePath = IOHelper.UserSettings.Default.DataFolder + "/PlayerProfiles" + $"/{IOHelper.UserSettings.Default.SelectedProfile}/" + "modsettings.lsx";
 
-        Debug.WriteLine($"Attempting to parse LSX file at {filePath}");
+        Log.Info($"Attempting to parse LSX file at {filePath}");
 
         if(string.IsNullOrEmpty(filePath)) return;
 
@@ -500,7 +502,7 @@ public partial class MainViewModel : ViewModelBase
         List<Resources.ModInfo> Mods = ModSettings["Mods"];
         List<Resources.ModInfo> ModOrder = ModSettings["ModOrder"];
 
-        Debug.WriteLine($"Found {Mods.Count} mods, and {ModOrder.Count} mod order entries in ModSettings.LSX.");
+        Log.Info($"Found {Mods.Count} mods, and {ModOrder.Count} mod order entries in ModSettings.LSX.");
 
         for(int i = 0; i < ModOrder.Count; i++)
         {
@@ -512,7 +514,7 @@ public partial class MainViewModel : ViewModelBase
             var matchingModInMods = Mods.FirstOrDefault(n => string.Equals(n.UUID, mod.UUID, StringComparison.OrdinalIgnoreCase));
             if (matchingModInMods == null)
             {
-                Debug.WriteLine($"The mod UUID {mod.UUID} has no matching mod in the Mods section of the modsettings.lsx file! Skipping.");
+                Log.Info($"The mod UUID {mod.UUID} has no matching mod in the Mods section of the modsettings.lsx file! Skipping.");
                 continue;
             }
 
@@ -522,7 +524,7 @@ public partial class MainViewModel : ViewModelBase
             var matchingModInAllMods = AllMods.FirstOrDefault(match => match.UUID == mod.UUID);
             if (matchingModInAllMods == null)
             {
-                Debug.WriteLine($"The mod UUID {mod.UUID} has no matching mod in the Mods folder (AllMods)!");
+                Log.Info($"The mod UUID {mod.UUID} has no matching mod in the Mods folder (AllMods)!");
                 continue;
             }
 
@@ -591,7 +593,7 @@ public partial class MainViewModel : ViewModelBase
                 var matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.UUID, dep, System.StringComparison.OrdinalIgnoreCase));
                 if(matchingMod == null) 
                 {
-                    Debug.WriteLine($"UUID not found: {dep}");
+                    Log.Info($"UUID not found: {dep}");
                     reasons.Add($"A mod with UUID {dep} was expected but not found in the Mods folder.");
                 }
                 else if (matchingMod.LoadOrder <= 0)
@@ -604,7 +606,7 @@ public partial class MainViewModel : ViewModelBase
                 }
             }
 
-            if(reasons.Count > 0) Debug.WriteLine($"Mod {Mod.Name} is invalid.");
+            if(reasons.Count > 0) Log.Warn($"Mod {Mod.Name} is invalid.");
 
             Mod.IsValid = reasons.Count == 0;
             Mod.InvalidReason = string.Join("\n", reasons);
@@ -616,7 +618,7 @@ public partial class MainViewModel : ViewModelBase
         var workshopPath = IOHelper.UserSettings.Default.WorkshopFolder;
         if(string.IsNullOrEmpty(workshopPath) || !Directory.Exists(workshopPath))
         {
-            Debug.WriteLine($"Workshop folder '{workshopPath}' does not exist, skipping workshop scan.");
+            Log.Info($"Workshop folder '{workshopPath}' does not exist, skipping workshop scan.");
             return;
         }
 
@@ -630,7 +632,7 @@ public partial class MainViewModel : ViewModelBase
             {
                 // if it has no files (e.g. a half-finished download) or more than one file, it's an unusual
                 // setup and it should be skipped so as to not misidentify a mod.
-                Debug.WriteLine($"{folder} has {files.Length} files instead of 1, skipping.");
+                Log.Info($"{folder} has {files.Length} files instead of 1, skipping.");
                 continue;
             }
 
@@ -640,7 +642,7 @@ public partial class MainViewModel : ViewModelBase
 
             if(matchingMod == null)
             {
-                Debug.WriteLine($"No matching installed mod for workshop item {name}");
+                Log.Info($"No matching installed mod for workshop item {name}");
                 continue;
             }
 
@@ -675,7 +677,7 @@ public partial class MainViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Update failed: {ex}");
+            Log.Error("Update failed", ex);
             StatusText = $"Update failed: {ex.Message}";
             await MessageboxHelper.ErrorBox.ErrorMessageBox($"An error occurred while loading your mods. Please check your settings.\n\n{ex.Message}");
             return;
@@ -697,6 +699,7 @@ public partial class MainViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
+            Log.Error("Failed to save the load order to the profile", ex);
             await MessageboxHelper.ErrorBox.ErrorMessageBox($"The load order could not be saved to the profile.\n\n{ex.Message}");
             return;
         }
@@ -823,7 +826,7 @@ public partial class MainViewModel : ViewModelBase
             if(File.Exists(imagePath)) 
             {
                 mod.PreviewImage = new Bitmap(imagePath);
-                Debug.WriteLine($"Assigned image to mod {mod.Name} from {imagePath}");
+                Log.Info($"Assigned image to mod {mod.Name} from {imagePath}");
             }
         }
     }
@@ -895,7 +898,7 @@ public partial class MainViewModel : ViewModelBase
         {
             if(DisabledModsView.Contains(mod)) ModsToMove.Add(mod);
         }
-        Debug.WriteLine($"Found {ModsToMove.Count} mods to move");
+        Log.Info($"Found {ModsToMove.Count} mods to move");
 
         // Disabled -> Enabled so Disabled is SOURCE, Enabled is TARGET
         await MoveMods(ModsToMove, DisabledMods, EnabledMods);
@@ -928,7 +931,7 @@ public partial class MainViewModel : ViewModelBase
         {
             if(EnabledModsView.Contains(mod)) ModsToMove.Add(mod);
         }
-        Debug.WriteLine($"Found {ModsToMove.Count} mods to move");
+        Log.Info($"Found {ModsToMove.Count} mods to move");
 
         // Enabled -> Disabled so Enabled is SOURCE, Disabled is TARGET
         await MoveMods(ModsToMove, EnabledMods, DisabledMods);
@@ -956,7 +959,7 @@ public partial class MainViewModel : ViewModelBase
         {
             if(modToMove == null) continue; // skip null mods
 
-            Debug.WriteLine($"Attempting to move {modToMove.Name} to index {targetIndex}");
+            Log.Info($"Attempting to move {modToMove.Name} to index {targetIndex}");
             SourceList.Remove(modToMove); // remove mod from source list
             TargetList.Insert(targetIndex, modToMove); // add mod to target list
             targetIndex ++; // increment so it inserts below the previous mod

@@ -91,13 +91,13 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"An error occurred in MainWindowClosing: {ex.Message}");
+            Log.Debug($"An error occurred in MainWindowClosing: {ex.Message}");
         }
     }
 
     private async void OnPointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
     {
-        Debug.WriteLine($"Firing OnPointerPressed");
+        Log.Debug($"Firing OnPointerPressed");
         if(sender is not DataGrid srcGrid) return;
 
         List<ModInfo> selectedMods = srcGrid.SelectedItems.OfType<ModInfo>().ToList();
@@ -170,7 +170,7 @@ public partial class MainWindow : Window
 
     private void OnDragOver(object? sender, DragEventArgs e)
     {
-        Debug.WriteLine($"Firing OnDragOver");
+        Log.Debug($"Firing OnDragOver");
         if (e.DataTransfer.Formats.Contains(ModItemFormat))
         {
             e.DragEffects = DragDropEffects.Move;
@@ -210,7 +210,7 @@ public partial class MainWindow : Window
             if(lastRow == null)
             {
                 // completely empty grid
-                Debug.WriteLine($"empty grid");
+                Log.Debug($"empty grid");
                 var gridTopLeft = targetGrid.TranslatePoint(new Point(0,0), MainGrid);
                 if (gridTopLeft.HasValue)
                 {
@@ -222,7 +222,7 @@ public partial class MainWindow : Window
             else
             {
                 // non-empty grid
-                Debug.WriteLine($"non-empty grid");
+                Log.Debug($"non-empty grid");
                 var rowTopLeft = lastRow.TranslatePoint(new Point(0,0), MainGrid);
                 if (rowTopLeft.HasValue)
                 {
@@ -236,7 +236,7 @@ public partial class MainWindow : Window
 
     private void OnDrop(object? sender, DragEventArgs e)
     {
-        Debug.WriteLine($"Firing OnDrop");
+        Log.Debug($"Firing OnDrop");
         GridDropIndicator.IsVisible = false;
         if(sender is not DataGrid targetGrid) return;
         if(DataContext is not MainViewModel vm) return;
@@ -297,7 +297,7 @@ public partial class MainWindow : Window
     private void OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if(DataContext is not MainViewModel vm) return;
-        if(isSelecting) { Debug.WriteLine($"isSelecting"); return; }
+        if(isSelecting) { Log.Debug($"isSelecting"); return; }
 
         isSelecting = true;
 
@@ -308,14 +308,14 @@ public partial class MainWindow : Window
             // enabled grid is selected
             targetGrid = EnabledGrid;
             DisabledGrid.SelectedItems.Clear();
-            Debug.WriteLine($"Clearing disabled mods selection");
+            Log.Debug($"Clearing disabled mods selection");
         }
         else
         {
             // disabled grid is selected
             targetGrid = DisabledGrid;
             EnabledGrid.SelectedItems.Clear();
-            Debug.WriteLine($"Clearing enabled mods selection");
+            Log.Debug($"Clearing enabled mods selection");
         }
         isSelecting = false;
 
@@ -329,7 +329,7 @@ public partial class MainWindow : Window
             ModInfo mod = (ModInfo) item;
             
             targetList.Add(mod);
-            Debug.WriteLine($"Adding mod {mod.Name}");
+            Log.Debug($"Adding mod {mod.Name}");
         }
 
         vm.PreviewMod = targetList.FirstOrDefault();

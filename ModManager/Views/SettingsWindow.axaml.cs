@@ -35,7 +35,7 @@ public partial class SettingsWindow : Window
         if (profiles == null)
         {
             ViewModel.AllProfiles.Clear();
-            Debug.WriteLine($"Null profiles return");
+            Log.Info($"Null profiles return");
         }
         else
         {
