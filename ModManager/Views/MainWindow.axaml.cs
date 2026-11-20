@@ -244,34 +244,31 @@ public partial class MainWindow : Window
         if(e.DataTransfer.TryGetValue(ModItemFormat) is not List<ModInfo> droppedMods) return;
 
         ObservableCollection<ModInfo> targetList = targetGrid == EnabledGrid ? vm.EnabledMods : vm.DisabledMods;
-        
-        ObservableCollection<ModInfo> sourceList;
 
-        foreach(var droppedMod in droppedMods)
+        // keep the dragged mods in the order they appear in their source list, not the order they were clicked
+        var orderedMods = droppedMods
+            .OrderBy(mod => vm.EnabledMods.Contains(mod) ? vm.EnabledMods.IndexOf(mod) : vm.DisabledMods.IndexOf(mod))
+            .ToList();
+
+        // work out the drop position once, before anything moves
+        int targetIndex = GetTargetIndex(targetGrid, e);
+        if(targetIndex < 0 || targetIndex > targetList.Count) targetIndex = targetList.Count;
+
+        // removing mods that sit above the drop position in the same list shifts everything up by one
+        targetIndex -= orderedMods.Count(mod => targetList.IndexOf(mod) is int i && i >= 0 && i < targetIndex);
+
+        foreach(var droppedMod in orderedMods)
         {
-            if (vm.EnabledMods.Contains(droppedMod))
-            {
-                sourceList = vm.EnabledMods;
-            }
-            else
-            {
-                sourceList = vm.DisabledMods;
-            }
-
-            int targetIndex = GetTargetIndex(targetGrid, e);
-
+            ObservableCollection<ModInfo> sourceList = vm.EnabledMods.Contains(droppedMod) ? vm.EnabledMods : vm.DisabledMods;
             sourceList.Remove(droppedMod);
-                
-            if(targetIndex < 0 || targetIndex > targetList.Count) 
-            {
-                targetList.Add(droppedMod);
-            }
-            else
-            {
-                targetList.Insert(targetIndex, droppedMod);
-            }
         }
-        
+
+        foreach(var droppedMod in orderedMods)
+        {
+            targetList.Insert(System.Math.Clamp(targetIndex, 0, targetList.Count), droppedMod);
+            targetIndex++; // insert below the previous mod so the order is kept
+        }
+
         vm.UpdateLoadOrders();
     }    
 
@@ -288,8 +285,8 @@ public partial class MainWindow : Window
         {
             var list = targetGrid == EnabledGrid ? vm.EnabledMods : vm.DisabledMods;
 
-            int index = list.IndexOf(targetMod)+1;
-            return index != -1 ? index : list.Count;
+            int index = list.IndexOf(targetMod);
+            return index != -1 ? index + 1 : list.Count;
         }
 
         return targetGrid == EnabledGrid ? vm.EnabledMods.Count : vm.DisabledMods.Count;
