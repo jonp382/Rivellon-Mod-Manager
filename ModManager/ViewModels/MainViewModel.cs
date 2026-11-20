@@ -621,7 +621,6 @@ public partial class MainViewModel : ViewModelBase
     public async Task ImportLoadOrderFromFile()
     {
         var file = await IOHelper.FileIO.SelectAnyFile("Please select the mod order file you want to import");
-        string? filePath = file?.ToString();
 
         if(string.IsNullOrWhiteSpace(file))
         {
@@ -636,21 +635,20 @@ public partial class MainViewModel : ViewModelBase
         try { json = JsonSerializer.Deserialize<Dictionary<string, List<Dictionary<string, string>>>>(rawText); }
         catch { json = null; }
 
-        if(json == null)
+        if(json == null || !json.TryGetValue("Order", out var ModsList) || ModsList == null)
         {
             await MessageboxHelper.ErrorBox.ErrorMessageBox($"The selected file was of an invalid JSON format, and the mod order could not be imported.");
             return;
         }
 
         List<string> missingMods = [];
-        List<Dictionary<string, string>> ModsList = json["Order"];
 
         foreach(var dict in ModsList)
         {
-            var modName = dict["Name"];
-            var modUUID = dict["UUID"];
+            if(dict == null || !dict.TryGetValue("UUID", out var modUUID) || string.IsNullOrWhiteSpace(modUUID)) continue;
+            var modName = dict.TryGetValue("Name", out var name) ? name : "Unknown";
 
-            var matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.UUID, modUUID));
+            var matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.UUID, modUUID, StringComparison.OrdinalIgnoreCase));
             if(matchingMod != null)
             {
                 tempList.Add(matchingMod);
@@ -666,11 +664,14 @@ public partial class MainViewModel : ViewModelBase
         DisabledMods.Clear();
 
         foreach(var mod in tempList) { EnabledMods.Add(mod); }
-        foreach(var mod in AllMods) { if(AllMods.FirstOrDefault(n => string.Equals(n.UUID, mod.UUID)) == null) DisabledMods.Add(mod); }
-        
+        foreach(var mod in AllMods) { if(!tempList.Contains(mod)) DisabledMods.Add(mod); }
+
         UpdateLoadOrders();
 
-        await MessageboxHelper.ErrorBox.ErrorMessageBox($"The following mods were not found among your installed list, and could not be enabled: \n{string.Join("\n", missingMods)}");
+        if(missingMods.Count > 0)
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox($"The following mods were not found among your installed list, and could not be enabled: \n{string.Join("\n", missingMods)}");
+        }
 
     }
 
