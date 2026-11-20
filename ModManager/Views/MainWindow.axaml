@@ -12,7 +12,7 @@
         x:Class="ModManager.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Icon="/Assets/app-icon.ico"
-        Title="Divinity Mod Manager"
+        Title="Rivellon Mod Manager"
         
         Width="1050" Height = "750"
         MinWidth="1050" MinHeight="750"
