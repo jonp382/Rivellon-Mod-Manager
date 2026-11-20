@@ -573,52 +573,41 @@ public partial class MainViewModel : ViewModelBase
     {
         StatusText = $"Validating load order...";
         // don't sort DisabledMods since we don't care about load orders there.
-        
-        if(EnabledMods.Count > 0)
+
+        foreach(Resources.ModInfo Mod in EnabledMods)
         {
-            for(int i = 0; i < EnabledMods.Count; i++)
+            // collect every problem with the mod, so the tooltip shows all of them instead of just the last one found
+            List<string> reasons = [];
+
+            if(Mod.LoadOrder <= 0)
             {
-                Resources.ModInfo Mod = EnabledMods[i];
-                Mod.IsValid = true;
-                Mod.InvalidReason = string.Empty;
-
-                if(Mod.LoadOrder <= 0)
-                {
-                    Mod.IsValid = false;
-                    Mod.InvalidReason = "Load order must be set for all enabled mods. Current Load Order: " + Mod.LoadOrder;
-                }
-
-                foreach(var dep in Mod.Dependencies)
-                {
-                    if(Resources.FixedModUUIDs.IDs.Contains(dep)) continue;
-
-                    var matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.UUID, dep, System.StringComparison.OrdinalIgnoreCase));
-                    if(matchingMod == null) 
-                    {
-                        Debug.WriteLine($"UUID not found: {dep}");
-                        Debug.WriteLine($"Mod {Mod.Name} is invalid.");
-                        Mod.IsValid = false;
-                        Mod.InvalidReason = $"A mod with UUID {dep} was expected but not found in the Mods folder.";
-                    }
-                    else if (matchingMod.LoadOrder <= 0)
-                    {
-                        Debug.WriteLine($"Load order error");
-                        Debug.WriteLine($"Mod {Mod.Name} is invalid.");
-                        Mod.IsValid = false;
-                        Mod.InvalidReason = $"{matchingMod.Name} should be enabled and placed before this mod, but it is currently DISABLED.";
-                    }
-                    else if(matchingMod.LoadOrder > Mod.LoadOrder)
-                    {
-                        Debug.WriteLine($"Load order error");
-                        Debug.WriteLine($"Mod {Mod.Name} is invalid.");
-                        Mod.IsValid = false;
-                        Mod.InvalidReason = $"{matchingMod.Name} should be placed before this mod, but it is currently placed AFTER this mod.";
-                    }
-                }
-
-
+                reasons.Add("Load order must be set for all enabled mods. Current Load Order: " + Mod.LoadOrder);
             }
 
+            foreach(var dep in Mod.Dependencies)
+            {
+                if(Resources.FixedModUUIDs.IDs.Contains(dep)) continue;
+
+                var matchingMod = AllMods.FirstOrDefault(n => string.Equals(n.UUID, dep, System.StringComparison.OrdinalIgnoreCase));
+                if(matchingMod == null) 
+                {
+                    Debug.WriteLine($"UUID not found: {dep}");
+                    reasons.Add($"A mod with UUID {dep} was expected but not found in the Mods folder.");
+                }
+                else if (matchingMod.LoadOrder <= 0)
+                {
+                    reasons.Add($"{matchingMod.Name} should be enabled and placed before this mod, but it is currently DISABLED.");
+                }
+                else if(matchingMod.LoadOrder > Mod.LoadOrder)
+                {
+                    reasons.Add($"{matchingMod.Name} should be placed before this mod, but it is currently placed AFTER this mod.");
+                }
+            }
+
+            if(reasons.Count > 0) Debug.WriteLine($"Mod {Mod.Name} is invalid.");
+
+            Mod.IsValid = reasons.Count == 0;
+            Mod.InvalidReason = string.Join("\n", reasons);
         }
     }
 
