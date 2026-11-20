@@ -79,140 +79,93 @@ public class CommonPaths
         }
     }
 
-    public async static Task<string> AutoFindGameDataFolder()
+    private const string SteamAppId = "435150";
+    private const string SteamappsPrompt = "Please select your steamapps folder in your Steam directory.";
+
+    // once the user selects steamapps, everything else is a fixed path from there.
+    public static string GetGameFolder(string steamappsPath) => Path.Combine(steamappsPath, "common", "Divinity Original Sin 2");
+
+    public static string GetWorkshopFolder(string steamappsPath) => Path.Combine(steamappsPath, "workshop", "content", SteamAppId);
+
+    // on windows the data folder is in the user's Documents folder. on linux it's inside the proton prefix:
+    // compatdata -> 435150 -> pfx -> drive_c -> users -> steamuser -> Documents -> Larian Studios -> Divinity Original Sin 2 Definitive Edition
+    // returns null on unsupported operating systems, or on linux if no steamapps folder was given.
+    public static string? GetDataFolder(string? steamappsPath)
     {
-        // the game data folder is probably consistent on windows but could vary on linux
-        // on windows assume its in MyDocuments
-        // on linux ask the user to select their root steam folder first
-
-        if (OperatingSystem.IsLinux())
+        if (OperatingSystem.IsWindows())
         {
-            var steamPath = await FileIO.SelectAnyFolder("Please select your steamapps folder in your Steam directory.");
-            if(string.IsNullOrEmpty(steamPath)) 
-            {
-                Log.Info($"No folder selected");
-                return string.Empty;
-            }
-
-            // once they select Steamapps its guaranteed navigation from there.
-            // compatdata, 435150, pfc, drive_c
-            // in the case of divinity, its users -> steamuser -> Documents -> Larian Studios -> Divinity Original Sin 2 Definitive Edition
-            
-            return Path.Combine(steamPath, "compatdata", "435150", "pfx", "drive_c", "users", "steamuser", "Documents", "Larian Studios", "Divinity Original Sin 2 Definitive Edition");
-        }
-        else if(OperatingSystem.IsWindows()){
             var home = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             return Path.Combine(home, "Larian Studios", "Divinity Original Sin 2 Definitive Edition");
         }
-        else
+
+        if (OperatingSystem.IsLinux() && !string.IsNullOrEmpty(steamappsPath))
         {
-            Log.Warn($"Invalid operating system!");
-            return string.Empty;
+            return Path.Combine(steamappsPath, "compatdata", SteamAppId, "pfx", "drive_c", "users", "steamuser", "Documents", "Larian Studios", "Divinity Original Sin 2 Definitive Edition");
         }
 
+        Log.Warn($"Unable to determine the data folder on this operating system");
+        return null;
+    }
+
+    private async static Task<string?> AskForSteamappsFolder()
+    {
+        var steamPath = await FileIO.SelectAnyFolder(SteamappsPrompt);
+        if(string.IsNullOrEmpty(steamPath))
+        {
+            Log.Info($"No folder selected");
+            return null;
+        }
+        return steamPath;
+    }
+
+    public async static Task<string> AutoFindGameDataFolder()
+    {
+        // the game data folder is consistent on windows, so only ask for the steam folder on linux
+        string? steamPath = null;
+        if (OperatingSystem.IsLinux())
+        {
+            steamPath = await AskForSteamappsFolder();
+            if(steamPath == null) return string.Empty;
+        }
+
+        return GetDataFolder(steamPath) ?? string.Empty;
     }
 
     public async static Task<string> AutoFindWorkshopFolder()
     {
-
-        var steamPath = await FileIO.SelectAnyFolder("Please select your steamapps folder in your Steam directory.");
-        if(string.IsNullOrEmpty(steamPath)) 
-        {
-            Log.Info($"No folder selected");
-            return string.Empty;
-        }
-
-
-        return Path.Combine(steamPath, "workshop", "content", "435150");
+        var steamPath = await AskForSteamappsFolder();
+        return steamPath == null ? string.Empty : GetWorkshopFolder(steamPath);
     }
 
     public async static Task<string> AutoFindGameFolder()
     {
-
-        var steamPath = await FileIO.SelectAnyFolder("Please select your steamapps folder in your Steam directory.");
-        if(string.IsNullOrEmpty(steamPath)) 
-        {
-            Log.Info($"No folder selected");
-            return string.Empty;
-        }
-
-
-        return Path.Combine(steamPath, "common", "Divinity Original Sin 2");
+        var steamPath = await AskForSteamappsFolder();
+        return steamPath == null ? string.Empty : GetGameFolder(steamPath);
     }
 
     public async static Task<Dictionary<string, string?>?> AutoDetermineAllFolders()
     {
         // if the user selects the steam folder we can get the game folder and workshop folder on windows, and all 3 on linux.
-        // on windows, the data folder is typically under Documents so i'll assume that here.
-        var steamPath = await FileIO.SelectAnyFolder("Please select your steamapps folder in your Steam directory.");
-        if(string.IsNullOrEmpty(steamPath)) 
-        {
-            Log.Info($"No folder selected. Please try again.");
-            return null;
-        }
+        var steamPath = await AskForSteamappsFolder();
+        if(steamPath == null) return null;
 
-        string? gameFolder = Path.Combine(steamPath, "common", "Divinity Original Sin 2");
-        string? workshopFolder = Path.Combine(steamPath, "workshop", "content", "435150");
-        string? dataFolder;
-
-        if (OperatingSystem.IsLinux())
-        {
-            dataFolder = Path.Combine(steamPath, "compatdata", "435150", "pfx", "drive_c", "users", "steamuser", "Documents", "Larian Studios", "Divinity Original Sin 2 Definitive Edition");
-        }
-        else if(OperatingSystem.IsWindows()){
-            var home = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            dataFolder = Path.Combine(home, "Larian Studios", "Divinity Original Sin 2 Definitive Edition");
-        }
-        else
+        string? dataFolder = GetDataFolder(steamPath);
+        if(dataFolder == null)
         {
             await MessageboxHelper.ErrorBox.ErrorMessageBox("Invalid operating system. The path detection system is configured to support Windows and Linux. Please manually enter your file paths!");
-            dataFolder = null;
         }
 
-        Dictionary<string, string?> returnDict = [];
-        returnDict.Add("Game", gameFolder);
-        returnDict.Add("Workshop", workshopFolder);
-        returnDict.Add("Data", dataFolder);
-
-        return returnDict;
-
-
+        return new Dictionary<string, string?>
+        {
+            ["Game"] = GetGameFolder(steamPath),
+            ["Workshop"] = GetWorkshopFolder(steamPath),
+            ["Data"] = dataFolder
+        };
     }
 }
 
 public static class FileIO
 {
-    public async static Task<string?> SelectModsFolder(string prompt = "Please make a selection")
-    {
-        var provider = StorageService.GetStorageProvider();
-        if (provider == null) return null;
-
-        var directory = await provider.OpenFolderPickerAsync(new FolderPickerOpenOptions
-        {
-            Title = prompt,
-            AllowMultiple = false,
-            
-        });
-
-        if (directory.Count > 0) 
-        {
-            string FilePathMods = directory[0].Path.LocalPath;
-
-            if (string.IsNullOrEmpty(FilePathMods))
-            {
-                Log.Warn($"Invalid directory path (path was blank). Please try again.");
-                return null;
-            }
-
-            return FilePathMods;
-        }
-        else
-        {
-            Log.Info($"No directory selected. Please try again.");
-            return null;
-        }
-    }
-
     public async static Task<string?> SelectAnyFile(string prompt = "Please make a selection")
     {
         var provider = StorageService.GetStorageProvider();
@@ -242,12 +195,18 @@ public static class FileIO
         }
     }
 
-    public async static Task<string?> SelectAnyFolder(string prompt = "Please make a selection")
+    // starts in the given folder if it exists, otherwise the user's home folder
+    public async static Task<string?> SelectAnyFolder(string prompt = "Please make a selection", string? startPath = null)
     {
         var provider = StorageService.GetStorageProvider();
         if (provider == null) return null;
 
-        IStorageFolder? startLocation = await provider.TryGetFolderFromPathAsync(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
+        if (string.IsNullOrWhiteSpace(startPath) || !Directory.Exists(startPath))
+        {
+            startPath = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+        }
+
+        IStorageFolder? startLocation = await provider.TryGetFolderFromPathAsync(startPath);
 
         var directory = await provider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {

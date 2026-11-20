@@ -194,24 +194,16 @@ public partial class MainViewModel : ViewModelBase
         Log.Info($"Done!");
     }
 
-    private bool FilterEnabledMods(object item)
+    private bool FilterEnabledMods(object item) => MatchesSearch(item, EnabledSearchText);
+
+    private bool FilterDisabledMods(object item) => MatchesSearch(item, DisabledSearchText);
+
+    private static bool MatchesSearch(object item, string searchText)
     {
         if(item is not Resources.ModInfo mod) return false;
-        if(string.IsNullOrWhiteSpace(EnabledSearchText)) return true;
+        if(string.IsNullOrWhiteSpace(searchText)) return true;
 
-        return mod.Name.Contains(EnabledSearchText, System.StringComparison.OrdinalIgnoreCase);
-
-
-    }
-
-    private bool FilterDisabledMods(object item)
-    {
-        if(item is not Resources.ModInfo mod) return false;
-        if(string.IsNullOrWhiteSpace(DisabledSearchText)) return true;
-
-        return mod.Name.Contains(DisabledSearchText, System.StringComparison.OrdinalIgnoreCase);
-
-
+        return mod.Name.Contains(searchText, System.StringComparison.OrdinalIgnoreCase);
     }
 
     partial void OnEnabledSearchTextChanged(string? oldValue, string newValue)
@@ -878,82 +870,45 @@ public partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public async Task EnableMod()
-    {
-        if (CurrentlySelectedMods == null) return;
-
-        List<Resources.ModInfo> ModsToMove = [];
-        foreach(var mod in CurrentlySelectedMods)
-        {
-            if(mod == null || EnabledMods.Contains(mod)) continue;
-            ModsToMove.Add(mod);
-        }
-
-
-        await MoveMods(ModsToMove, DisabledMods, EnabledMods);
-    }
+    public void EnableMod() => MoveSelectedMods(DisabledMods, EnabledMods);
 
     [RelayCommand]
-    public async Task EnableAllMods()
-    {
-        if(DisabledMods.Count == 0) return;
+    public void DisableMod() => MoveSelectedMods(EnabledMods, DisabledMods);
 
-        List<Resources.ModInfo> ModsToMove = [];
-        foreach(Resources.ModInfo mod in DisabledMods)
-        {
-            if(DisabledModsView.Contains(mod)) ModsToMove.Add(mod);
-        }
+    // only moves the mods that are visible with the current search filter
+    [RelayCommand]
+    public void EnableAllMods() => MoveVisibleMods(DisabledMods, DisabledModsView, EnabledMods);
+
+    [RelayCommand]
+    public void DisableAllMods() => MoveVisibleMods(EnabledMods, EnabledModsView, DisabledMods);
+
+    private void MoveSelectedMods(ObservableCollection<Resources.ModInfo> SourceList, ObservableCollection<Resources.ModInfo> TargetList)
+    {
+        // only move selected mods that are actually in the source list
+        var ModsToMove = CurrentlySelectedMods.Where(mod => mod != null && SourceList.Contains(mod)).ToList();
+        MoveMods(ModsToMove, SourceList, TargetList);
+    }
+
+    private void MoveVisibleMods(ObservableCollection<Resources.ModInfo> SourceList, DataGridCollectionView SourceView, ObservableCollection<Resources.ModInfo> TargetList)
+    {
+        if(SourceList.Count == 0) return;
+
+        var ModsToMove = SourceList.Where(SourceView.Contains).ToList();
         Log.Info($"Found {ModsToMove.Count} mods to move");
 
-        // Disabled -> Enabled so Disabled is SOURCE, Enabled is TARGET
-        await MoveMods(ModsToMove, DisabledMods, EnabledMods);
+        MoveMods(ModsToMove, SourceList, TargetList);
     }
 
-    [RelayCommand]
-    public async Task DisableMod()
-    {
-        
-        if (CurrentlySelectedMods == null) return;
-        List<Resources.ModInfo> ModsToMove = [];
-        foreach(var mod in CurrentlySelectedMods)
-        {
-            if(mod == null || DisabledMods.Contains(mod)) continue;
-            ModsToMove.Add(mod);
-        }
-        
-
-        await MoveMods(ModsToMove, EnabledMods, DisabledMods);
-    }
-
-    [RelayCommand]
-    public async Task DisableAllMods()
-    {
-        if(EnabledMods.Count == 0) return;
-
-        List<Resources.ModInfo> ModsToMove = [];
-        foreach(Resources.ModInfo mod in EnabledMods)
-        {
-            if(EnabledModsView.Contains(mod)) ModsToMove.Add(mod);
-        }
-        Log.Info($"Found {ModsToMove.Count} mods to move");
-
-        // Enabled -> Disabled so Enabled is SOURCE, Disabled is TARGET
-        await MoveMods(ModsToMove, EnabledMods, DisabledMods);
-    }
-
-
-    public async Task MoveMods(List<Resources.ModInfo> ModsToMove, ObservableCollection<Resources.ModInfo> SourceList, ObservableCollection<Resources.ModInfo> TargetList)
+    public void MoveMods(List<Resources.ModInfo> ModsToMove, ObservableCollection<Resources.ModInfo> SourceList, ObservableCollection<Resources.ModInfo> TargetList)
     {
         foreach(Resources.ModInfo modToMove in ModsToMove)
         {
             if(modToMove == null) continue; // skip null mods
             SourceList.Remove(modToMove); // remove mod from source list
             TargetList.Add(modToMove); // add mod to target list
-
         }
 
         UpdateLoadOrders();
-
     }
 
     // im using the word "sort" to refer to resolving dependencies via load order.

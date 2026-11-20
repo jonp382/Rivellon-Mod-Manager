@@ -53,7 +53,7 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     public async Task SelectDataDirectory()
     {
-        var path = await IOHelper.FileIO.SelectModsFolder("Select the Divinity 2 parent folder that contains Mods, PlayerProfiles etc.");
+        var path = await IOHelper.FileIO.SelectAnyFolder("Select the Divinity 2 parent folder that contains Mods, PlayerProfiles etc.", DataDirectory);
 
         // only update if a valid path was selected.
         if(path != null)
@@ -77,7 +77,7 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     public async Task SelectWorkshopDirectory()
     {
-        var path = await IOHelper.FileIO.SelectModsFolder("Select the Divinity 2 workshop folder, typically found at steamapps > workshop > content > 435150");
+        var path = await IOHelper.FileIO.SelectAnyFolder("Select the Divinity 2 workshop folder, typically found at steamapps > workshop > content > 435150", WorkshopDirectory);
 
         // only update if a valid path was selected.
         if(path != null)
@@ -101,7 +101,7 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     public async Task SelectGameDirectory()
     {
-        var path = await IOHelper.FileIO.SelectAnyFolder("Select the Divinity 2 folder in your Steam directory, typically found at steamapps > common > Divinity Original Sin 2");
+        var path = await IOHelper.FileIO.SelectAnyFolder("Select the Divinity 2 folder in your Steam directory, typically found at steamapps > common > Divinity Original Sin 2", GameDirectory);
 
         // only update if a valid path was selected.
         if(!string.IsNullOrEmpty(path))
@@ -127,9 +127,10 @@ public partial class SettingsViewModel : ObservableObject
         var returnDict = await IOHelper.CommonPaths.AutoDetermineAllFolders();
         if(returnDict == null) return; // assume the error message box is handled in the iohelper function
 
-        GameDirectory = returnDict["Game"]!;
-        DataDirectory = returnDict["Data"]!;
-        WorkshopDirectory = returnDict["Workshop"]!;
+        // only overwrite folders that could actually be determined
+        if(returnDict["Game"] is string game) GameDirectory = game;
+        if(returnDict["Data"] is string data) DataDirectory = data;
+        if(returnDict["Workshop"] is string workshop) WorkshopDirectory = workshop;
 
     }
 
