@@ -115,7 +115,8 @@
         <Style Selector="Button.ActionBtn StackPanel">
             <Setter Property="Spacing" Value="4"/>
         </Style>
-        <Style Selector="Button.ActionBtn Path">
+        <!-- line icons drawn with a Path, they follow the button's text colour -->
+        <Style Selector="Path.Icon">
             <Setter Property="Width" Value="16"/>
             <Setter Property="Height" Value="16"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -124,6 +125,13 @@
             <Setter Property="StrokeLineCap" Value="Round"/>
             <Setter Property="StrokeJoin" Value="Round"/>
         </Style>
+        <Style Selector=":is(Button).Toolbar">
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="ToolTip.ShowDelay" Value="400"/>
+        </Style>
+
         <Style Selector="Button.ActionBtn TextBlock">
             <Setter Property="FontSize" Value="10"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -133,52 +141,67 @@
     <!-- global grid -->
     <Grid RowDefinitions="Auto, Auto, *, 30">
         
-        <!-- top menu row -->
-        <Menu Grid.Row="0" Grid.ColumnSpan="2" FontSize="12" FontWeight="Bold" > 
-            <MenuItem Header="File">
+        <!-- toolbar: profile selection and actions on the left, saving to the game on the right -->
+        <DockPanel Grid.Row="0" Margin="10,8,10,6" LastChildFill="False">
 
-                <MenuItem
-                    Header="Import Mod"
-                    Command="{Binding ImportMod}"
+            <!-- the main action of the app, so it gets the accent colour -->
+            <Button
+                DockPanel.Dock="Right"
+                Classes="accent Toolbar"
+                Command="{Binding ExportLSXToProfileCommand}"
+                ToolTip.Tip="Write the enabled mods and their order into the game's modsettings.lsx for this profile. A backup of the old file is kept."
+            >
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Path Classes="Icon" Data="M 3 8.5 L 6.5 12 L 13 4"/>
+                    <TextBlock Text="{Binding CurrentProfileText, StringFormat='{}Save to {0}'}" FontWeight="SemiBold"/>
+                </StackPanel>
+            </Button>
+
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="Profile" Classes="Muted" VerticalAlignment="Center" Margin="2,0,4,0"/>
+                <ComboBox
+                    ItemsSource="{Binding Profiles}"
+                    SelectedItem="{Binding SelectedProfile}"
+                    MinWidth="170"
+                    VerticalAlignment="Center"
+                    ToolTip.Tip="The DOS2 profile whose mod settings are loaded and saved"
                 />
 
-                <MenuItem 
-                    Header="Extract PAK File"
-                    Command="{Binding ExtractPakFileCommand}"
-                />
+                <Rectangle Width="1" Height="24" Margin="8,0" Fill="{DynamicResource AppBorderBrush}" VerticalAlignment="Center"/>
 
-                <MenuItem
-                    Header="Download Norbyte's Script Extender (latest)"
-                    Command="{Binding DownloadScriptExtenderCommand}"
-                />
-            </MenuItem>
+                <Button Classes="Toolbar" Command="{Binding ImportModCommand}" ToolTip.Tip="Install a mod from a .pak or .zip file">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Path Classes="Icon" Data="M 8 2 V 10 M 4.5 6.5 L 8 10 L 11.5 6.5 M 2.5 11 V 13.5 H 13.5 V 11"/>
+                        <TextBlock Text="Import Mod"/>
+                    </StackPanel>
+                </Button>
 
-            <MenuItem Header="Load Order">
-               <MenuItem
-                    Header="{Binding CurrentProfileText, StringFormat='{}Export Load Order to Game (Profile \'{0}\')'}"
-                    Command="{Binding ExportLSXToProfileCommand}"
-                />
+                <DropDownButton Classes="Toolbar" Content="Load Order">
+                    <DropDownButton.Flyout>
+                        <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                            <MenuItem Header="Import Load Order from File" Command="{Binding ImportLoadOrderFromFileCommand}"/>
+                            <MenuItem Header="Export Load Order to File" Command="{Binding ExportLoadOrderToFileCommand}"/>
+                        </MenuFlyout>
+                    </DropDownButton.Flyout>
+                </DropDownButton>
 
-                <MenuItem
-                    Header="Export Load Order to File"
-                    Command="{Binding ExportLoadOrderToFileCommand}"
-                />
+                <DropDownButton Classes="Toolbar" Content="Tools">
+                    <DropDownButton.Flyout>
+                        <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                            <MenuItem Header="Extract PAK File" Command="{Binding ExtractPakFileCommand}"/>
+                            <MenuItem Header="Download Norbyte's Script Extender (latest)" Command="{Binding DownloadScriptExtenderCommand}"/>
+                        </MenuFlyout>
+                    </DropDownButton.Flyout>
+                </DropDownButton>
 
-                <MenuItem
-                    Header="Import Load Order from File"
-                    Command="{Binding ImportLoadOrderFromFileCommand}"
-                />
-            </MenuItem>
-
-            <MenuItem Header="Settings">
-                <MenuItem
-                    Header="Open Preferences"
-                    Click="OnOpenSettingsClicked"
-                    
-                />
-            </MenuItem>            
-
-        </Menu>
+                <Button Classes="Toolbar" Click="OnOpenSettingsClicked" ToolTip.Tip="Folders, theme and other preferences">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Path Classes="Icon" Data="M 2 4.5 H 14 M 2 11.5 H 14 M 5.5 2.5 V 6.5 M 10.5 9.5 V 13.5"/>
+                        <TextBlock Text="Settings"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </DockPanel>
         
         <!-- main area: preview card, enabled mods card, move buttons, disabled mods card -->
         <Grid 
@@ -334,31 +357,31 @@
             <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="6">
                 <Button Classes="ActionBtn" Command="{Binding EnableMod}" ToolTip.Tip="Enable the selected mods">
                     <StackPanel>
-                        <Path Data="M 10 3 L 5 8 L 10 13"/>
+                        <Path Classes="Icon" Data="M 10 3 L 5 8 L 10 13"/>
                         <TextBlock Text="Enable"/>
                     </StackPanel>
                 </Button>
                 <Button Classes="ActionBtn" Command="{Binding EnableAllMods}" ToolTip.Tip="Enable all mods shown in the disabled list">
                     <StackPanel>
-                        <Path Data="M 8 3 L 3 8 L 8 13 M 13 3 L 8 8 L 13 13"/>
+                        <Path Classes="Icon" Data="M 8 3 L 3 8 L 8 13 M 13 3 L 8 8 L 13 13"/>
                         <TextBlock Text="Enable all"/>
                     </StackPanel>
                 </Button>
                 <Button Classes="ActionBtn" Command="{Binding DisableMod}" ToolTip.Tip="Disable the selected mods">
                     <StackPanel>
-                        <Path Data="M 6 3 L 11 8 L 6 13"/>
+                        <Path Classes="Icon" Data="M 6 3 L 11 8 L 6 13"/>
                         <TextBlock Text="Disable"/>
                     </StackPanel>
                 </Button>
                 <Button Classes="ActionBtn" Command="{Binding DisableAllMods}" ToolTip.Tip="Disable all mods shown in the enabled list">
                     <StackPanel>
-                        <Path Data="M 3 3 L 8 8 L 3 13 M 8 3 L 13 8 L 8 13"/>
+                        <Path Classes="Icon" Data="M 3 3 L 8 8 L 3 13 M 8 3 L 13 8 L 8 13"/>
                         <TextBlock Text="Disable all"/>
                     </StackPanel>
                 </Button>
                 <Button Classes="ActionBtn accent" Command="{Binding SortMods}" Margin="0,12,0,0" ToolTip.Tip="Sort the enabled mods so every mod loads after the mods it depends on">
                     <StackPanel>
-                        <Path Data="M 5 2 V 14 M 2 11 L 5 14 L 8 11 M 11 14 V 2 M 8 5 L 11 2 L 14 5"/>
+                        <Path Classes="Icon" Data="M 5 2 V 14 M 2 11 L 5 14 L 8 11 M 11 14 V 2 M 8 5 L 11 2 L 14 5"/>
                         <TextBlock Text="Sort"/>
                     </StackPanel>
                 </Button>

@@ -371,6 +371,40 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private string _currentProfileText = string.Empty;
 
+    // profiles shown in the toolbar dropdown
+    [ObservableProperty]
+    private ObservableCollection<string> _profiles = [];
+
+    [ObservableProperty]
+    private string? _selectedProfile;
+
+    // true while the dropdown is being refilled, so that doesn't count as the user picking a profile
+    private bool _refreshingProfiles = false;
+
+    partial void OnSelectedProfileChanged(string? value)
+    {
+        if(_refreshingProfiles || string.IsNullOrEmpty(value) || value == IOHelper.UserSettings.Default.SelectedProfile) return;
+
+        Log.Info($"Switching to profile {value}");
+        IOHelper.UserSettings.Default.SelectedProfile = value;
+        IOHelper.UserSettings.Default.Save();
+        _ = Update();
+    }
+
+    private void RefreshProfiles()
+    {
+        _refreshingProfiles = true;
+        try
+        {
+            Profiles = new(IOHelper.CommonPaths.GetAllProfiles(IOHelper.UserSettings.Default.DataFolder) ?? []);
+            SelectedProfile = IOHelper.UserSettings.Default.SelectedProfile;
+        }
+        finally
+        {
+            _refreshingProfiles = false;
+        }
+    }
+
     public List<ModInfo> CurrentlySelectedMods = [];
 
     [ObservableProperty]
@@ -663,6 +697,7 @@ public partial class MainViewModel : ViewModelBase
             EnabledMods.Clear();
             DisabledMods.Clear();
 
+            RefreshProfiles();
             ParseModsDirectory();
             await ParseLSXFile();
             ParseWorkshopFolder();
