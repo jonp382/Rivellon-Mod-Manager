@@ -358,8 +358,14 @@ public partial class ModInfo : ObservableObject
     public string Description { get; set; } = string.Empty;
     public string MD5 {get; set; } = string.Empty; // almost always unused unless its a default fake mod like the base game.
     public string WorkshopID {get; set;} = string.Empty;
-    public SteamAPI.PublishedFileDetail? WorkshopDetails {get; set;} = null;
-    public Bitmap? PreviewImage {get; set; } = null;
+
+    // these are filled in after the mod list is shown (workshop sync runs in the background),
+    // so they need to notify the UI when they change.
+    [ObservableProperty]
+    private SteamAPI.PublishedFileDetail? _workshopDetails = null;
+
+    [ObservableProperty]
+    private Bitmap? _previewImage = null;
 
     public List<string> Dependencies {get; set; } = [];
 }
