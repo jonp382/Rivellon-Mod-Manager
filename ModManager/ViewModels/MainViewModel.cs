@@ -524,7 +524,11 @@ public partial class MainViewModel : ViewModelBase
     public async void ParseWorkshopFolder()
     {
         var workshopPath = IOHelper.UserSettings.Default.WorkshopFolder;
-        if(string.IsNullOrEmpty(workshopPath)) return;
+        if(string.IsNullOrEmpty(workshopPath) || !Directory.Exists(workshopPath))
+        {
+            Debug.WriteLine($"Workshop folder '{workshopPath}' does not exist, skipping workshop scan.");
+            return;
+        }
 
         string[] folders = Directory.GetDirectories(workshopPath);
 
@@ -532,11 +536,11 @@ public partial class MainViewModel : ViewModelBase
         {
             // should have one PAK file per folder
             string[] files = Directory.GetFiles(folder);
-            if(files.Length > 1)
+            if(files.Length != 1)
             {
-                // if it somehow has more than one file, it's an unusual setup and it should be skipped
-                // so as to not misidentify a mod.
-                Debug.WriteLine($"{folder} has more than one PAK file, skipping.");
+                // if it has no files (e.g. a half-finished download) or more than one file, it's an unusual
+                // setup and it should be skipped so as to not misidentify a mod.
+                Debug.WriteLine($"{folder} has {files.Length} files instead of 1, skipping.");
                 continue;
             }
 
