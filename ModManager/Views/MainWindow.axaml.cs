@@ -69,7 +69,7 @@ public partial class MainWindow : Window
         // don't update anything if the user cancelled the settings window (also includes hitting [X])
         if (dialogResult) 
         {
-            vm.Update();
+            await vm.Update();
 
             Application.Current!.RequestedThemeVariant = IOHelper.UserSettings.Default.EnableDarkTheme
                 ? Avalonia.Styling.ThemeVariant.Dark

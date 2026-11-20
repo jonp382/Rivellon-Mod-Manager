@@ -30,16 +30,31 @@ public partial class MainViewModel : ViewModelBase
     public MainViewModel()
     {
         IOHelper.UserSettings.Load();
-        Update();
 
         EnabledModsView = new DataGridCollectionView(EnabledMods) { Filter = FilterEnabledMods };
         DisabledModsView = new DataGridCollectionView(DisabledMods) { Filter = FilterDisabledMods };
 
-        // obtain workshop preview images. only ran in constructor to minimize API usage.
-        UpdateWorkshopInfo();
+        // constructors can't await, so start loading here and let it run in the background
+        _ = InitializeAsync();
 
         Debug.WriteLine($"Constructor complete");
         OnPropertyChanged();
+    }
+
+    private async Task InitializeAsync()
+    {
+        await Update();
+
+        // obtain workshop preview images. only ran on startup to minimize API usage.
+        try
+        {
+            await UpdateWorkshopInfo();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Workshop sync failed: {ex.Message}");
+            StatusText = $"Workshop sync failed: {ex.Message}";
+        }
     }
 
     [RelayCommand]
@@ -177,7 +192,7 @@ public partial class MainViewModel : ViewModelBase
         }
 
         Console.WriteLine($"Updating mods list...");
-        Update();
+        await Update();
         StatusText = importSummary;
         Console.WriteLine($"Done!");
     }
@@ -221,7 +236,7 @@ public partial class MainViewModel : ViewModelBase
         return null;
     }
 
-    public async void UpdateWorkshopInfo()
+    public async Task UpdateWorkshopInfo()
     {
         
         // only download images for missing mods
@@ -439,7 +454,7 @@ public partial class MainViewModel : ViewModelBase
 
     }
 
-    public async void ParseLSXFile()
+    public async Task ParseLSXFile()
     {
         EnabledMods.Clear();
         DisabledMods.Clear();
@@ -598,7 +613,7 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
-    public async void ParseWorkshopFolder()
+    public void ParseWorkshopFolder()
     {
         var workshopPath = IOHelper.UserSettings.Default.WorkshopFolder;
         if(string.IsNullOrEmpty(workshopPath) || !Directory.Exists(workshopPath))
@@ -637,24 +652,35 @@ public partial class MainViewModel : ViewModelBase
     }
 
     // Updates the list of all mods and their load orders after a change to the settings are made.
-    public async void Update()
+    // any error is caught and shown here, so callers never need their own error handling.
+    public async Task Update()
     {
 
         StatusText = "Updating mods database...";
 
-        AllMods.Clear();
-        EnabledMods.Clear();
-        DisabledMods.Clear();
+        try
+        {
+            AllMods.Clear();
+            EnabledMods.Clear();
+            DisabledMods.Clear();
 
-        ParseModsDirectory();
-        ParseLSXFile();
-        ParseWorkshopFolder();
-        UpdatePreviewImages(); // this only re-assigns images, it does not download them
+            ParseModsDirectory();
+            await ParseLSXFile();
+            ParseWorkshopFolder();
+            UpdatePreviewImages(); // this only re-assigns images, it does not download them
 
-        // update UI profile display
-        CurrentProfileText = IOHelper.UserSettings.Default.SelectedProfile;
+            // update UI profile display
+            CurrentProfileText = IOHelper.UserSettings.Default.SelectedProfile;
 
-        UpdateLoadOrders();
+            UpdateLoadOrders();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Update failed: {ex}");
+            StatusText = $"Update failed: {ex.Message}";
+            await MessageboxHelper.ErrorBox.ErrorMessageBox($"An error occurred while loading your mods. Please check your settings.\n\n{ex.Message}");
+            return;
+        }
 
         StatusText = _skippedFiles.Count > 0
             ? $"Update complete! Skipped {_skippedFiles.Count} unreadable file(s): {string.Join(", ", _skippedFiles)}"
