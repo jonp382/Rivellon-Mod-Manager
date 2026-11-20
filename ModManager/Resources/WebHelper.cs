@@ -16,7 +16,16 @@ namespace WebHelper;
 
 public class WebRequest()
 {
-    private static readonly HttpClient client = new HttpClient();
+    private static readonly HttpClient client = CreateClient();
+
+    private static HttpClient CreateClient()
+    {
+        var httpClient = new HttpClient();
+        // github's API rejects requests without a user agent. set it once here, since adding it
+        // on every request makes the header grow each time.
+        httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("ModManager");
+        return httpClient;
+    }
     
     public static async Task GetWorkshopDetails(List<ModInfo> workshopItems)
     {
@@ -167,37 +176,59 @@ public class WebRequest()
         }
     }   
 
+    // returns the path of the downloaded zip, or null if anything went wrong.
     public static async Task<string?> DownloadScriptExtender()
     {
         string URL = "https://api.github.com/repos/Norbyte/ositools/releases/latest";
 
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("ModManager");
-        var response = await client.GetAsync(URL);
-        response.EnsureSuccessStatusCode();
-
-        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        // Console.WriteLine($"Json file: \n{json}");
-
-        var assets = json.RootElement.GetProperty("assets");
-
-        var asset = assets.EnumerateArray().First (a => a.GetProperty("name").GetString()?.StartsWith("ScriptExtender-Updater-v") ?? false);
-        
-        if (string.IsNullOrWhiteSpace(asset.GetProperty("name").GetString()))
+        try
         {
+            var response = await client.GetAsync(URL);
+            response.EnsureSuccessStatusCode();
+
+            using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+
+            if(!json.RootElement.TryGetProperty("assets", out var assets) || assets.ValueKind != JsonValueKind.Array)
+            {
+                Debug.WriteLine($"Script extender release had no assets list");
+                return null;
+            }
+
+            JsonElement? asset = null;
+            foreach(var a in assets.EnumerateArray())
+            {
+                if(a.TryGetProperty("name", out var assetName) && (assetName.GetString()?.StartsWith("ScriptExtender-Updater-v") ?? false))
+                {
+                    asset = a;
+                    break;
+                }
+            }
+
+            if(asset == null)
+            {
+                Debug.WriteLine($"No ScriptExtender-Updater asset found in the latest release");
+                return null;
+            }
+
+            string? name = asset.Value.GetProperty("name").GetString();
+            string? url = asset.Value.TryGetProperty("browser_download_url", out var urlProperty) ? urlProperty.GetString() : null;
+            if(string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(url)) return null;
+
+            string outDir = Path.Combine(IOHelper.CommonPaths.GetBaseFolderPath(), "temp-downloads");
+            Directory.CreateDirectory(outDir);
+
+            // only use the file name part, in case the asset name contains path characters
+            string outFile = Path.Combine(outDir, Path.GetFileName(name));
+
+            var zipBytes = await client.GetByteArrayAsync(url);
+            await File.WriteAllBytesAsync(outFile, zipBytes);
+
+            return outFile;
+        }
+        catch (System.Exception ex)
+        {
+            Debug.WriteLine($"Failed to download the script extender: {ex.Message}");
             return null;
         }
-
-        var url = asset.GetProperty("browser_download_url").GetString();
-        
-
-        string outDir = Path.Combine(IOHelper.CommonPaths.GetBaseFolderPath(), "temp-downloads");
-        Directory.CreateDirectory(outDir);
-
-        string outFile = Path.Combine(outDir, asset.GetProperty("name").GetString()!);
-
-        var zipBytes = await client.GetByteArrayAsync(url);
-        await File.WriteAllBytesAsync(Path.Combine(outFile), zipBytes);
-
-        return outFile;
     }
 }

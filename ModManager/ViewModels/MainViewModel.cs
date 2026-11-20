@@ -253,12 +253,20 @@ public partial class MainViewModel : ViewModelBase
         string? outFilePath = await WebHelper.WebRequest.DownloadScriptExtender();
         if (string.IsNullOrWhiteSpace(outFilePath))
         {
-            await MessageboxHelper.ErrorBox.ErrorMessageBox("The Mod Manager was unable to download the script extender.");
+            await MessageboxHelper.ErrorBox.ErrorMessageBox("The Mod Manager was unable to download the script extender. Please check your internet connection and try again.");
             return;
         }
 
         string rootDirectory = Path.GetDirectoryName(outFilePath)!;
-        await ZipFile.ExtractToDirectoryAsync(outFilePath, rootDirectory, true);
+        try
+        {
+            await ZipFile.ExtractToDirectoryAsync(outFilePath, rootDirectory, true);
+        }
+        catch (Exception ex)
+        {
+            await MessageboxHelper.ErrorBox.ErrorMessageBox($"The script extender was downloaded, but could not be extracted.\n\n{ex.Message}");
+            return;
+        }
 
         string? DLL = Directory.GetFiles(rootDirectory).FirstOrDefault(file => string.Equals(Path.GetFileName(file), "dxgi.dll", StringComparison.OrdinalIgnoreCase));
         if (string.IsNullOrWhiteSpace(DLL))
