@@ -119,7 +119,7 @@
             <Setter Property="Width" Value="16"/>
             <Setter Property="Height" Value="16"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="Stroke" Value="{Binding $parent[Button].Foreground}"/>
+            <Setter Property="Stroke" Value="{Binding $self.(TextElement.Foreground)}"/>
             <Setter Property="StrokeThickness" Value="1.8"/>
             <Setter Property="StrokeLineCap" Value="Round"/>
             <Setter Property="StrokeJoin" Value="Round"/>

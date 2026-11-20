@@ -297,7 +297,7 @@ public class UserSettings
     public string GameFolder {get; set; } = string.Empty;
     public double WindowWidth {get; set; } = 1200;
     public double WindowHeight {get; set; } = 800;
-    public bool EnableDarkTheme {get; set; } = false;
+    public bool EnableDarkTheme {get; set; } = true; // dark by default for new installs
 
     public static UserSettings Load()
     {

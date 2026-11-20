@@ -16,6 +16,10 @@
                     <SolidColorBrush x:Key="AppBorderBrush" Color="#2E2E35" />
                     <SolidColorBrush x:Key="AppTextBrush" Color="#E6E6E9" />
                     <SolidColorBrush x:Key="AppMutedTextBrush" Color="#9A9AA6" />
+                    <!-- dark text on the amber accent buttons, white is hard to read on it -->
+                    <SolidColorBrush x:Key="AccentButtonForeground" Color="#1F1606" />
+                    <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="#1F1606" />
+                    <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="#3A2A0C" />
                 </ResourceDictionary>
 
                 <ResourceDictionary x:Key="Light">
@@ -35,7 +39,13 @@
     </Application.DataTemplates>
 
     <Application.Styles>
-        <FluentTheme />
+        <!-- amber/gold accent to match DOS2's own UI, instead of the operating system's accent colour -->
+        <FluentTheme>
+            <FluentTheme.Palettes>
+                <ColorPaletteResources x:Key="Dark" Accent="#FFD9A441" />
+                <ColorPaletteResources x:Key="Light" Accent="#FFB0761C" />
+            </FluentTheme.Palettes>
+        </FluentTheme>
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
     </Application.Styles>
 </Application>
