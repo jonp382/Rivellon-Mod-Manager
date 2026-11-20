@@ -35,9 +35,7 @@ jobs:
           done
           mkdir dist
           cp out/win-x64/ModManager.exe dist/RivellonModManager-win-x64.exe
-          # tar keeps the executable permission, a plain download would lose it
-          cp out/linux-x64/ModManager out/RivellonModManager
-          tar -czf dist/RivellonModManager-linux-x64.tar.gz -C out RivellonModManager
+          cp out/linux-x64/ModManager dist/RivellonModManager-linux-x64
 
       - uses: actions/upload-artifact@v4
         with:
