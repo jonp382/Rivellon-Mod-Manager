@@ -9,16 +9,21 @@
         <ResourceDictionary>
             <ResourceDictionary.ThemeDictionaries>
                 
+                <!-- Background is the window, Surface is the cards drawn on top of it -->
                 <ResourceDictionary x:Key="Dark">
-                    <SolidColorBrush x:Key="AppBackgroundBrush" Color="#1E1E1E" />
-                    <SolidColorBrush x:Key="AppSurfaceBrush" Color="#2D2D2D" />
-                    <SolidColorBrush x:Key="AppTextBrush" Color="#E0E0E0" />
+                    <SolidColorBrush x:Key="AppBackgroundBrush" Color="#161619" />
+                    <SolidColorBrush x:Key="AppSurfaceBrush" Color="#212126" />
+                    <SolidColorBrush x:Key="AppBorderBrush" Color="#2E2E35" />
+                    <SolidColorBrush x:Key="AppTextBrush" Color="#E6E6E9" />
+                    <SolidColorBrush x:Key="AppMutedTextBrush" Color="#9A9AA6" />
                 </ResourceDictionary>
 
                 <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="AppBackgroundBrush" Color="White" />
+                    <SolidColorBrush x:Key="AppBackgroundBrush" Color="#EEF0F3" />
                     <SolidColorBrush x:Key="AppSurfaceBrush" Color="White" />
+                    <SolidColorBrush x:Key="AppBorderBrush" Color="#DDE1E7" />
                     <SolidColorBrush x:Key="AppTextBrush" Color="#102A43" />
+                    <SolidColorBrush x:Key="AppMutedTextBrush" Color="#5F6B7A" />
                 </ResourceDictionary>
 
             </ResourceDictionary.ThemeDictionaries>

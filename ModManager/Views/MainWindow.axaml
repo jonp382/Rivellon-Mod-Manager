@@ -31,11 +31,21 @@
     
         <!-- Datagrid styling -->
 
+        <!-- the cards provide the border, so the grids don't need their own -->
         <Style Selector="DataGrid">
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
-            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
             <Setter Property="GridLinesVisibility" Value="None"/>
+        </Style>
+
+        <!-- column headers blend into the card instead of a dark bar -->
+        <Style Selector="DataGridColumnHeader">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource AppMutedTextBrush}"/>
+            <Setter Property="FontSize" Value="11"/>
+        </Style>
+        <Style Selector="DataGridColumnHeadersPresenter">
+            <Setter Property="Background" Value="Transparent"/>
         </Style>
 
         <Style Selector="DataGridCell">
@@ -57,13 +67,66 @@
             <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}"/>
         </Style>
 
-        <!-- action button styling -->
+        <!-- panels (preview, enabled mods, disabled mods) -->
+
+        <Style Selector="Border.Card">
+            <Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="10"/>
+        </Style>
+
+        <Style Selector="TextBlock.CardTitle">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style Selector="TextBlock.Muted">
+            <Setter Property="Foreground" Value="{DynamicResource AppMutedTextBrush}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+
+        <!-- small pill showing how many mods are in a list -->
+        <Style Selector="Border.CountBadge">
+            <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="8,1"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Border.CountBadge > TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource AppMutedTextBrush}"/>
+        </Style>
+
+        <!-- action button styling: an icon with a short label underneath -->
 
         <Style Selector="Button.ActionBtn">
-            <Setter Property="Padding" Value="10,5"/>
-            <Setter Property="Margin" Value="2"/>
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="Width" Value="66"/>
+            <Setter Property="Padding" Value="4,8"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="ToolTip.ShowDelay" Value="300"/>
+        </Style>
+        <Style Selector="Button.ActionBtn StackPanel">
+            <Setter Property="Spacing" Value="4"/>
+        </Style>
+        <Style Selector="Button.ActionBtn Path">
+            <Setter Property="Width" Value="16"/>
+            <Setter Property="Height" Value="16"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Stroke" Value="{Binding $parent[Button].Foreground}"/>
+            <Setter Property="StrokeThickness" Value="1.8"/>
+            <Setter Property="StrokeLineCap" Value="Round"/>
+            <Setter Property="StrokeJoin" Value="Round"/>
+        </Style>
+        <Style Selector="Button.ActionBtn TextBlock">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
         </Style>
     </Window.Styles>
     
@@ -117,296 +180,269 @@
 
         </Menu>
         
-        <!-- TODO: need to rename -->
-        <!-- main grid with the DataGrids etc. -->
+        <!-- main area: preview card, enabled mods card, move buttons, disabled mods card -->
         <Grid 
             Name="MainGrid" 
-            Grid.Row = "2" 
-            ColumnDefinitions="360, *, 45, *"
-            RowDefinitions="15, 40, *"
+            Grid.Row="2" 
+            ColumnDefinitions="340, *, 76, *"
+            Margin="10,4,10,10"
         >
 
-            <!-- stack panel to hold the preview section on the left side -->
-            <Grid
-                Grid.RowSpan="10"
-                Grid.Column="0"
-                RowDefinitions="350, 30, 30, 30, 30, 30, *"
-                ColumnDefinitions="*"
+            <!-- preview card on the left side -->
+            <Border Grid.Column="0" Classes="Card" Margin="0,0,10,0">
+                <Grid RowDefinitions="Auto, Auto, Auto, *">
 
-                Margin="5"
-            >   
+                    <!-- preview image -->
+                    <Border Grid.Row="0" CornerRadius="6" ClipToBounds="True" Background="{DynamicResource AppBackgroundBrush}" Height="300">
+                        <Image
+                            Source="{Binding PreviewMod.PreviewImage}"
+                            Stretch="Uniform"
+                            RenderOptions.BitmapInterpolationMode="HighQuality"
+                        />
+                    </Border>
 
-                
-                <!-- preview image -->
-                <Image
-                    Source="{Binding PreviewMod.PreviewImage}"
-                    Width="340"
-                    Height="340"
-                    Margin="5"
-                    Stretch="Uniform"
-
-                    Grid.Row="0"
-                    Grid.Column="0"
-                >
-            
-                </Image>
-
-                <!-- mod name -->
-                <TextBlock
-                    Text="{Binding PreviewMod.Name, StringFormat='{}{0}'}"
-                    FontWeight="Bold"
-                    
-                    Grid.Row="1"
-                    Grid.Column="0"
-
-                />
-                
-                <!-- mod author -->
-                <TextBlock
-                    Text="{Binding PreviewMod.Author, StringFormat='{}Author: {0}'}"
-
-                    Grid.Row="2"
-                    Grid.Column="0"
-
-                />
-
-                <!-- mod version -->
-                <TextBlock
-                    Text="{Binding PreviewMod.DisplayVersion, StringFormat='{}Version: {0}'}"
-
-                    Grid.Row="3"
-                    Grid.Column="0"
-
-                />
-
-                <!-- mod UUID -->
-                <TextBlock
-                    Text="{Binding PreviewMod.UUID, StringFormat='{}ID: {0}'}"
-
-                    Grid.Row="4"
-                    Grid.Column="0"
-
-                />
-
-                <!-- mod workshop ID -->
-                <TextBlock
-                    Text="{Binding PreviewMod.WorkshopID, StringFormat='{}Workshop ID: {0}'}"
-
-                    Grid.Row="5"
-                    Grid.Column="0"
-
-                />
-
-                <!-- mod workshop description -->
-                <ScrollViewer
-                    Grid.Row="6"
-                    Grid.Column="0"
-                >
-                    <!-- renders the steam BBCode ([h1], [b], [list] etc.) instead of showing raw tags -->
-                    <controls:BBCodeTextBlock
-                        BBCode="{Binding PreviewMod.WorkshopDetails.Description}"
+                    <!-- mod name -->
+                    <TextBlock
+                        Grid.Row="1"
+                        Margin="2,12,2,6"
+                        Text="{Binding PreviewMod.Name}"
+                        FontSize="16"
+                        FontWeight="Bold"
                         TextWrapping="Wrap"
                     />
-                </ScrollViewer>
-                    
-        
-            </Grid>
 
-            <!-- Enabled/Disable buttons -->
-            <StackPanel Grid.Row="1" Grid.RowSpan="4" Grid.Column="2" VerticalAlignment="Center" Spacing="4">
-                <Button Content="&lt;" ToolTip.Tip="Enable Selected" Classes="ActionBtn" Command="{Binding EnableMod}"/>
-                <Button Content="&lt;&lt;" ToolTip.Tip="Enable ALL" Classes="ActionBtn" Command="{Binding EnableAllMods}"/>
-                <Button Content="&gt;" ToolTip.Tip="Disable Selected" Classes="ActionBtn" Command="{Binding DisableMod}"/>
-                <Button Content="&gt;&gt;" ToolTip.Tip="Disable ALL" Classes="ActionBtn" Command="{Binding DisableAllMods}"/>
-                <Button Content="&lt;&gt;" ToolTip.Tip="Sort Mods by Dependencies" Classes="ActionBtn" Command="{Binding SortMods}"/>
+                    <!-- mod details -->
+                    <StackPanel Grid.Row="2" Margin="2,0,2,10" Spacing="2">
+                        <TextBlock Classes="Muted" Text="{Binding PreviewMod.Author, StringFormat='{}Author: {0}'}"/>
+                        <TextBlock Classes="Muted" Text="{Binding PreviewMod.DisplayVersion, StringFormat='{}Version: {0}'}"/>
+                        <TextBlock Classes="Muted" Text="{Binding PreviewMod.UUID, StringFormat='{}ID: {0}'}"/>
+                        <TextBlock Classes="Muted" Text="{Binding PreviewMod.WorkshopID, StringFormat='{}Workshop ID: {0}'}"/>
+                    </StackPanel>
+
+                    <!-- mod workshop description -->
+                    <Border Grid.Row="3" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,1,0,0" Padding="0,10,0,0">
+                        <ScrollViewer>
+                            <!-- renders the steam BBCode ([h1], [b], [list] etc.) instead of showing raw tags -->
+                            <controls:BBCodeTextBlock
+                                BBCode="{Binding PreviewMod.WorkshopDetails.Description}"
+                                TextWrapping="Wrap"
+                                Margin="2,0,12,0"
+                            />
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- enabled mods card -->
+            <Border Grid.Column="1" Classes="Card">
+                <Grid RowDefinitions="Auto, Auto, *">
+
+                    <!-- header with the title and number of mods -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="4,0,0,8">
+                        <TextBlock Classes="CardTitle" Text="Enabled Mods"/>
+                        <Border Classes="CountBadge">
+                            <TextBlock Text="{Binding EnabledMods.Count}"/>
+                        </Border>
+                    </StackPanel>
+
+                    <TextBox
+                        Grid.Row="1"
+                        Margin="0,0,0,8"
+                        PlaceholderText="Filter enabled mods..."
+                        Name="EnabledSearchBox"
+                        Text="{Binding EnabledSearchText, Mode=TwoWay}"
+                    />
+
+                        <DataGrid x:Name="EnabledGrid"
+                            ItemsSource="{Binding EnabledModsView}"
+                            Grid.Row="2"
+                            IsReadOnly="True"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto"
+                            ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                            
+                            AutoGenerateColumns="False"
+                            CanUserResizeColumns="True"
+                            CanUserReorderColumns="True"
+                            CanUserSortColumns="True"
+
+                            DragDrop.AllowDrop="True"
+                            PointerPressed="OnPointerPressed"
+
+                            SelectionMode="Extended"
+                            SelectionChanged="OnSelectionChanged"
+                            >
+
+                            <DataGrid.Styles>
+
+                                <!-- style for all rows regardless of status -->
+                                <Style Selector="DataGridRow" x:DataType="models:ModInfo">
+
+                                   <!-- enable tooltip and use the converter to handle string? -> string -->
+                                    <Setter 
+                                        Property="ToolTip.Tip" 
+                                        Value="{Binding InvalidReason, Converter={x:Static conv:StringToTooltipConverter.Instance}}"
+                                            
+                                    />
+
+                                    <!-- styling for invalid mods -->
+                                    <Setter 
+                                        Property="Background" 
+                                        Value="{Binding IsValid, Converter={x:Static conv:BoolToRedBrushConverter.Instance}}"
+                                    />
+                                </Style>
+                            </DataGrid.Styles>
+
+                            <DataGrid.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem 
+                                        Header="Open Workshop Page in Browser"
+                                        Command="{Binding OpenWorkshopPageCommand}"
+                                    >
+                                    </MenuItem>
+
+                                    <MenuItem 
+                                        Header="Open Workshop Page in Steam"
+                                        Command="{Binding OpenWorkshopPageSteamCommand}"
+                                    >
+                                    </MenuItem>
+
+
+                                </ContextMenu>
+                            
+                            </DataGrid.ContextMenu>
+
+                            <!-- column declaration -->
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="#" Binding="{ReflectionBinding LoadOrder}" />
+                                <!-- small preview image, uses the images already downloaded from the workshop -->
+                                <DataGridTemplateColumn Width="52" CanUserSort="False" CanUserResize="False" CanUserReorder="False">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="models:ModInfo">
+                                            <Border Classes="Thumbnail">
+                                                <Image Source="{Binding PreviewImage}" Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Name" Binding="{ReflectionBinding Name}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                </Grid>
+            </Border>
+
+            <!-- buttons to move mods between the two lists -->
+            <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="6">
+                <Button Classes="ActionBtn" Command="{Binding EnableMod}" ToolTip.Tip="Enable the selected mods">
+                    <StackPanel>
+                        <Path Data="M 10 3 L 5 8 L 10 13"/>
+                        <TextBlock Text="Enable"/>
+                    </StackPanel>
+                </Button>
+                <Button Classes="ActionBtn" Command="{Binding EnableAllMods}" ToolTip.Tip="Enable all mods shown in the disabled list">
+                    <StackPanel>
+                        <Path Data="M 8 3 L 3 8 L 8 13 M 13 3 L 8 8 L 13 13"/>
+                        <TextBlock Text="Enable all"/>
+                    </StackPanel>
+                </Button>
+                <Button Classes="ActionBtn" Command="{Binding DisableMod}" ToolTip.Tip="Disable the selected mods">
+                    <StackPanel>
+                        <Path Data="M 6 3 L 11 8 L 6 13"/>
+                        <TextBlock Text="Disable"/>
+                    </StackPanel>
+                </Button>
+                <Button Classes="ActionBtn" Command="{Binding DisableAllMods}" ToolTip.Tip="Disable all mods shown in the enabled list">
+                    <StackPanel>
+                        <Path Data="M 3 3 L 8 8 L 3 13 M 8 3 L 13 8 L 8 13"/>
+                        <TextBlock Text="Disable all"/>
+                    </StackPanel>
+                </Button>
+                <Button Classes="ActionBtn accent" Command="{Binding SortMods}" Margin="0,12,0,0" ToolTip.Tip="Sort the enabled mods so every mod loads after the mods it depends on">
+                    <StackPanel>
+                        <Path Data="M 5 2 V 14 M 2 11 L 5 14 L 8 11 M 11 14 V 2 M 8 5 L 11 2 L 14 5"/>
+                        <TextBlock Text="Sort"/>
+                    </StackPanel>
+                </Button>
             </StackPanel>
 
-            <!-- Enabled mod count -->
-            <TextBlock 
-                Grid.Row="0" 
-                Grid.Column="1"
-                Margin="25,0" 
-                VerticalAlignment="Center"
-                HorizontalAlignment="Left"
-                Text="{Binding EnabledMods.Count, StringFormat='{}{0} Enabled Mods'}" 
-                FontWeight="Bold"
-                FontSize="12"
-            />
+            <!-- disabled mods card -->
+            <Border Grid.Column="3" Classes="Card">
+                <Grid RowDefinitions="Auto, Auto, *">
 
-            <!-- Disabled mod count -->
-            <TextBlock 
-                Text="{Binding DisabledMods.Count, StringFormat='{}{0} Disabled Mods'}" 
-                FontWeight="Bold"
-                FontSize="12"
-                Grid.Row="0" 
-                Grid.Column="3"
-                Margin="25,0" 
-                VerticalAlignment="Center"
-                HorizontalAlignment="Left"
-            />
+                    <!-- header with the title and number of mods -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="4,0,0,8">
+                        <TextBlock Classes="CardTitle" Text="Disabled Mods"/>
+                        <Border Classes="CountBadge">
+                            <TextBlock Text="{Binding DisabledMods.Count}"/>
+                        </Border>
+                    </StackPanel>
 
-            <TextBox
-                PlaceholderText="Filter Enabled Mods..."
-                Grid.Row="1"
-                Grid.Column="1"
-                Margin="5"
-                Name="EnabledSearchBox"
-                Text="{Binding EnabledSearchText, Mode=TwoWay}"
-            />
+                    <TextBox
+                        Grid.Row="1"
+                        Margin="0,0,0,8"
+                        PlaceholderText="Filter disabled mods..."
+                        Name="DisabledSearchBox"
+                        Text="{Binding DisabledSearchText, Mode=TwoWay}"
+                    />
 
-            <TextBox
-                PlaceholderText="Filter Disabled Mods..."
-                Grid.Row="1"
-                Grid.Column="3"
-                Margin="5"
-                Name="DisabledSearchBox"
-                Text="{Binding DisabledSearchText, Mode=TwoWay}"
-            />
+                        <DataGrid x:Name="DisabledGrid"
+                            ItemsSource="{Binding DisabledModsView}"
+                            Grid.Row="2"
+                            IsReadOnly="True"
 
-            <!-- Enabled Mods Grid -->
-            <DataGrid x:Name="EnabledGrid"
-                ItemsSource="{Binding EnabledModsView}"
-                Grid.Row="2"
-                Grid.Column="1"
-                IsReadOnly="True"
-                Margin = "5"
-                ScrollViewer.VerticalScrollBarVisibility="Auto"
-                ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                
-                AutoGenerateColumns="False"
-                CanUserResizeColumns="True"
-                CanUserReorderColumns="True"
-                CanUserSortColumns="True"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto"
+                            ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                            
+                            AutoGenerateColumns="False"
+                            CanUserResizeColumns="True"
+                            CanUserReorderColumns="True"
+                            CanUserSortColumns="True"
 
-                Background="Transparent"
-                DragDrop.AllowDrop="True"
-                PointerPressed="OnPointerPressed"
+                            DragDrop.AllowDrop="True"
+                            PointerPressed="OnPointerPressed"
 
-                SelectionMode="Extended"
-                SelectionChanged="OnSelectionChanged"
-                >
+                            SelectionMode="Extended"
+                            SelectionChanged="OnSelectionChanged"
+                            >
 
-                <DataGrid.Styles>
+                            <DataGrid.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem 
+                                        Header="Open Workshop Page in Browser"
+                                        Command="{Binding OpenWorkshopPageCommand}"
+                                    >
+                                    </MenuItem>
 
-                    <!-- style for all rows regardless of status -->
-                    <Style Selector="DataGridRow" x:DataType="models:ModInfo">
-
-                       <!-- enable tooltip and use the converter to handle string? -> string -->
-                        <Setter 
-                            Property="ToolTip.Tip" 
-                            Value="{Binding InvalidReason, Converter={x:Static conv:StringToTooltipConverter.Instance}}"
-                                
-                        />
-
-                        <!-- styling for invalid mods -->
-                        <Setter 
-                            Property="Background" 
-                            Value="{Binding IsValid, Converter={x:Static conv:BoolToRedBrushConverter.Instance}}"
-                        />
-                    </Style>
-                </DataGrid.Styles>
-
-                <DataGrid.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem 
-                            Header="Open Workshop Page in Browser"
-                            Command="{Binding OpenWorkshopPageCommand}"
-                        >
-                        </MenuItem>
-
-                        <MenuItem 
-                            Header="Open Workshop Page in Steam"
-                            Command="{Binding OpenWorkshopPageSteamCommand}"
-                        >
-                        </MenuItem>
+                                    <MenuItem 
+                                        Header="Open Workshop Page in Steam"
+                                        Command="{Binding OpenWorkshopPageSteamCommand}"
+                                    >
+                                    </MenuItem>
 
 
-                    </ContextMenu>
-                
-                </DataGrid.ContextMenu>
+                                </ContextMenu>
+                            
+                            </DataGrid.ContextMenu>
 
-                <!-- column declaration -->
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="#" Binding="{ReflectionBinding LoadOrder}" />
-                    <!-- small preview image, uses the images already downloaded from the workshop -->
-                    <DataGridTemplateColumn Width="52" CanUserSort="False" CanUserResize="False" CanUserReorder="False">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate x:DataType="models:ModInfo">
-                                <Border Classes="Thumbnail">
-                                    <Image Source="{Binding PreviewImage}" Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality"/>
-                                </Border>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="Name" Binding="{ReflectionBinding Name}" />
-                </DataGrid.Columns>
-            </DataGrid>
-
-            <!--  -->
-            <!-- Use column 2 for spacing -->
-            <!--  -->
-
-            <!-- Disabled Mods Grid -->
-            <DataGrid  x:Name="DisabledGrid"
-                ItemsSource="{Binding DisabledModsView}"
-                Grid.Row="2"
-                Grid.Column="3"
-                IsReadOnly="True"
-                Margin = "5"
-
-                ScrollViewer.VerticalScrollBarVisibility="Auto"
-                ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                
-                AutoGenerateColumns="False"
-                CanUserResizeColumns="True"
-                CanUserReorderColumns="True"
-                CanUserSortColumns="True"
-
-                Background="Transparent"
-                DragDrop.AllowDrop="True"
-                PointerPressed="OnPointerPressed"
-
-                SelectionMode="Extended"
-                SelectionChanged="OnSelectionChanged"
-                >
-
-                <DataGrid.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem 
-                            Header="Open Workshop Page in Browser"
-                            Command="{Binding OpenWorkshopPageCommand}"
-                        >
-                        </MenuItem>
-
-                        <MenuItem 
-                            Header="Open Workshop Page in Steam"
-                            Command="{Binding OpenWorkshopPageSteamCommand}"
-                        >
-                        </MenuItem>
-
-
-                    </ContextMenu>
-                
-                </DataGrid.ContextMenu>
-
-                <!-- don't need any valid/invalid logic in disabled mods -->
-                <!-- column declaration -->
-                <DataGrid.Columns>
-                    <!-- small preview image, uses the images already downloaded from the workshop -->
-                    <DataGridTemplateColumn Width="52" CanUserSort="False" CanUserResize="False" CanUserReorder="False">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate x:DataType="models:ModInfo">
-                                <Border Classes="Thumbnail">
-                                    <Image Source="{Binding PreviewImage}" Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality"/>
-                                </Border>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="Name" Binding="{ReflectionBinding Name}" />
-                    <DataGridTextColumn Header="Version" Binding="{ReflectionBinding DisplayVersion}" SortMemberPath="VersionNumber" />
-                    <DataGridTextColumn Header="Author" Binding="{ReflectionBinding Author}" />
-                </DataGrid.Columns>
-            </DataGrid>
+                            <!-- don't need any valid/invalid logic in disabled mods -->
+                            <!-- column declaration -->
+                            <DataGrid.Columns>
+                                <!-- small preview image, uses the images already downloaded from the workshop -->
+                                <DataGridTemplateColumn Width="52" CanUserSort="False" CanUserResize="False" CanUserReorder="False">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="models:ModInfo">
+                                            <Border Classes="Thumbnail">
+                                                <Image Source="{Binding PreviewImage}" Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Name" Binding="{ReflectionBinding Name}" />
+                                <DataGridTextColumn Header="Version" Binding="{ReflectionBinding DisplayVersion}" SortMemberPath="VersionNumber" />
+                                <DataGridTextColumn Header="Author" Binding="{ReflectionBinding Author}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                </Grid>
+            </Border>
 
             <!-- Drag-drop indicator to show where a mod will be placed. -->
             <Rectangle 
@@ -419,14 +455,14 @@
                 IsVisible="False"
                 IsHitTestVisible="False"
             />
-
-
         </Grid>
+
 
         <!-- border for the status and profile display text at the bottom -->
         <Border
             Grid.Row="3"
-            Background="{DynamicResource SystemControlBackgroundChromeLowBrush}"
+            Background="{DynamicResource AppSurfaceBrush}"
+            BorderBrush="{DynamicResource AppBorderBrush}"
             Padding="12,4"
             BorderThickness="0,1,0,0"
             
@@ -438,7 +474,7 @@
                 <TextBlock
                     Text="{Binding StatusText, StringFormat='{}Status: {0}'}"
                     FontSize="11"
-                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                    Foreground="{DynamicResource AppMutedTextBrush}"
                     HorizontalAlignment="Left"
                 />
 
@@ -446,7 +482,7 @@
                 <TextBlock
                     Text="{Binding CurrentProfileText, StringFormat='{}Selected Profile: {0}'}"
                     FontSize="11"
-                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                    Foreground="{DynamicResource AppMutedTextBrush}"
                     HorizontalAlignment="Right"
                 />
 
